@@ -1,0 +1,46 @@
+#!/usr/bin/perl
+
+my $debug=1;
+use Data::Dumper;
+use File::stat;
+use strict;
+use warnings; 
+use Fcntl ':mode';
+
+$|++;
+
+die "usage: $0 [script]" unless @ARGV==1;
+my $script=shift;
+sub get_path() {
+  my (@path,%seen);
+  for( split(/:/,"/bin/bash:$ENV{PATH}") )
+  {
+    my $stat=stat($_);
+    if(!defined($stat)) {
+      warn("stat:$_:$!");
+      next;
+    };
+    unless( -d $stat ) {
+      warn("$_ is not a dir");
+      next;
+    };
+    my $unid = sprintf("%08x:%08x",$stat->dev,$stat->ino);
+    if( defined($seen{$unid}) ) {
+      warn("$_ seen before");
+      next;
+    };
+    $seen{$unid}=$_;
+    push(@path,$_);
+  };
+  return @path;
+};
+my @script = grep { my $stat=lstat($_); defined($stat) && -f ($stat) } map { "$_/$script" } get_path();
+if( @script > 1 ) {
+  my $i=0;
+  for(@script) {
+    printf("%8d) %s\n", ++$i, $_);
+  };
+  my $r=<STDIN>;
+  @script = @script[$r-1];
+};
+exec("vim", @script);
