@@ -13,5 +13,5 @@ for(@ARGV)
     warn("stat:$_:$!");
     next;
   };
-  printf "%s => %ld %5.2f\n", $_, $st->mtime, ($t-$st->mtime)/86400;
+  printf "%s => %ld %5.2f\n", $_, ($t-$st->mtime), ($t-$st->mtime)/86400;
 };
