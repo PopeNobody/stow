@@ -1,0 +1,59 @@
+#!/usr/bin/perl
+use autodie qw(:all);
+$|++;
+use strict;
+use warnings;
+our ( %pkg,$pkg,$path,$ipkg,%time, $name, $ini);
+
+use Getopt::WonderBra;
+
+sub help() {
+  print "usage: $0 [-zd] [-p pat | -f pat]\n";
+};
+sub version() {
+  print "$0 version 0.1.0\n";
+};
+
+@ARGV = getopt( 'p:f:zd', @ARGV );
+use Data::Dumper;
+our (@fpats , @ppats );
+our ($zipped) = (0,0);
+while(( $_=shift ) ne '--')
+{
+  if( /^-p$/ ) { push(@ppats, shift); }
+  elsif ( /^-f$/ ) { push(@fpats,shift); }
+  elsif ( /^-z$/ ) { $zipped=!$zipped; }
+  else { die "I do not grok: '$_'"; };
+};
+die "no files needed" if @ARGV;
+die "no pats provided" unless @fpats || @ppats;
+$\="\n";
+$,=" ";
+
+sub maybe_print
+{
+  if( grep { $pkg =~ $_ } @ppats ) {
+    1;
+  } elsif ( grep { $path =~ $_ } @fpats ) {
+    1;
+  } else {
+    return 0;
+  };
+  print "$pkg $path";
+  return 1;
+};
+my $stime=time;
+my $match=0;
+my $fn="/var/cache/apt/apt-file-search-slash";
+if( $zipped ) {
+  open(STDIN,"zcat $fn.gz|");
+} else {
+  open(STDIN,"cat $fn|");
+};
+while(<STDIN>){
+  chomp;
+  s{\s+$}{};
+  ($pkg,$path) = m{^([^:]+)\s*:\s*(.*)$};
+  $match += maybe_print;
+};
+close(STDIN);
