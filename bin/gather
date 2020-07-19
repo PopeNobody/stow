@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+# vim: sw=2 ts=2
+use strict;
+use warnings;
+
+my %data;
+my $k;
+my @v;
+
+while(<>) {
+	($k,@v) =split;
+	push(@{$data{$k}}, @v);
+};
+$,=" ";
+$\="\n";
+for $k (sort keys %data){
+	@v=@{$data{$k}};
+	print $k, @v;
+	
+};

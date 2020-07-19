@@ -1,0 +1,10 @@
+#!/bin/bash
+
+findext () 
+{ 
+    find -type f -not -name '.*' -name '*.*' |
+      sed 's,.*\.,,' | sort | uniq -c | sort -n
+}
+export -f findext
+return 0 2>/dev/null
+findext "$@"

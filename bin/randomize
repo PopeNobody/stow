@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+# vim: sw=2 ts=2
+
+use warnings;
+use strict;
+
+my @text=<>;
+while(@text) {
+  print splice(@text,int(rand(@text)),1);
+};

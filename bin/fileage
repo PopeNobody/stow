@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+use File::stat;
+
+my $t=time;
+for(@ARGV)
+{
+  my $st=stat($_);
+  if(!defined($st)){
+    warn("stat:$_:$!");
+    next;
+  };
+  printf "%s => %ld %5.2f\n", $_, $st->mtime, ($t-$st->mtime)/86400;
+};

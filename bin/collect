@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dump;
+
+my %sums;
+while(<>) {
+	chomp;
+	my ( $key, $val ) = m{^(\S+)\s+(.*)$};
+	push(@{$sums{$key}},$val);
+};
+
+
+for( sort keys %sums ) {
+	print "key: $_\n";
+	for( @{$sums{$_}} ) {
+		print "   $_\n";
+	};
+};

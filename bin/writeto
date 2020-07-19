@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if (($#-1)); then
+	echo >&2 "usage: $0 <file>"
+	exit 1
+fi
+exec >$1
+exec cat

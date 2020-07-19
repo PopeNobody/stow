@@ -1,0 +1,15 @@
+#!/bin/bash
+
+lspath() {
+  (($#)) || set PATH
+  for i; do 
+    local -n "r=$i" 
+    local IFS=:
+    set -- $r
+    IFS=$' \t\n'
+    printf '%s\n' "$@"
+  done
+};
+export -f lspath
+return 0 2>/dev/null
+lspath "$@"

@@ -1,0 +1,43 @@
+#!/bin/bash
+#  vim: ts=2 sw=2
+
+getppid () 
+{
+	local args=""
+	local recurse=false
+  local run_ps=false
+  local script=false
+
+  set -- $(getopt -u -o xrp -- "$@")
+  while (($#)) && test "x${1:0:1}" == "x-"; do
+    case $1 in
+      (-r) recurse=true; shift;;
+      (-x) script=true; shift;;
+      (-p) run_ps=true; shift;;
+      (--) shift;;
+    esac
+  done
+
+  (($# == 0)) && set -- $$
+  (($# > 1)) && echo "usage: getppid [-r] [-p] <pid>" >&2 && return 1
+
+  $script && (( $1 == $$ )) && set -- $PPID
+
+	# (($1==1)) && echo 0 && return 0
+
+  if $recurse; then
+    while (($1>1)); do
+      set -- $(getppid "$1") "$@"
+    done
+  else
+    set -- $(ps h -oppid "$@")
+  fi
+  if $run_ps; then
+    ps -oppid,pid,cmd "$@"
+  else
+    printf '%s\n' "$@"
+  fi
+}
+return 0 2>/dev/null
+
+getppid -x "$@"

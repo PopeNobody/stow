@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+
+
+my $hours=8;
+if(@ARGV) {
+	$hours=eval shift;
+};
+if( @ARGV ) {
+	die "usage: $0 <hours as decimal>";
+};
+open(STDOUT,"|aplay") or die;
+my $secs= 60*60*$hours;
+my $mins=int($secs/60);
+$secs=$secs%60;
+printf "Countdown: %d:%d\n", $mins, $secs;;
+while($mins) {
+	print STDERR ": $mins :";
+	if(0) {
+		sleep(60);
+	} else {
+		for(my $i=0;$i<60;$i++){
+			sleep(1);
+			print STDERR ".";
+		};
+	};
+	print STDERR "\n";
+	--$mins;
+};
+$|++;
+if($secs) {
+	print STDERR "extra secs: $secs\n";
+	while( ${secs}-- ) {
+		sleep(1);
+		print STDERR ".";
+	};
+};
+my $done=0;
+my @sounds=(
+	" ZZZZZZZZZZZZZZZZZZZZ",
+	"    ZZZZZZZZZZZZZZZZZ",
+	"        ZZZZZZZZZZZZZ",
+	"            ZZZZZZZZZ",
+	"                ZZZZZ",
+	"                    Z",
+	" Z Z Z Z Z Z Z Z Z Z ",
+	" Z Z Z Z Z Z Z Z Z Z ",
+	" Z Z Z Z Z Z Z Z Z Z ",
+	" Z Z Z Z Z Z Z Z Z Z ",
+);
+my $i=0;
+while( !$done ) {
+	my $buf="$sounds[$i]";
+	print STDERR "$buf\n";
+	for(my $j=0;$j<132;$j++) {
+		print "$buf\n";
+	};
+	if(++$i>=@sounds){
+		$i=0;
+	}
+};

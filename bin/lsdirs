@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+# vim: sw=2 ts=2
+use strict;
+use warnings;
+
+if(@ARGV) {
+	print "$_\n" for grep { -d } @ARGV;
+	exit(0);
+};
+warn "reading from STDIN\n" if -t STDIN;
+$\="\n";
+while(<>){
+	s/^\s+//;
+	s/\s+$//;
+	print if -d;
+};
+

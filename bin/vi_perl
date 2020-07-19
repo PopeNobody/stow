@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use autodie qw(:all);
+use autodie qw(fork);
+$|++;
+
+BEGIN {
+  $\="\n";
+  #  print STDERR "$$ started @ARGV";
+};
+END {
+  #  print STDERR "$$ ended";
+};
+open(STDIN,"</dev/null");
+use IO::Pipe;
+my $out = new IO::Pipe;
+my $err = new IO::Pipe;
+
+if( !fork ) {
+  open(STDOUT,">&".fileno($out->writer)) or die;
+  open(STDERR,">&".fileno($err->writer)) or die;
+  close($out);
+  close($err);
+  exec "perl", @ARGV;
+  die "failed!";
+};
+use IO::Select;
+my $sel = new IO::Select;
+my $out_buf="";
+my $err_buf="";
+$sel->add( [ $out->reader(), \$out_buf, 0 ] );
+$sel->add( [ $err->reader(), \$err_buf, 1 ] );
+while($sel->handles){
+  my @can=$sel->can_read;
+  for(@can)
+  {
+    my ($pipe,$ref,$pre);
+    ( $pipe, $ref, $pre ) = @$_;
+    local (*_)=$ref;
+    my $res=sysread($pipe,$_,1,length);
+    if(!defined($res)) {
+      die "sysread:$!";
+    } elsif ( !$res ) {
+      $sel->remove($pipe);
+      close($pipe) or die "close:$!";
+      $_="$_\n" if length($$ref);
+    };
+    next unless s{\n$}{};
+    if($pre && s{ at (\S+) line (\d+)\.*}{})
+    {
+      my ($file,$line) = ($1,$2);
+      s{^\t(.*)called\s*$}{called from $1};
+      print "$file:$line:\tmsg:$_";
+    } else {
+      print;
+    };
+    $_="";
+  };
+};

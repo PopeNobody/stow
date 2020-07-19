@@ -1,0 +1,11 @@
+#!/bin/bash
+
+report() {
+	"$@";
+	x=$?;
+	echo $( printf '%q ' "$@" returned $x ) >&2;
+	return $x
+}
+export report
+return 0 2>/dev/null
+report "$@"
