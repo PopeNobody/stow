@@ -1,0 +1,23 @@
+#!/bin/bash
+
+SCRIPT="$1"
+
+if (($#)); then
+	set -- $(type -ap "$1")
+fi
+while (($#>1)); do
+	echo "$@"
+	select i in "$@"; do
+		set -- $i
+		break;
+	done;
+	echo "$@"
+done
+if ((!$#)); then
+	echo "usage: pvi <command_name>" >&2
+	exit 1;
+fi
+
+exec vi "$1"
+
+
