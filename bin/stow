@@ -463,20 +463,8 @@ use Scalar::Util qw(reftype);
 use Stow;
 use Stow::Util qw(parent error);
 
-for ( getcwd() ) {
-  local $_="$_";
-  s{/+$}{};
-  last if( m{/stow$} );
-  my $pkg;
-  ($_,$pkg) = m{^(.*)/(.*)$};
-  die "not in stow/* or stow" unless m{/stow$};
-  @ARGV=($pkg) unless @ARGV;
-  chdir($_) or die "chdir:$_:$!";
-};
-
 my $ProgramName = $0;
 $ProgramName =~ s{.*/}{};
-
 
 main() unless caller();
 
