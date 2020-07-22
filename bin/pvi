@@ -3,42 +3,81 @@
 my $debug=1;
 use Data::Dumper;
 use File::stat;
+use Getopt::WonderBra;
 use strict;
 use warnings; 
+use autodie qw(:all);
 use Fcntl ':mode';
+use Cwd qw( getcwd abs_path );
 
 $|++;
 
-die "usage: $0 [script]" unless @ARGV==1;
-my $script=shift;
+sub help {
+  print qq{
+  usage: $0 [-s] [script]
+
+  $0 makes it easy to modify scripts on your path.
+
+  You type, for example, pvi pvi, and if pvi is in your path, pvi
+  will find the script, resolve symbolic linkes ( I use stow(1) ) and
+  fire up your editor.
+
+  There is only one flag so far, -s, which edits your file using the vim
+  sudo scheme .. which reads and writes the file as a superuser, but still
+  runs the editor as you.
+  };
+};
+sub version() {
+  print qq{ $0 version 0.1.0 };
+};
+my $super=0;
+
+@ARGV = getopt("s", @ARGV);
+while(($_=shift) ne '--')
+{
+  if( qr{^-s$} ) {
+    $super=1;
+  } else {
+    die "I don't grok '$_'\n";
+  };
+};
+sub get_path();
+sub main(@);
+exit(main(@ARGV));
+##
+## subs 
+##
+sub main(@) {
+  help("script name required") unless @_;
+  my @script;
+  for my $script ( @_ ) {
+    local @_;
+    for(get_path) {
+      print STDERR "\n$_\n";
+      my $full=$_=join("/",$_,$script);
+      next unless -e;
+      my $abs=$_=abs_path($_);
+      push(@_,$_) if -f;
+    };
+    warn "no script called $script on path" unless @_;
+    (@script,@_) = ( @script,@_);
+  };
+  die "no scripts found" unless @script;
+  @script = map { "sudo:$_" } @script if $super;
+  exec("vim", @script);
+};
+
 sub get_path() {
   my (@path,%seen);
   for( split(/:/,"/bin/bash:$ENV{PATH}") )
   {
     my $stat=stat($_);
-    if(!defined($stat)) {
-      warn("stat:$_:$!");
-      next;
-    };
-    unless( -d $stat ) {
-      warn("$_ is not a dir");
-      next;
-    };
+    next unless defined $stat;
+    next unless( -d $stat );
     my $unid = sprintf("%08x:%08x",$stat->dev,$stat->ino);
-    if( defined($seen{$unid}) ) {
-      warn("$_ seen before");
-      next;
-    };
+    next if defined $seen{$unid};
     $seen{$unid}=$_;
     push(@path,$_);
   };
   return @path;
 };
-my @script;
-for(get_path) {
-  $_=join("/",$_,$script);
-  next unless -f;
-  push(@script,$_);
-};
-die "no script called $script on path" unless @script;
-exec("vim", @script);
