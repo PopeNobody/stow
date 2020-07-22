@@ -34,13 +34,11 @@ sub get_path() {
   };
   return @path;
 };
-my @script = grep { my $stat=lstat($_); defined($stat) && -f ($stat) } map { "$_/$script" } get_path();
-if( @script > 1 ) {
-  my $i=0;
-  for(@script) {
-    printf("%8d) %s\n", ++$i, $_);
-  };
-  my $r=<STDIN>;
-  @script = @script[$r-1];
+my @script;
+for(get_path) {
+  $_=join("/",$_,$script);
+  next unless -f;
+  push(@script,$_);
 };
+die "no script called $script on path" unless @script;
 exec("vim", @script);
