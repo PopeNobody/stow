@@ -3,9 +3,9 @@ use autodie qw(:all);
 $|++;
 use strict;
 use warnings;
-our ( %pkg,$pkg,$path,$ipkg,%time, $name, $ini);
 
 use Getopt::WonderBra;
+use Data::Dumper;
 
 sub help() {
   print "usage: $0 [-zd] [-p pat | -f pat]\n";
@@ -14,46 +14,136 @@ sub version() {
   print "$0 version 0.1.0\n";
 };
 
-@ARGV = getopt( 'p:f:zd', @ARGV );
-use Data::Dumper;
-our (@fpats , @ppats );
-our ($zipped) = (0,0);
-while(( $_=shift ) ne '--')
-{
-  if( /^-p$/ ) { push(@ppats, shift); }
-  elsif ( /^-f$/ ) { push(@fpats,shift); }
-  elsif ( /^-z$/ ) { $zipped=!$zipped; }
-  else { die "I do not grok: '$_'"; };
+@ARGV = getopt( 'pflzdD', @ARGV );
+our(@names);
+our(@eval);
+BEGIN {
+  print STDOUT "STDOUT\n";
+  print STDERR "STDERR\n";
 };
-die "no files needed" if @ARGV;
-die "no pats provided" unless @fpats || @ppats;
-$\="\n";
-$,=" ";
-
-sub maybe_print
-{
-  if( grep { $pkg =~ $_ } @ppats ) {
-    1;
-  } elsif ( grep { $path =~ $_ } @fpats ) {
-    1;
-  } else {
-    return 0;
+BEGIN {
+  eval {
+    package main;
+    use vars qw( %keys );
+    %keys = map { $_,1 } keys %main::;
+    print scalar( keys %keys ), "\n";
   };
-  print "$pkg $path";
-  return 1;
-};
-my $stime=time;
-my $match=0;
-my $fn="/var/cache/apt/apt-file-search-slash";
-if( $zipped ) {
-  open(STDIN,"zcat $fn.gz|");
-} else {
-  open(STDIN,"cat $fn|");
-};
-while(<STDIN>){
-  chomp;
-  s{\s+$}{};
-  ($pkg,$path) = m{^([^:]+)\s*:\s*(.*)$};
-  $match += maybe_print;
-};
-close(STDIN);
+}
+BEGIN { $\="\n"; $,=" "; $"=" "; };
+BEGIN 
+{
+  @names = qw( $zipped $debug $dump @pats $type %args );
+  push(@eval, "package main;");
+  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
+  push(@eval, 'my $i=0;');
+  push(@eval, 'print ++$i, "\n";');
+  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
+  push(@eval, "\$DB::single=1;");
+  push(@eval, "\$DB::single=1;");
+  my $names=join(", ", @names);
+  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
+  push(@eval, join(" ","our( $names );"));
+  push(@eval, 'print ++$i, "\n";');
+  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
+  for( grep(m{^[\$]}, @names) ) {
+    push(@eval, "$_=q($_);");
+    push(@eval, "\$args{$_}=\\$_;");
+  };
+#      push(@eval, 'print ++$i, "\n";');
+#      for( grep(s{^[\%]}{}, @names) ) {
+#        my $line=join("",'%',$_,'=( self=>',"'",$_,"'",');');
+#        push(@eval, $line);
+#      };
+#      push(@eval, 'print ++$i, "\n";');
+#      for( grep(s{^[\@]}{}, @names) ) {
+#        my $line=join('',"\@$_ = qw($_);");
+#        push(@eval, $line);
+#      };
+#      push(@eval, 'print ++$i, "\n";');
+#      {
+#        local $"=", ";
+#        push(@eval, "print Dumper( \\\%args );");
+#        #push(@eval, "print Data::Dumper->Dump( [ \@data ], [ \@names, qw(%args) ] );");
+#      };
+  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
+  #  push(@eval, "print Dumper( \\\%args );");
+  $_=" $_" for @eval;
+  unshift(@eval, "{");
+  push(@eval,"}");
+  printf("%5d: %s\n", $_, $eval[$_-1]) for 1 .. @eval;
+  my $eval = join("\n",@eval);
+  eval $eval;
+  print "$@" if "$@";
+}; 
+
+#    {
+#      package main;
+#      print Dumper( \%args );
+#    };
+#    
+#    ($zipped, $debug, $dump, @pats, $type) = map { \$data{$_} } ;
+#    
+#    sub set_type($)
+#    {
+#      $args{type} = $_[0] unless defined $args{type};
+#      die ">1 type supplied" unless $args{type} eq $_[0];
+#    };
+#    my $hands={
+#      '-p' => sub{ set_type('p'); },
+#      '-f' => sub{ set_type('f'); },
+#      '-l' => sub{ set_type('l'); },
+#      '-z' => sub{ $_=!$_ for $args{zipped}; },
+#      '-d' => sub{ $_++ for $args{debug}; },
+#      '-D' => sub{ $_=!$_ for $args{dump}; },
+#    };
+#    while(( $_=shift ) ne '--')
+#    {
+#      my $hand=$hands->{$_};
+#      $hand->($_, @ARGV);
+#    };
+#    $args{pats}=[@ARGV];
+#    
+#    
+#    while(( $_=shift ) ne '--')
+#    {
+#      if( /^-p$/ ) { push(@ppats, shift); }
+#      elsif ( /^-f$/ ) { push(@fpats,shift); }
+#      elsif ( /^-l$/ ) { push(@lpats,shift); }
+#      elsif ( /^-z$/ ) { $zipped=!$zipped; }
+#      else { die "I do not grok: '$_'"; };
+#    };
+#    push(@lpats,splice(@ARGV));
+#    die "no pats provided" unless @fpats || @ppats || @lpats;
+#    $\="\n";
+#    $,=" ";
+#    our(%done);
+#    sub maybe_print
+#    {
+#      if( grep { $line =~ $_ } @lpats ) {
+#        1;
+#      } elsif( grep { $pkg =~ $_ } @ppats ) {
+#        $done{$pkg}=1;
+#      } elsif ( grep { $path =~ $_ } @fpats ) {
+#        1;
+#      } else {
+#        return 0;
+#      };
+#      print "$pkg $path";
+#      return 1;
+#    };
+#    my $stime=time;
+#    my $match=0;
+#    my $fn="/var/cache/apt/apt-file-search-slash";
+#    if( $zipped ) {
+#      open(STDIN,"zcat $fn.gz|");
+#    } else {
+#      open(STDIN,"cat $fn|");
+#    };
+#    while(<STDIN>){
+#      chomp;
+#      s{\s+$}{};
+#      ($line,$pkg,$path) = ($_, m{^([^:]+)\s*:\s*(.*)$});
+#      next if defined $done{$pkg};
+#      $match += maybe_print($_);
+#    };
+#    close(STDIN);
