@@ -1,0 +1,93 @@
+#!/usr/bin/perl
+ 
+$|++;
+use strict;
+use warnings;
+
+my $dry_run=1;
+my $debug=0;
+my $link=1;
+my $replace=1;
+open(STDERR,">&STDOUT") if $dry_run;
+{
+  my @temp=splice(@ARGV);
+  while(@temp)
+  {
+    $_=shift @temp;
+    if (/^-y$/){
+      $dry_run=0;
+    } elsif ( /^-d/ ) {
+      $debug=1;
+    } else {
+      push(@ARGV,$_);
+    };
+  };
+};
+$debug=1 if $dry_run;
+sub debug {
+	print STDERR @_, "\n" if $debug;
+};
+sub xrename($$) {
+    my $from=shift or die;
+    my $to=shift or die;
+    die "too many args" if @_;
+    if($dry_run) {
+        debug("will not rename ($from) to ($to)");
+        return $from;
+    }else{
+				rename($from,$to) or die "rename:$from,$to:$!";
+        return $to;
+    };
+};
+sub xsymlink($$) {
+  my $path=shift;
+  my $text=shift;
+  die "too many args" if @_;
+  if($dry_run) {
+    debug("not symlinking($path,$path)");
+  } else {
+    symlink($path,$text) or die "symlink:$path,$text:$!";
+  };
+};
+my @dir;
+push(@dir, @ARGV || $ENV{PWD} );
+sub fix_name($) {
+	for(shift) {
+		s/[ ()]/_/g;
+		s/_*-_*/-/g;
+    s/__+/_/g;
+    s/_$//g;
+    return $_;
+	};
+  die "no arg for fix_name!";
+};
+my @todo;
+$\="\n";
+while(@dir) {
+  my $dir=shift @dir;
+  debug("dir: $dir\n");
+  my @dents=do{
+    opendir(my $dh, $dir) || die "open:$dir:$!";
+    local @_=readdir($dh) or die "readdir:$dir:$!";
+    closedir($dh) or die "closedir:$dh:$!";
+    @_ = grep { !m{^\.\.?$} } @_;
+    @_;
+  };
+  for(@dents) {
+    my $orig=$_;
+    my $dest=fix_name($_);
+    my $forig="$dir/$orig";
+    my $fdest="$dir/$dest";
+    if( -d "$forig" ) {
+      push(@dir,"$forig");
+    };
+    next if $orig eq $dest;
+    next if -l $forig && readlink($forig) eq $dest;
+    if( -e $dest ) {
+      warn "will not clobber $dest with $orig\n";
+      next;
+    };
+    xrename($forig,$fdest);
+    xsymlink($dest,$forig);
+  };
+};

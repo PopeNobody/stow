@@ -1,44 +1,23 @@
-#!/usr/bin/perl
+#!/bin/bash
 
-my $debug=1;
-use Data::Dumper;
-use File::stat;
-use strict;
-use warnings; 
-use Fcntl ':mode';
+SCRIPT="$1"
 
-$|++;
+if (($#)); then
+	set -- $(type -ap "$1")
+fi
+while (($#>1)); do
+	echo "$@"
+	select i in "$@"; do
+		set -- $i
+		break;
+	done;
+	echo "$@"
+done
+if ((!$#)); then
+	echo "usage: pvi <command_name>" >&2
+	exit 1;
+fi
 
-die "usage: $0 [script]" unless @ARGV==1;
-my $script=shift;
-sub get_path() {
-  my (@path,%seen);
-  for( split(/:/,"/bin/bash:$ENV{PATH}") )
-  {
-    my $stat=stat($_);
-    if(!defined($stat)) {
-      warn("stat:$_:$!");
-      next;
-    };
-    unless( -d $stat ) {
-      warn("$_ is not a dir");
-      next;
-    };
-    my $unid = sprintf("%08x:%08x",$stat->dev,$stat->ino);
-    if( defined($seen{$unid}) ) {
-      warn("$_ seen before");
-      next;
-    };
-    $seen{$unid}=$_;
-    push(@path,$_);
-  };
-  return @path;
-};
-my @script;
-for(get_path) {
-  $_=join("/",$_,$script);
-  next unless -f;
-  push(@script,$_);
-};
-die "no script called $script on path" unless @script;
-exec("vim", @script);
+exec vi "$1"
+
+
