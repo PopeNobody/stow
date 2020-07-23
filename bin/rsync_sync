@@ -1,0 +1,7 @@
+rsync_sync () 
+{
+  while(($#)); do
+    rsync -Parv $1 :$PWD/. . && rsync -Parv . $1 :$PWD/.
+    shift;
+  done
+}
