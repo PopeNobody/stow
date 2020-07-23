@@ -1,6 +1,5 @@
 #!/bin/bash
 # vim: ts=2 sw=2 ft=sh
 
-exec </dev/tty
-exec >/dev/tty 2>&1
-exec "$@"
+set -xv
+{ printf '%q\n' "$@"; "$@"; } </dev/tty >&0 2>&0
