@@ -3,13 +3,32 @@
 my $debug=1;
 use Data::Dumper;
 use File::stat;
+use Getopt::WonderBra;
 use strict;
 use warnings; 
 use Fcntl ':mode';
 
 $|++;
 
+sub help {
+  print "usage: $0 [-c cmd] script";
+}
+sub version {
+  print "pvi version 0.5.0";
+};
+my ($defcmd, $cmd) = qw(vim);
 die "usage: $0 [script]" unless @ARGV==1;
+@ARGV = getopt("c:",@ARGV);
+while( ($_=shift) ne '--' )
+{
+  if( m{^-c$} ) {
+    die ">1 command specified" if defined $cmd;
+    $cmd=shift;
+  } else {
+    die "I don't grok '$_'";
+  };
+};
+die "no command to search for!";
 my $script=shift;
 sub get_path() {
   my (@path,%seen);
@@ -41,6 +60,6 @@ if( @script > 1 ) {
     printf("%8d) %s\n", ++$i, $_);
   };
   my $r=<STDIN>;
-  @script = @script[$r-1];
+  @script = $script[$r-1];
 };
-exec("vim", @script);
+exec($cmd, @script);
