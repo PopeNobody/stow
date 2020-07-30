@@ -1,6 +1,0 @@
-#!/bin/bash
-
-set -e
-cd
-cd .ssh
-exec /usr/bin/ssh-add id_git id_nn_desktop id_rsa id_self_rsa lfs_rsa
