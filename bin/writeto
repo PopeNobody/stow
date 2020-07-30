@@ -4,4 +4,4 @@ if (($#-1)); then
 	echo >&2 "usage: $0 <file>"
 	exit 1
 fi
-exec dd of="$1"
+exec dd of="$1" bs=1M
