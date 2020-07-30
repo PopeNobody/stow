@@ -1,122 +1,105 @@
 #!/usr/bin/perl
-use autodie qw(:all);
 $|++;
+use autodie qw(:all);
 use strict;
 use warnings;
-
-use Getopt::WonderBra;
 use Data::Dumper;
+BEGIN {
+  sub qquote {
+    goto &Data::Dumper::qquote;
+  };
+};
+our($debug);
 
 sub help() {
   print "usage: $0 [-zd] [-p pat | -f pat]\n";
 };
-sub version() {
+sub version {
   print "$0 version 0.1.0\n";
 };
+use Getopt::WonderBra;
+sub handle_arg($);
+sub mainloop();
 
-@ARGV = getopt( 'pflzdD', @ARGV );
-our(@names);
-our(@eval);
 BEGIN {
   print STDOUT "STDOUT\n";
   print STDERR "STDERR\n";
 };
 BEGIN {
-  eval {
-    package main;
-    use vars qw( %keys );
-    %keys = map { $_,1 } keys %main::;
-    print scalar( keys %keys ), "\n";
-  };
-}
-BEGIN { $\="\n"; $,=" "; $"=" "; };
-BEGIN 
-{
-  @names = qw( $zipped $debug $dump @pats $type %args );
-  push(@eval, "package main;");
-  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
-  push(@eval, 'my $i=0;');
-  push(@eval, 'print ++$i, "\n";');
-  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
-  push(@eval, "\$DB::single=1;");
-  push(@eval, "\$DB::single=1;");
-  my $names=join(", ", @names);
-  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
-  push(@eval, join(" ","our( $names );"));
-  push(@eval, 'print ++$i, "\n";');
-  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
-  for( grep(m{^[\$]}, @names) ) {
-    push(@eval, "$_=q($_);");
-    push(@eval, "\$args{$_}=\\$_;");
-  };
-#      push(@eval, 'print ++$i, "\n";');
-#      for( grep(s{^[\%]}{}, @names) ) {
-#        my $line=join("",'%',$_,'=( self=>',"'",$_,"'",');');
-#        push(@eval, $line);
-#      };
-#      push(@eval, 'print ++$i, "\n";');
-#      for( grep(s{^[\@]}{}, @names) ) {
-#        my $line=join('',"\@$_ = qw($_);");
-#        push(@eval, $line);
-#      };
-#      push(@eval, 'print ++$i, "\n";');
-#      {
-#        local $"=", ";
-#        push(@eval, "print Dumper( \\\%args );");
-#        #push(@eval, "print Data::Dumper->Dump( [ \@data ], [ \@names, qw(%args) ] );");
-#      };
-  push(@eval,join("","print STDERR q(", join(':',__FILE__,__LINE__,"hi!"), ");"));
-  #  push(@eval, "print Dumper( \\\%args );");
-  $_=" $_" for @eval;
-  unshift(@eval, "{");
-  push(@eval,"}");
-  printf("%5d: %s\n", $_, $eval[$_-1]) for 1 .. @eval;
-  my $eval = join("\n",@eval);
-  eval $eval;
-  print "$@" if "$@";
-}; 
+  $\="\n"; $,=" "; $"=" ";
+  $Data::Dumper::Useqq=1;
+  $Data::Dumper::Deparse=1;
+  $Data::Dumper::Sortkeys=1;
+};
+use vars qw( %args );
+$_=undef for @args{ qw( pat type ) };
+$_=0     for @args{ qw( zipped debug dump ) };
 
-#    {
-#      package main;
-#      print Dumper( \%args );
-#    };
-#    
-#    ($zipped, $debug, $dump, @pats, $type) = map { \$data{$_} } ;
-#    
-#    sub set_type($)
-#    {
-#      $args{type} = $_[0] unless defined $args{type};
-#      die ">1 type supplied" unless $args{type} eq $_[0];
-#    };
-#    my $hands={
-#      '-p' => sub{ set_type('p'); },
-#      '-f' => sub{ set_type('f'); },
-#      '-l' => sub{ set_type('l'); },
-#      '-z' => sub{ $_=!$_ for $args{zipped}; },
-#      '-d' => sub{ $_++ for $args{debug}; },
-#      '-D' => sub{ $_=!$_ for $args{dump}; },
-#    };
-#    while(( $_=shift ) ne '--')
-#    {
-#      my $hand=$hands->{$_};
-#      $hand->($_, @ARGV);
-#    };
-#    $args{pats}=[@ARGV];
-#    
-#    
-#    while(( $_=shift ) ne '--')
-#    {
-#      if( /^-p$/ ) { push(@ppats, shift); }
-#      elsif ( /^-f$/ ) { push(@fpats,shift); }
-#      elsif ( /^-l$/ ) { push(@lpats,shift); }
-#      elsif ( /^-z$/ ) { $zipped=!$zipped; }
-#      else { die "I do not grok: '$_'"; };
-#    };
-#    push(@lpats,splice(@ARGV));
-#    die "no pats provided" unless @fpats || @ppats || @lpats;
-#    $\="\n";
-#    $,=" ";
-#    our(%done);
+@ARGV=getopt( 'wpflzdD', @ARGV );
+handle_arg(shift(@ARGV)) while(@ARGV);
+die "no pats, and did not die!" unless defined($args{pat});
+for($args{type}) {
+  $_="file" unless defined;
+};
+mainloop();
+exit(0);
+
+
+sub mainloop()
+{
+  my $fn="/var/cache/apt/apt-file-search-slash";
+  if($args{zipped}) {
+    $fn = "zcat $fn.gz|";
+  } else {
+    $fn = "<$fn";
+  };
+  my $qr=$args{pat};
+  $qr=qr{$qr};
+  open(STDIN,"$fn");
+  while(<STDIN>){
+    chomp;
+    my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+    print "type=$args{type}";
+    if( $args{type} eq "package" ) {
+      print if $pkg =~ /$qr/;
+    } elsif ( $args{type} eq "file" ) {
+      print if $file =~ /$qr/;
+    } else {
+      print if $_ =~ /$qr/;
+    };
+  };
+  close(STDIN) or die "close:$fn:$!";
+  open(STDIN,"</dev/null");
+};
+
+sub set_type($) {
+  local *_=\$args{type};
+  die "only one type alowed" if defined;
+  $_=shift;
+};
+sub handle_arg($)
+{
+  print STDERR "handle_arg(@_,@ARGV)\n";
+  my $hands={
+    '-p' => sub{ set_type('package'); },
+    '-f' => sub{ set_type('file'); },
+    '-l' => sub{ set_type('line'); },
+    '-w' => sub{ $_=!$_ for $args{whole}; },
+    '-z' => sub{ $_=!$_ for $args{zipped}; },
+    '-d' => sub{ $_++ for $args{debug}; },
+    '-D' => sub{ $_=!$_ for $args{dump}; },
+    '--' => sub{
+      die "I need patterns!" unless @ARGV;
+      $args{pat}=shift @ARGV;
+      die "Too many args!" if @ARGV;
+    },
+  };
+  for(@_) {
+    my $hand=$hands->{$_};
+    die "I do not grok '$_'" unless defined $hand;
+    $hand->($_,@ARGV);
+  };
+};
 #    sub maybe_print
 #    {
 #      if( grep { $line =~ $_ } @lpats ) {
@@ -133,17 +116,4 @@ BEGIN
 #    };
 #    my $stime=time;
 #    my $match=0;
-#    my $fn="/var/cache/apt/apt-file-search-slash";
-#    if( $zipped ) {
-#      open(STDIN,"zcat $fn.gz|");
-#    } else {
-#      open(STDIN,"cat $fn|");
-#    };
-#    while(<STDIN>){
-#      chomp;
-#      s{\s+$}{};
-#      ($line,$pkg,$path) = ($_, m{^([^:]+)\s*:\s*(.*)$});
-#      next if defined $done{$pkg};
-#      $match += maybe_print($_);
-#    };
 #    close(STDIN);
