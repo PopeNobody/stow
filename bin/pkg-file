@@ -4,6 +4,11 @@ use autodie qw(:all);
 use strict;
 use warnings;
 use Data::Dumper;
+BEGIN {
+  sub qquote {
+    goto &Data::Dumper::qquote;
+  };
+};
 our($debug);
 
 sub help() {
@@ -31,55 +36,26 @@ $_=undef for @args{ qw( pat type ) };
 $_=0     for @args{ qw( zipped debug dump ) };
 
 @ARGV=getopt( 'wpflzdD', @ARGV );
-print STDERR Dumper( \@ARGV );
 handle_arg(shift(@ARGV)) while(@ARGV);
 die "no pats, and did not die!" unless defined($args{pat});
-die "no type supplied!" unless defined($args{type});
-print STDERR Dumper( \%args );
+$args{type} ||= "file";
 mainloop();
 exit(0);
 
 {
-  sub matcher($)
+  sub mainloop()
   {
-    for(@_) {
-      my ($qr);
-      if(/^package/)
-      {
-        if($args{whole}) {
-          $qr= qr{^$args{pat}$};
-        } else { 
-          $qr=qr{$args{pat}};
-        };
-      };
-      print STDERR Dumper($qr);
-      my %seen;
-      return sub {
-        use Carp qw(croak);
-        croak "expected one arg, got(@_)" unless 1==@_;
-        my ($pkg) = m{^([^:]+):};
-        die "bad line!" unless defined $pkg;
-        return () if $seen{$pkg}++;
-        return grep { m{$qr} } $pkg;
-      };
-    };
-  };
-  sub mainloop() {
     my $fn="/var/cache/apt/apt-file-search-slash";
     if($args{zipped}) {
       $fn = "zcat $fn.gz|";
     } else {
       $fn = "<$fn";
     };
-    my $match = matcher($args{type});
+    my $qr=$args{pat};
+    $qr=join('','^',$qr,'$') if $args{whole};
     open(STDIN,"$fn");
-    while(<STDIN>){
-      chomp;
-      #($line,$pkg,$path) = ($_, m{^([^:]+)\s*:\s*(.*)$});
-      for( $match->($_) ) {
-        $args{hits}++;
-        print $_;
-      };
+    for( grep { m{$qr} } <STDIN> ) {
+      print;
     };
     open(STDIN,"</dev/null");
   };

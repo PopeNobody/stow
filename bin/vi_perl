@@ -6,32 +6,28 @@ use autodie qw(:all);
 use autodie qw(fork);
 use File::stat;
 $|++;
+$\="\n";
 
-BEGIN {
-  $\="\n";
-  #  print STDERR "$$ started @ARGV";
+if(!@ARGV) {
+  die "usage: $0 [script and args ...] ...\n...";
 };
-END {
-  #  print STDERR "$$ ended";
+my $script=shift;
+if( $script ne "-e" ) {  
+  if( ! -f $script ) {
+    my @path;
+    @path = split(/:/, $ENV{PATH});
+    $_=join('/',$_,$script) for @path;
+    @path = grep { -e } @path;
+    use Data::Dumper;
+    $script=shift @path;
+  };
 };
+die "no script found" unless defined $script;
+
 open(STDIN,"</dev/null");
 use IO::Pipe;
 my $out = new IO::Pipe;
 my $err = new IO::Pipe;
-@ARGV = ( "-e", '$\="\n"; print for glob("*");' ) unless @ARGV;
-my $script=shift;
-if( $script ne "-e" ) {  
-  if( ! -f $script ) {
-    use Data::Dumper;
-
-    for( map { join('/',$_,$script) } split(/:/, $ENV{PATH})) {
-      print Dumper( $_, lstat($_) );
-      next unless -e _;
-      $script=$_;
-    };
-  };
-
-};
 
 if( !fork ) {
   open(STDOUT,">&".fileno($out->writer)) or die;
