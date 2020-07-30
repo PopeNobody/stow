@@ -38,28 +38,40 @@ $_=0     for @args{ qw( zipped debug dump ) };
 @ARGV=getopt( 'wpflzdD', @ARGV );
 handle_arg(shift(@ARGV)) while(@ARGV);
 die "no pats, and did not die!" unless defined($args{pat});
-$args{type} ||= "file";
+for($args{type}) {
+  $_="file" unless defined;
+};
 mainloop();
 exit(0);
 
+
+sub mainloop()
 {
-  sub mainloop()
-  {
-    my $fn="/var/cache/apt/apt-file-search-slash";
-    if($args{zipped}) {
-      $fn = "zcat $fn.gz|";
-    } else {
-      $fn = "<$fn";
-    };
-    my $qr=$args{pat};
-    $qr=join('','^',$qr,'$') if $args{whole};
-    open(STDIN,"$fn");
-    for( grep { m{$qr} } <STDIN> ) {
-      print;
-    };
-    open(STDIN,"</dev/null");
+  my $fn="/var/cache/apt/apt-file-search-slash";
+  if($args{zipped}) {
+    $fn = "zcat $fn.gz|";
+  } else {
+    $fn = "<$fn";
   };
+  my $qr=$args{pat};
+  $qr=qr{$qr};
+  open(STDIN,"$fn");
+  while(<STDIN>){
+    chomp;
+    my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+    print "type=$args{type}";
+    if( $args{type} eq "package" ) {
+      print if $pkg =~ /$qr/;
+    } elsif ( $args{type} eq "file" ) {
+      print if $file =~ /$qr/;
+    } else {
+      print if $_ =~ /$qr/;
+    };
+  };
+  close(STDIN) or die "close:$fn:$!";
+  open(STDIN,"</dev/null");
 };
+
 sub set_type($) {
   local *_=\$args{type};
   die "only one type alowed" if defined;
