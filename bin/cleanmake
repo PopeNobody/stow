@@ -1,8 +1,4 @@
 #!/bin/bash
 
-set -- /usr/bin/make "$@"
-for i in TERM HOME PATH; do
-  set -- "$i=${!i}" "$@"
-done
-set -- "/usr/bin/env" -i "$@"
-exec "$@"
+env=( TERM="$TERM" HOME="$HOME" PATH="$PATH" )
+exec /usr/bin/env -i "${env}" /usr/bin/make "$@"
