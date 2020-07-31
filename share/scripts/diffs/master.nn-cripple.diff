@@ -1,0 +1,27 @@
+diff --git a/bin/fake_edit b/bin/fake_edit
+index 0db1160..e5a1d76 100755
+--- a/bin/fake_edit
++++ b/bin/fake_edit
+@@ -3,5 +3,4 @@
+ if ! tty -s <&1; then
+   exec >/dev/null
+ fi
+-test -z "$1" && echo>&2 "cannot open '$1'" && exit 1;
+ echo "No log message" | tee "$1" 
+diff --git a/bin/rsync_sync b/bin/rsync_sync
+old mode 100755
+new mode 100644
+index 58915f2..028363c
+--- a/bin/rsync_sync
++++ b/bin/rsync_sync
+@@ -1,7 +1,6 @@
+ rsync_sync () 
+ {
+   while(($#)); do
+-    ssh $1 mkdir -p "$PWD"
+     rsync -Parv $1 :$PWD/. . && rsync -Parv . $1 :$PWD/.
+     shift;
+   done
+diff --git a/bin/tty_say b/bin/tty_say
+old mode 100644
+new mode 100755
