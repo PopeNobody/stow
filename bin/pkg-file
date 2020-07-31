@@ -71,7 +71,7 @@ exit(0);
     };
     $qr=qr{$qr};
     open(STDIN,"$fn");
-    
+
     if( $args{type} eq 'file' ) {
       file_match;
     } elsif ( $args{type} eq 'package' ) {
@@ -86,50 +86,33 @@ exit(0);
     die "$@" if "$@";
     open(STDIN,"</dev/null");
   };
-};
 
-sub set_type($) {
-  local *_=\$args{type};
-  die "only one type alowed" if defined;
-  $_=shift;
-};
-sub handle_arg($)
-{
-  print STDERR "handle_arg(@_,@ARGV)\n";
-  my $hands={
-    '-p' => sub{ set_type('package'); },
-    '-f' => sub{ set_type('file'); },
-    '-l' => sub{ set_type('line'); },
-    '-w' => sub{ $_=!$_ for $args{whole}; },
-    '-z' => sub{ $_=!$_ for $args{zipped}; },
-    '-d' => sub{ $_++ for $args{debug}; },
-    '-D' => sub{ $_=!$_ for $args{dump}; },
-    '--' => sub{
-      die "I need patterns!" unless @ARGV;
-      $args{pat}=shift @ARGV;
-      die "Too many args!" if @ARGV;
-    },
+  sub set_type($) {
+    local *_=\$args{type};
+    die "only one type alowed" if defined;
+    $_=shift;
   };
-  for(@_) {
-    my $hand=$hands->{$_};
-    die "I do not grok '$_'" unless defined $hand;
-    $hand->($_,@ARGV);
+  sub handle_arg($)
+  {
+    print STDERR "handle_arg(@_,@ARGV)\n";
+    my $hands={
+      '-p' => sub{ set_type('package'); },
+      '-f' => sub{ set_type('file'); },
+      '-l' => sub{ set_type('line'); },
+      '-w' => sub{ $_=!$_ for $args{whole}; },
+      '-z' => sub{ $_=!$_ for $args{zipped}; },
+      '-d' => sub{ $_++ for $args{debug}; },
+      '-D' => sub{ $_=!$_ for $args{dump}; },
+      '--' => sub{
+        die "I need patterns!" unless @ARGV;
+        $args{pat}=shift @ARGV;
+        die "Too many args!" if @ARGV;
+      },
+    };
+    for(@_) {
+      my $hand=$hands->{$_};
+      die "I do not grok '$_'" unless defined $hand;
+      $hand->($_,@ARGV);
+    };
   };
 };
-#    sub maybe_print
-#    {
-#      if( grep { $line =~ $_ } @lpats ) {
-#        1;
-#      } elsif( grep { $pkg =~ $_ } @ppats ) {
-#        $done{$pkg}=1;
-#      } elsif ( grep { $path =~ $_ } @fpats ) {
-#        1;
-#      } else {
-#        return 0;
-#      };
-#      print "$pkg $path";
-#      return 1;
-#    };
-#    my $stime=time;
-#    my $match=0;
-#    close(STDIN);
