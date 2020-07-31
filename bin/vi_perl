@@ -3,70 +3,199 @@
 use strict;
 use warnings;
 use autodie qw(:all);
+sub find_script($);
 use autodie qw(fork);
-use File::stat;
-$|++;
-$\="\n";
+use Cwd qw(realpath getcwd);
+use vars qw(@path  );
+use vars qw(@build @exist);
 
-if(!@ARGV) {
-  die "usage: $0 [script and args ...] ...\n...";
-};
-my $script=shift;
-if( $script ne "-e" ) {  
-  if( ! -f $script ) {
-    my @path;
-    @path = split(/:/, $ENV{PATH});
-    $_=join('/',$_,$script) for @path;
-    @path = grep { -e } @path;
-    use Data::Dumper;
-    $script=shift @path;
-  };
-};
-die "no script found" unless defined $script;
-
-open(STDIN,"</dev/null");
 use IO::Pipe;
-my $out = new IO::Pipe;
-my $err = new IO::Pipe;
 
-if( !fork ) {
-  open(STDOUT,">&".fileno($out->writer)) or die;
-  open(STDERR,">&".fileno($err->writer)) or die;
-  close($out);
-  close($err);
-  exec "perl", $script, @ARGV;
-  die "failed!";
+use File::stat;
+BEGIN {
+  use vars qw( %proc  @proc  $proc );
+  use vars qw( @script );
+
+  $|++; $\="\n";
+
+  sub main(@);
+  sub hr;
+  sub main(@);
+  sub splitpath($);
+  sub run_perl($$@);
+  sub watch_perl($$);
+  sub splitpath($);
+  sub find_script($);
+  sub hr;
+}
+
+
+#print STDERR join(':',__FILE__,__LINE__,"main(@ARGV)"),"\n";
+die "usage: $0 [script and args ...] ...\n..." unless @ARGV;
+my $res=main(@ARGV);
+#print STDERR join(':',__FILE__,__LINE__,"main(@ARGV) => $res"),"\n";
+exit($res);
+
+die "exit:$!";
+use Data::Dumper;
+BEGIN {
+  $Data::Dumper::Deparse=1;
+  $Data::Dumper::Terse=1;
+  $Data::Dumper::Useqq=1;
 };
-use IO::Select;
-my $sel = new IO::Select;
-my $out_buf="";
-my $err_buf="";
-$sel->add( [ $out->reader(), \$out_buf, 0 ] );
-$sel->add( [ $err->reader(), \$err_buf, 1 ] );
-while($sel->handles){
-  my @can=$sel->can_read;
-  for(@can)
+{
+  sub main(@)
   {
-    my ($pipe,$ref,$stream);
-    ( $pipe, $ref, $stream ) = @$_;
-    local (*_)=$ref;
-    my $res=sysread($pipe,$_,1,length);
-    if(!defined($res)) {
-      die "sysread:$!";
-    } elsif ( !$res ) {
-      $sel->remove($pipe);
-      close($pipe) or die "close:$!";
-      $_="$_\n" if length($$ref);
+    local (@_) = splice(@_);
+    open(OLDERR,">&STDERR");
+    open(STDIN,"</dev/null");
+    print OLDERR join(':',__FILE__,__LINE__,"enter main(@_)\n");
+
+    for(@proc) {
+      print Dumper($_);
+      exit(0);
     };
-    next unless chomp;
-    if($stream && s{ at (\S+) line (\d+)\.*}{})
-    {
-      my ($file,$line) = ($1,$2);
-      s{^\t(.*)called\s*$}{called from $1};
-      print STDERR "$file:$line: msg $_";
-    } else {
-      print STDOUT "$_";
-    };
-    $_="";
+
+    print OLDERR join(':',__FILE__,__LINE__,"_exit main(@_)\n");
+    close(STDIN);
+    close(STDERR);
+    close(STDOUT);
+    close(OLDERR);
+    return 0;
   };
+
+#        my $hide=q[
+#        my ($init_pid,$pid)=$$;
+#        my (@pipe);
+#        @_ = map { +{ pipe=>new IO::Pipe, proc=>$_, } } @_;
+#        if( ($pid=fork)==0 ) {
+#          print join(':',__FILE__,__LINE__,"part1()");
+#        } elsif( ($pid=fork)==0 ) {
+#          print join(':',__FILE__,__LINE__,"part2()");
+#        } else {
+#          print join(':',__FILE__,__LINE__,"part3()");
+#        };
+#        ];
+
+  sub run_perl($$@)
+  {
+    print OLDERR join(':',__FILE__,__LINE__,"$$:run_perl(@_)");
+    my (@script) = find_script(shift(@_));
+    @_ = ( "perl", shift(@script), @_ );
+    my ($out,$err,@args) = @_;
+    open(STDOUT,">&".fileno($out->writer)) or die;
+    open(STDERR,">&".fileno($err->writer)) or die;
+    close($out);
+    close($err);
+    exec(@_);
+    die "failed!";
+  };
+  sub watch_perl($$)
+  {
+    print OLDERR join(':',__FILE__,__LINE__,"$$:watch_perl(@_)");
+    my ($out,$err) = @_;
+    use IO::Select;
+    my $sel = new IO::Select;
+    my $out_buf="";
+    my $err_buf="";
+    $sel->add( [ $out->reader(), \$out_buf, 0 ] );
+    $sel->add( [ $err->reader(), \$err_buf, 1 ] );
+    while($sel->handles)
+    {
+      my @can=$sel->can_read;
+      for(@can)
+      {
+        my ($pipe,$ref,$id);
+        ( $pipe, $ref, $id ) = @$_;
+        local (*_)=$ref;
+        my $res=sysread($pipe,$_,1,length);
+        if(!defined($res)) {
+          die "sysread:$!";
+        } elsif ( !$res ) {
+          $sel->remove($pipe);
+          close($pipe) or die "close:$!";
+          $_="$_\n" if length($$ref);
+        };
+        next unless chomp;
+        if($id && s{ at (\S+) line (\d+)\.*}{})
+        {
+          my ($file,$line) = ($1,$2);
+          s{^\t(.*)called\s*$}{called from $1};
+          print STDERR "$file:$line: msg $_";
+        } else {
+          print STDOUT "$_";
+        };
+        $_="";
+      };
+    };
+  };
+  sub splitpath($)
+  {
+    return map { split qr{:+} } @_;
+  };
+  sub find_script($)
+  {
+    my (@path,$script);
+    if( @_ && defined($_[0]) ) {
+      $script=shift;
+    } else {
+      die "usage: find_script(basename)\n\n";
+    };
+
+    if( substr($script,0,1) eq '/' ) {
+      push(@path, '');
+    } else {
+      push(@path, splitpath($ENV{PATH}));
+    };
+    $_=join('/',$_,$script) for @path;
+    return grep { lstat($_) || stat($_) } @path;
+  };
+  sub hr {
+    print "\n".join('', map { ' <-> ' } 1 .. 20)."\n\n";
+  };
+  use vars qw( $run_perl $watch_perl ); 
+  sub make_proc(&)
+  {
+    our (%self,$self);
+    our ($proc)=shift;
+    $self=\$self;
+    $self{sub}=$proc;
+    $self{pid}=-1;
+    $self{fds}[0]="</dev/null";
+    $self{fds}[1]=new IO::Pipe;
+    $self{fds}[2]=new IO::Pipe;
+    return $self;
+  };
+  sub make_procs()
+  {
+    local (@_);
+    print STDERR "make_procs(@_)";
+    $run_perl=sub { &main::run_perl(@_); };
+    $watch_perl=sub { &main::watch_perl(@_); };
+    print STDERR Dumper(
+      {
+        run_perl => \&run_perl,
+        watch_perl => \&watch_perl,
+      }
+    );
+
+
+    #push(@_, make_proc({ &main::run_perl }));
+    #push(@_, make_proc({ &main::watch_perl }));
+    return () unless defined wantarray;
+    return \@_ unless wantarray;
+    print STDERR "make_procs(@_) returning";
+    return @_;
+  };
+};
+BEGIN {
+  @proc=make_procs();
+
+#      sub doit() {
+#        print Dumper( [ \$proc, \@proc, \%proc ] );
+#        print "\n";
+#        print Dumper( [ \$proc, \@proc, \%proc ] );
+#        return 1;
+#      };
+#      my $x=doit();
 };
