@@ -4,11 +4,6 @@ use autodie qw(:all);
 use strict;
 use warnings;
 use Data::Dumper;
-BEGIN {
-  sub qquote {
-    goto &Data::Dumper::qquote;
-  };
-};
 our($debug);
 
 sub help() {
@@ -22,112 +17,102 @@ sub handle_arg($);
 sub mainloop();
 
 BEGIN {
-  print STDOUT "STDOUT\n";
-  print STDERR "STDERR\n";
-};
-BEGIN {
   $\="\n"; $,=" "; $"=" ";
   $Data::Dumper::Useqq=1;
   $Data::Dumper::Deparse=1;
   $Data::Dumper::Sortkeys=1;
 };
+
 use vars qw( %args );
+
 $_=undef for @args{ qw( pat type ) };
-$_=0     for @args{ qw( zipped debug dump ) };
+$_=0     for @args{ qw( zipped debug dump whole ) };
 
 @ARGV=getopt( 'wpflzdD', @ARGV );
 handle_arg(shift(@ARGV)) while(@ARGV);
 die "no pats, and did not die!" unless defined($args{pat});
-for($args{type}) {
-  $_="file" unless defined;
-};
+$args{type}='file' unless defined($args{type});
 mainloop();
 exit(0);
-
-use vars qw( $qr );
-
-sub mainloop()
 {
-  my $fn="/var/cache/apt/apt-file-search-slash";
-  if($args{zipped}) {
-    $fn = "zcat $fn.gz|";
-  } else {
-    $fn = "<$fn";
+  my $qr;
+  sub file_match {
+    while(<STDIN>){
+      chomp;
+      my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+      print if $file=~m{$qr};
+    };
   };
-  $qr=$args{pat};
-  $qr=qr{$qr};
-  #  my $proc;
-#      if( $args{type} eq "package" ) {
-#        $proc=sub(@) {
-#          return grep {
-#            my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
-#            $pkg =~/$qr/;
-#          } @_;
-#        };
-#      } elsif ( $args{type} eq "file" ) {
-#        $proc=sub(@) {
-#          return grep {
-#            my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
-#            $file =~/$qr/;
-#          } @_;
-#        };
-#      } else {
-#        $proc=sub(@) {
-#          return grep /$qr/, @_;
-#        };
-#      };
+  sub pack_match {
+    while(<STDIN>){
+      chomp;
+      my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+      print if $pkg=~m{$qr};
+    };
+  };
+  sub line_match {
+    while(<STDIN>){
+      chomp;
+      print if m{$qr};
+    };
+  };
+  sub mainloop()
+  {
+    my $fn="/var/cache/apt/apt-file-search-slash";
+    if($args{zipped}) {
+      $fn = "zcat $fn.gz|";
+    } else {
+      $fn = "<$fn";
+    };
+    $qr=$args{pat};
+    if($args{whole})
+    {
+      $qr=join('','^',$qr,'$');
+    };
+    $qr=qr{$qr};
+    open(STDIN,"$fn");
 
-  open(STDIN,"$fn");
-  while($proc->(<STDIN>)){
-    chomp;
-    print;
-  };
-  close(STDIN) or die "close:$fn:$!";
-  open(STDIN,"</dev/null");
-};
+    if( $args{type} eq 'file' ) {
+      file_match;
+    } elsif ( $args{type} eq 'package' ) {
+      pack_match;
+    } elsif ( $args{type} eq 'line' ) {
+      line_match;
+    } else {
+      die "idk how to handle $args{type}";
+    };
 
-sub set_type($) {
-  local *_=\$args{type};
-  die "only one type alowed" if defined;
-  $_=shift;
-};
-sub handle_arg($)
-{
-  print STDERR "handle_arg(@_,@ARGV)\n";
-  my $hands={
-    '-p' => sub{ set_type('package'); },
-    '-f' => sub{ set_type('file'); },
-    '-l' => sub{ set_type('line'); },
-    '-w' => sub{ $_=!$_ for $args{whole}; },
-    '-z' => sub{ $_=!$_ for $args{zipped}; },
-    '-d' => sub{ $_++ for $args{debug}; },
-    '-D' => sub{ $_=!$_ for $args{dump}; },
-    '--' => sub{
-      die "I need patterns!" unless @ARGV;
-      $args{pat}=shift @ARGV;
-      die "Too many args!" if @ARGV;
-    },
+    close(STDIN);
+    die "$@" if "$@";
+    open(STDIN,"</dev/null");
   };
-  for(@_) {
-    my $hand=$hands->{$_};
-    die "I do not grok '$_'" unless defined $hand;
-    $hand->($_,@ARGV);
+
+  sub set_type($) {
+    local *_=\$args{type};
+    die "only one type alowed" if defined;
+    $_=shift;
+  };
+  sub handle_arg($)
+  {
+    print STDERR "handle_arg(@_,@ARGV)\n";
+    my $hands={
+      '-p' => sub{ set_type('package'); },
+      '-f' => sub{ set_type('file'); },
+      '-l' => sub{ set_type('line'); },
+      '-w' => sub{ $_=!$_ for $args{whole}; },
+      '-z' => sub{ $_=!$_ for $args{zipped}; },
+      '-d' => sub{ $_++ for $args{debug}; },
+      '-D' => sub{ $_=!$_ for $args{dump}; },
+      '--' => sub{
+        die "I need patterns!" unless @ARGV;
+        $args{pat}=shift @ARGV;
+        die "Too many args!" if @ARGV;
+      },
+    };
+    for(@_) {
+      my $hand=$hands->{$_};
+      die "I do not grok '$_'" unless defined $hand;
+      $hand->($_,@ARGV);
+    };
   };
 };
-#    sub maybe_print
-#    {
-#      if( grep { $line =~ $_ } @lpats ) {
-#        1;
-#      } elsif( grep { $pkg =~ $_ } @ppats ) {
-#        $done{$pkg}=1;
-#      } elsif ( grep { $path =~ $_ } @fpats ) {
-#        1;
-#      } else {
-#        return 0;
-#      };
-#      print "$pkg $path";
-#      return 1;
-#    };
-#    my $stime=time;
-#    my $match=0;
-#    close(STDIN);
