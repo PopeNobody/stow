@@ -1,0 +1,29 @@
+diff --git a/doc/func_experiments.sh b/doc/func_experiments.sh
+deleted file mode 100644
+index cfece11..0000000
+--- a/doc/func_experiments.sh
++++ /dev/null
+@@ -1,16 +0,0 @@
+-x () 
+-{ 
+-  (($#)) || set -- church master nn-cripple nn-desktop nn-laptop;
+-    for i in "$@";
+-    do
+-      echo
+-      echo echo "doing: $i"
+-      echo
+-        echo git checkout master;
+-        echo git checkout $i;
+-        echo "echo $i | tee doc/ver";
+-        echo git commit doc/ver;
+-        echo git push;
+-        echo;
+-    done
+-}
+diff --git a/doc/ver b/doc/ver
+index 1f7391f..75d6a5d 100644
+--- a/doc/ver
++++ b/doc/ver
+@@ -1 +1 @@
+-master
++nn-desktop
