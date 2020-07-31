@@ -44,7 +44,6 @@ for($args{type}) {
 mainloop();
 exit(0);
 
-use vars qw( $qr );
 
 sub mainloop()
 {
@@ -54,33 +53,20 @@ sub mainloop()
   } else {
     $fn = "<$fn";
   };
-  $qr=$args{pat};
+  my $qr=$args{pat};
   $qr=qr{$qr};
-  #  my $proc;
-#      if( $args{type} eq "package" ) {
-#        $proc=sub(@) {
-#          return grep {
-#            my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
-#            $pkg =~/$qr/;
-#          } @_;
-#        };
-#      } elsif ( $args{type} eq "file" ) {
-#        $proc=sub(@) {
-#          return grep {
-#            my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
-#            $file =~/$qr/;
-#          } @_;
-#        };
-#      } else {
-#        $proc=sub(@) {
-#          return grep /$qr/, @_;
-#        };
-#      };
-
   open(STDIN,"$fn");
-  while($proc->(<STDIN>)){
+  while(<STDIN>){
     chomp;
-    print;
+    my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+    print "type=$args{type}";
+    if( $args{type} eq "package" ) {
+      print if $pkg =~ /$qr/;
+    } elsif ( $args{type} eq "file" ) {
+      print if $file =~ /$qr/;
+    } else {
+      print if $_ =~ /$qr/;
+    };
   };
   close(STDIN) or die "close:$fn:$!";
   open(STDIN,"</dev/null");
