@@ -1,0 +1,157 @@
+diff --git a/bin/pkg-file b/bin/pkg-file
+index 745fb5a..13a8960 100755
+--- a/bin/pkg-file
++++ b/bin/pkg-file
+@@ -129,4 +129,7 @@ BEGIN {
+     return @_;
+   };
+ 
++#    die "no pats, and did not die!" unless defined($args{qr});
++#    $args{type}='file' unless defined($args{type});
++#    mainloop();
+ };
+diff --git a/bin/pkg-file.orig b/bin/pkg-file.orig
+new file mode 100755
+index 0000000..b2d1764
+--- /dev/null
++++ b/bin/pkg-file.orig
+@@ -0,0 +1,139 @@
++#!/usr/bin/perl
++$|++;
++
++use autodie qw(:all);
++use strict;
++use warnings;
++use Data::Dumper;
++our($debug);
++
++use vars qw( %args );
++sub help() {
++  print "usage: $0 [-zd] [-p qr | -f qr]\n";
++};
++sub version {
++  print "$0 version 0.1.0\n";
++};
++sub main(@);
++use Getopt::WonderBra;
++
++exit(main(@ARGV));
++die "wtf?";
++BEGIN {
++  $\="\n"; $,=" "; $"=" ";
++  $Data::Dumper::Useqq=1;
++  $Data::Dumper::Deparse=1;
++  $Data::Dumper::Sortkeys=1;
++};
++
++
++{
++  our(%args,$qr,$fn);
++  sub file_match {
++    while(<STDIN>){
++      chomp;
++      my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
++      print if $file=~m{$qr};
++    };
++  };
++  sub pack_match {
++    while(<STDIN>){
++      chomp;
++      my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
++      print if $pkg=~m{$qr};
++    };
++  };
++  sub line_match {
++    while(<STDIN>){
++      chomp;
++      print if m{$qr};
++    };
++  };
++  sub data_ln() {
++    my(%data);
++    $data{qr}=\$qr;
++    $data{fn}=\$fn;
++    $data{args}=\%args;
++    $data{ARGV}=\@ARGV;
++    local ($_)=Dumper(\%data);
++    $_=join(" ", split /[\s\n]+/);
++    return $_;
++  };
++  sub main(@)
++  {
++    local $_;
++    $args{fn}="/var/cache/apt/apt-file-search-slash";
++    $_=undef for @args{ qw( qr type ) };
++    $_=0     for @args{ qw( zipped debug dump whole ) };
++    $args{orig}=[\@_];
++    @_=getopt('wpflzdD',@_);
++    while(($_=shift(@_))ne'--')
++    {
++      @_=handle_arg($_,@_);
++    };
++    our($fn,$qr);
++    *fn=\$args{fn};
++    *qr=\$args{qr};
++    die "need pattern" unless @_;
++    $args{qr}=shift;
++    die "extra args (@_)" if @_;
++    if($args{zipped}) {
++      $fn = "zcat $fn.gz|";
++    } else {
++      $fn = "<$fn";
++    };
++    $qr=$args{qr};
++    if($args{whole})
++    {
++      $qr=join('','^',$qr,'$');
++    };
++    $qr=qr{$qr};
++    open(STDIN,"$fn");
++
++    if( $args{type} eq 'file' ) {
++      file_match;
++    } elsif ( $args{type} eq 'package' ) {
++      pack_match;
++    } elsif ( $args{type} eq 'line' ) {
++      line_match;
++    } else {
++      die "idk how to handle $args{type}";
++    };
++
++    close(STDIN);
++    die "$@" if "$@";
++    open(STDIN,"</dev/null");
++    return 0;
++  };
++
++  sub set_type($) {
++    local *_=\$args{type};
++    die "only one type alowed" if defined;
++    $_=shift;
++  };
++  sub handle_arg($)
++  {
++    my $hands={
++      '-p' => sub{ set_type('package'); },
++      '-f' => sub{ set_type('file'); },
++      '-l' => sub{ set_type('line'); },
++      '-w' => sub{ $_=!$_ for $args{whole}; },
++      '-z' => sub{ $_=!$_ for $args{zipped}; },
++      '-d' => sub{ $_++ for $args{debug}; },
++      '-D' => sub{ $_=!$_ for $args{dump}; },
++    };
++    local ($_)=shift;
++    my $hand=$hands->{$_};
++    die "I do not grok '$_'" unless defined $hand;
++    $hand->($_,@_);
++    return @_;
++  };
++  sub handle_args(@) {
++    @_=getopt('wpflzdD',@_);
++    return 1;
++  };
++
++#    die "no pats, and did not die!" unless defined($args{qr});
++#    $args{type}='file' unless defined($args{type});
++#    mainloop();
++};
