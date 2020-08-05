@@ -133,7 +133,4 @@ BEGIN {
     return 1;
   };
 
-#    die "no pats, and did not die!" unless defined($args{qr});
-#    $args{type}='file' unless defined($args{type});
-#    mainloop();
 };
