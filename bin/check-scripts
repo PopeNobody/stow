@@ -4,6 +4,7 @@ use FindBin qw($Bin);
 chdir "$Bin/..";
 use lib "./lib";
 
+system("echo working in \$(pwd)");
 open(STDOUT,"|md5sum -c - --quiet") or die "open:md5sum:$!";
 while(<DATA>){
   chomp;
