@@ -72,8 +72,8 @@ BEGIN {
       @_=handle_arg($_,@_);
     };
     our($fn,$qr);
-    *fn=\$args{'fn'};
-    *qr=\$args{'qr'};
+    *fn=\$args{fn};
+    *qr=\$args{qr};
     die "need pattern" unless @_;
     $args{qr}=shift;
     die "extra args (@_)" if @_;
@@ -89,7 +89,7 @@ BEGIN {
     };
     $qr=qr{$qr};
     open(STDIN,"$fn");
-    $args{type}='line' unless defined $args{type};
+
     if( $args{type} eq 'file' ) {
       file_match;
     } elsif ( $args{type} eq 'package' ) {
@@ -127,6 +127,10 @@ BEGIN {
     die "I do not grok '$_'" unless defined $hand;
     $hand->($_,@_);
     return @_;
+  };
+  sub handle_args(@) {
+    @_=getopt('wpflzdD',@_);
+    return 1;
   };
 
 #    die "no pats, and did not die!" unless defined($args{qr});
