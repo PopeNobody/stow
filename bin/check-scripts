@@ -1,0 +1,61 @@
+#!/usr/bin/perl
+
+use FindBin qw($Bin);
+chdir "$Bin/..";
+use lib "./lib";
+
+system("echo working in \$(pwd)");
+open(STDOUT,"|md5sum -c - --quiet") or die "open:md5sum:$!";
+while(<DATA>){
+  chomp;
+  print "$_\n";
+};
+close(STDOUT);
+
+__DATA__
+7d0566bd491e87a84894a26c29d1c2bf  ./sbin/installkernel
+508aca44abc17bf849958fc647207a2c  ./Makefile
+9200ec9c6169fba397260656f090b508  ./bin/ttyrun
+549a19d41dba7aa62352f1b0aa8117d9  ./bin/update_task
+c43b48cebbc1093a39d9186d40585f0b  ./bin/fake_edit
+dc9a33c3ec89ccaa25bdd909c7f368a0  ./bin/with_agent
+2a102f6e28c64b3115143289f44c5d45  ./bin/tty_say
+d3ae5fe1a6ac567b82edbe3e4db8f9b2  ./bin/collect
+6bad16caf061c937db50b4a45f893728  ./bin/findhome
+a050166813acbc6078e7e6ddacecc901  ./bin/lspath
+1391ebc236fdbddcd0f3feb354f19879  ./bin/md5dir
+eff54d8a1984cc3e918990016db1ace1  ./bin/mvto
+d53e7b237479187d3eea09bc3e2ff732  ./bin/alarm
+76799772272002175f5defa2be9537b0  ./bin/screen-xRR
+4e1e0faf113188258c7e0a414c46f215  ./bin/not
+c2fcef742c53f8f5596d04e0b502e541  ./bin/cpto
+71e76b2d6f88573d79e85d3161ac1615  ./bin/findext
+45512d476008acaff1a63f2537f065c5  ./bin/lsdirs
+2faa2ee4baf5916a66fd84e1ea4dd258  ./bin/gather
+9b6ff69dd5e4d0574ac90de4a6996438  ./bin/vi_perl
+ba03acbccbc2312cda611676232706df  ./bin/randomize
+23d23ee865af7d9bfa9fc4ef3039a98f  ./bin/fixpath
+8574ebf7de521de860a3a745c83b97c1  ./bin/report
+5146892cea48fd67cd4e289c03defd75  ./bin/fixnames
+a7c9bfd9abc1b15d2866af6f361f4194  ./bin/rsync_sync
+0079fe32a517fe2270032c15fbde273c  ./bin/except
+561ec8d2a9ef629dfe0c27f3442b52a3  ./bin/start
+3a8b3b1d33cc04f17954ad0b8ea7b289  ./bin/google
+56cb8412ceb3c15893d9767aabb050b2  ./bin/fileage
+ba0e225abee86863383033d2caa56cac  ./bin/csort
+4071172d7b570eabae7b08a3f3004f36  ./bin/lsfiles
+7ca5c8057d7e9d53049dd2a93c1c8160  ./bin/getppid
+bab303bd60090af45f7318cf273ce458  ./bin/0args
+d38979fbc7bccbe538930910b3ce128d  ./bin/pvi
+d295abeee429616f504d81dd531098f8  ./bin/pkg-names
+de10f9428f616378c56d3be8f8d938e7  ./bin/cleanmake
+7e97d30ef96b98a372ec7ab4f69d69e1  ./bin/serdate
+0d974b127fe62800fd0bac678cd08f6a  ./bin/stow
+d0b12ab816a74026b457e85529ee3f8d  ./bin/writeto
+602534b7217dfe6385e27f54c60a131e  ./.gitignore
+180649e8254326fa025a2a9be0ba13df  ./tests/test1.pl
+320ec64075ab4665cd4a0e35bc4facf7  ./.stow-local-ignore
+0ad86eb8dd80bd34013e3eef5f2c1ddd  ./lib/perl5/Getopt/WonderBra.pm
+a52b790ea48b6d86508e2a540331daa7  ./lib/perl5/Stow.pm
+9f25b0c64752f669c645209c841cee8c  ./lib/perl5/Stow/Util.pm
+d41752eeb651c5182908cf3e8773a1cc  ./bin/pkg-file
