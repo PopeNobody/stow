@@ -32,7 +32,6 @@ c2fcef742c53f8f5596d04e0b502e541  ./bin/cpto
 71e76b2d6f88573d79e85d3161ac1615  ./bin/findext
 45512d476008acaff1a63f2537f065c5  ./bin/lsdirs
 2faa2ee4baf5916a66fd84e1ea4dd258  ./bin/gather
-9b6ff69dd5e4d0574ac90de4a6996438  ./bin/vi_perl
 ba03acbccbc2312cda611676232706df  ./bin/randomize
 23d23ee865af7d9bfa9fc4ef3039a98f  ./bin/fixpath
 8574ebf7de521de860a3a745c83b97c1  ./bin/report
@@ -50,7 +49,6 @@ d38979fbc7bccbe538930910b3ce128d  ./bin/pvi
 d295abeee429616f504d81dd531098f8  ./bin/pkg-names
 de10f9428f616378c56d3be8f8d938e7  ./bin/cleanmake
 7e97d30ef96b98a372ec7ab4f69d69e1  ./bin/serdate
-0d974b127fe62800fd0bac678cd08f6a  ./bin/stow
 d0b12ab816a74026b457e85529ee3f8d  ./bin/writeto
 602534b7217dfe6385e27f54c60a131e  ./.gitignore
 180649e8254326fa025a2a9be0ba13df  ./tests/test1.pl
@@ -59,3 +57,5 @@ d0b12ab816a74026b457e85529ee3f8d  ./bin/writeto
 a52b790ea48b6d86508e2a540331daa7  ./lib/perl5/Stow.pm
 9f25b0c64752f669c645209c841cee8c  ./lib/perl5/Stow/Util.pm
 d41752eeb651c5182908cf3e8773a1cc  ./bin/pkg-file
+2e30f22ff2bea90c2827a91bffa879d0  ./bin/vi_perl
+2686d7910c92429c7a658dab3039a133  ./bin/stow
