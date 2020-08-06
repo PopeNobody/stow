@@ -24,11 +24,11 @@ sub main(@)
 {
   my ($script);
   local (*ARGV)=(\@_);
-  $script=shift;
-  
   if(!@ARGV) {
     die "usage: $0 [script and args ...] ...\n...";
   };
+  $script=shift;
+
   if( $script ne "-e" ) {  
     if( ! -f $script ) {
       my @path;
