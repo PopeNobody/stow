@@ -3,24 +3,41 @@
 
 fixpath () 
 { 
-    (($#)) || set PATH;
-    unset seen
-    local -A seen
-    local -a  dirs=( $(IFS=:; echo ${!1}) )
-    declare -p dirs
-    local -i idx;
-    local -i  num=${#dirs[@]};
-    if true; then
-      for((i=0;i<num;i++)); do
-        idx=$(( num - i ));
-        echo "idx=$idx num=$num"
-        dir="${dirs[idx]}"
-        echo "dir=$dir"
-        s=${seen["$dir"]}
-        seen["$dir"]=idx;
-        declare -p seen
-        declare -p dirs
-      done
-    fi
-}
+  (($#)) || set PATH;
+  unset seen
+  local -A seen
+  local -a  dirs=( $(IFS=:; echo ${!1}) )
+  local -a  by_dev
+  for fn in ${dirs[@]}; do
+    test -d "$fn/" || continue;
+    set -- $(stat -c ' %d %i ' "$fn");
+    local -i dd="$1" ii="$2"
+    local -i d0="$(($1%256))" d1="$(( ($1/256)%256 ))"
+    local -i i0="$(($2%256))" i1="$(( ($2/256)%256 ))" i2="$(( ($2/(256*256))%256 ))"
+    local var=""
+    set -- $(
+    for var in dd d0 d1 xx ii i0 i1 i2 ; do
+      [[ $var == "xx" ]] && echo && continue
+      local -n val="$var"
+      echo $( printf " %s='%016x' " "$var" "$val" )
+    done
+  )
+  done
+};
+#        local -i idx;
+#        local -i  num=${#dirs[@]};
+#        declare -p num idx dirs seen
+#        if true; then
+#          for((i=0;i<num;i++)); do
+#            idx=$(( num - i ));
+#            echo "idx=$idx num=$num"
+#            dir="${dirs[idx]}"
+#            echo "dir=$dir"
+#            fid=( $(stat -c ' %d %i ' "$dir") )
+#            s=${seen["$dir"]}
+#            seen["$dir"]=idx;
+#            declare -p seen
+#            declare -p dirs
+#          done
+#    fi
 fixpath "$@"

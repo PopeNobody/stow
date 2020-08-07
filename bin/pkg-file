@@ -94,7 +94,6 @@ exit(0);
   };
   sub handle_arg($)
   {
-    print STDERR "handle_arg(@_,@ARGV)\n";
     my $hands={
       '-p' => sub{ set_type('package'); },
       '-f' => sub{ set_type('file'); },
