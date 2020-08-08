@@ -96,7 +96,7 @@ main() {
   store sums.md5 md5sum vmlinuz System.map config  
   set -- $dst/ $dst.new/
   old=100
-  while test -d $1; do set ${dst}/old.$((old++)) "$@"; done
+  while test -d $1; do set ${dst}.old.$((old++)) "$@"; done
   while (($#>1)); do 
     test -e "$1" && stderr "$1 exists" && return 1;
     mv -v "$2" "$1" || return 1;

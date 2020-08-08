@@ -1,8 +1,0 @@
-#!/bin/bash
-
-cd
-exec >> $HOME/tmp/update.log 2>&1
-serdate $0 
-cd $HOME/stow/home
-git push
-git pull
