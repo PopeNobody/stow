@@ -1,10 +1,24 @@
 #!/usr/bin/perl
 $|++;
+
 use autodie qw(:all);
 use strict;
 use warnings;
 use Data::Dumper;
+our($debug);
+
+use vars qw( %args );
+sub help() {
+  print "usage: $0 [-zd] [-p qr | -f qr]\n";
+};
+sub version {
+  print "$0 version 0.1.0\n";
+};
+sub main(@);
 use Getopt::WonderBra;
+
+exit(main(@ARGV));
+die "wtf?";
 BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
@@ -13,31 +27,9 @@ BEGIN {
   $Data::Dumper::Sortkeys=1;
 };
 
-our($debug);
 
-sub help() {
-  print "usage: $0 [-zd] [-p pat | -f pat]\n";
-};
-sub version {
-  print "$0 version 0.1.0\n";
-};
-sub handle_arg($);
-sub mainloop();
-
-
-use vars qw( %args );
-
-$_=undef for @args{ qw( pat type ) };
-$_=0     for @args{ qw( zipped debug dump whole ) };
-
-@ARGV=getopt( 'wpflzdD', @ARGV );
-handle_arg(shift(@ARGV)) while(@ARGV);
-die "no pats, and did not die!" unless defined($args{pat});
-$args{type}='file' unless defined($args{type});
-mainloop();
-exit(0);
 {
-  my $qr;
+  our(%args,$qr,$fn);
   sub file_match {
     while(<STDIN>){
       chomp;
@@ -58,22 +50,47 @@ exit(0);
       print if m{$qr};
     };
   };
-  sub mainloop()
+  sub data_ln() {
+    my(%data);
+    $data{qr}=\$qr;
+    $data{fn}=\$fn;
+    $data{args}=\%args;
+    $data{ARGV}=\@ARGV;
+    local ($_)=Dumper(\%data);
+    $_=join(" ", split /[\s\n]+/);
+    return $_;
+  };
+  sub main(@)
   {
-    my $fn="/var/cache/apt/apt-file-search-slash";
+    local $_;
+    $args{fn}="/var/cache/apt/apt-file-search-slash";
+    $_=undef for @args{ qw( qr type ) };
+    $_=0     for @args{ qw( zipped debug dump whole ) };
+    $args{orig}=[\@_];
+    @_=getopt('wpflzdD',@_);
+    while(($_=shift(@_))ne'--')
+    {
+      @_=handle_arg($_,@_);
+    };
+    our($fn,$qr);
+    *fn=\$args{'fn'};
+    *qr=\$args{'qr'};
+    die "need pattern" unless @_;
+    $args{qr}=shift;
+    die "extra args (@_)" if @_;
     if($args{zipped}) {
       $fn = "zcat $fn.gz|";
     } else {
       $fn = "<$fn";
     };
-    $qr=$args{pat};
+    $qr=$args{qr};
     if($args{whole})
     {
       $qr=join('','^',$qr,'$');
     };
     $qr=qr{$qr};
     open(STDIN,"$fn");
-
+    $args{type}='line' unless defined $args{type};
     if( $args{type} eq 'file' ) {
       file_match;
     } elsif ( $args{type} eq 'package' ) {
@@ -87,6 +104,7 @@ exit(0);
     close(STDIN);
     die "$@" if "$@";
     open(STDIN,"</dev/null");
+    return 0;
   };
 
   sub set_type($) {
@@ -104,16 +122,11 @@ exit(0);
       '-z' => sub{ $_=!$_ for $args{zipped}; },
       '-d' => sub{ $_++ for $args{debug}; },
       '-D' => sub{ $_=!$_ for $args{dump}; },
-      '--' => sub{
-        die "I need patterns!" unless @ARGV;
-        $args{pat}=shift @ARGV;
-        die "Too many args!" if @ARGV;
-      },
     };
-    for(@_) {
-      my $hand=$hands->{$_};
-      die "I do not grok '$_'" unless defined $hand;
-      $hand->($_,@ARGV);
-    };
+    local ($_)=shift;
+    my $hand=$hands->{$_};
+    die "I do not grok '$_'" unless defined $hand;
+    $hand->($_,@_);
+    return @_;
   };
 };
