@@ -84,8 +84,6 @@ sub run_perl($$$@) {
   close($out);
   open(STDERR,">&".fileno($err->writer)) or die;
   close($err);
-  #warn("run_perl(@_)");
-  #warn("run_perl($out,$err,$script,@args)");
   exec "perl", $script, @args;
   die "failed!";
 };
