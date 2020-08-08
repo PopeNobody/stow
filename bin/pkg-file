@@ -4,6 +4,15 @@ use autodie qw(:all);
 use strict;
 use warnings;
 use Data::Dumper;
+use Getopt::WonderBra;
+BEGIN {
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+  $Data::Dumper::Useqq=1;
+  $Data::Dumper::Deparse=1;
+  $Data::Dumper::Sortkeys=1;
+};
+
 our($debug);
 
 sub help() {
@@ -12,16 +21,9 @@ sub help() {
 sub version {
   print "$0 version 0.1.0\n";
 };
-use Getopt::WonderBra;
 sub handle_arg($);
 sub mainloop();
 
-BEGIN {
-  $\="\n"; $,=" "; $"=" ";
-  $Data::Dumper::Useqq=1;
-  $Data::Dumper::Deparse=1;
-  $Data::Dumper::Sortkeys=1;
-};
 
 use vars qw( %args );
 

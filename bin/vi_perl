@@ -63,7 +63,7 @@ while($sel->handles){
     {
       my ($file,$line) = ($1,$2);
       s{^\t(.*)called\s*$}{called from $1};
-      print STDERR "$file:$line: msg $_";
+      print STDERR "$file:$line: $_";
     } else {
       print STDOUT "$_";
     };
