@@ -4,12 +4,10 @@ $|++;
 use strict;
 use warnings;
 
-my $dry_run=1;
-my $debug=0;
-my $link=1;
-my $replace=1;
+our($dry_run, $debug, $link, $replace);
+($dry_run, $debug, $link, $replace) = qw( 1 0 1 1 );
 
-sub xsymlink($$);
+
 sub handle_args();
 sub debug {
 	print STDERR @_, "\n" if $debug;
@@ -26,12 +24,13 @@ sub xrename($$) {
         return $to;
     };
 };
-sub fix_name($) {
-	for(shift) {
-		s/[ ()]/_/g;
-		s/_*-_*/-/g;
+sub fix_name($)
+{
+	for(shift)
+  {
+    return $_ unless s/[^.a-zA-Z0-9-]/_/g;
+    use Data::Dumper;
     s/__+/_/g;
-    s/_$//g;
     return $_;
 	};
   die "no arg for fix_name!";
@@ -50,16 +49,6 @@ sub handle_args()
     };
   };
 };
-sub xsymlink($$) {
-  my $path=shift;
-  my $text=shift;
-  die "too many args" if @_;
-  if($dry_run) {
-    debug("not symlinking($path,$path)");
-  } else {
-    symlink($path,$text) or die "symlink:$path,$text:$!";
-  };
-};
 sub main
 {
   handle_args;
@@ -71,7 +60,6 @@ sub main
   $\="\n";
   while(@dir) {
     my $dir=shift @dir;
-    debug("+$dir\n");
     my @dents=do{
       opendir(my $dh, $dir) || die "open:$dir:$!";
       local @_=readdir($dh) or die "readdir:$dir:$!";
@@ -94,9 +82,7 @@ sub main
         next;
       };
       xrename($forig,$fdest);
-      xsymlink($dest,$forig);
     };
-    debug("-$dir\n");
   };
 };
 main;
