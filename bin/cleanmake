@@ -1,8 +1,4 @@
 #!/bin/bash
 
 env=( TERM="$TERM" HOME="$HOME" PATH="$PATH" )
-<<<<<<< HEAD
 exec /usr/bin/env -i "${env[@]}" /usr/bin/make "$@"
-=======
-exec /usr/bin/env -i "${env}" /usr/bin/make "$@"
->>>>>>> 4e101b4e3ca37d336dffd01008f620057a0b4318
