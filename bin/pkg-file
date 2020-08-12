@@ -1,10 +1,17 @@
 #!/usr/bin/perl
 $|++;
 
-use autodie qw(:all);
 use strict;
 use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
 use Data::Dumper;
+use Getopt::WonderBra;
+use File::Basename;
+use File::Copy;
 our($debug);
 
 use vars qw( %args );
@@ -20,6 +27,7 @@ use Getopt::WonderBra;
 exit(main(@ARGV));
 die "wtf?";
 BEGIN {
+  $|++;
   $\="\n"; $,=" "; $"=" ";
   $Data::Dumper::Useqq=1;
   $Data::Dumper::Deparse=1;
