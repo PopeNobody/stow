@@ -2,8 +2,16 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
-use Carp qw(cluck);
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use Data::Dumper;
 use Getopt::WonderBra;
+use File::Basename;
+use File::Copy;
+use Carp qw(cluck);
 
 sub help() {
   print "$0 [ -n ] <files>\n";
