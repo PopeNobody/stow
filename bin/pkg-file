@@ -27,6 +27,7 @@ use Getopt::WonderBra;
 exit(main(@ARGV));
 die "wtf?";
 BEGIN {
+  $|++;
   $\="\n"; $,=" "; $"=" ";
   $Data::Dumper::Useqq=1;
   $Data::Dumper::Deparse=1;
