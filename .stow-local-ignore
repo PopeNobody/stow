@@ -7,6 +7,7 @@ GNUmakefile
 scripts/lib/vi_perl_lib.pl
 lib/vi_perl_lib.pl
 scripts/lib/FILEPATH.pm
+tests
 lib/FILEPATH.pm
 \.\#.+       # CVS conflict files / emacs lock files
 \.cvsignore
