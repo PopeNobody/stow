@@ -1,7 +1,10 @@
 #!/usr/bin/perl
+#
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl5";
+}l
 
-use FindBin qw($Bin);
-use lib "$Bin/../lib/perl5";
 # GNU Stow - manage farms of symbolic links
 # Copyright (C) 1993, 1994, 1995, 1996 by Bob Glickstein
 # Copyright (C) 2000, 2001 Guillaume Morin

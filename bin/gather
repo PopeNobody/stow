@@ -2,6 +2,11 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
 use Getopt::WonderBra;
 sub help
 {
@@ -47,6 +52,6 @@ while(<>) {
     } elsif ( $dup == -1 && @v >= 2 ) {
       next;
     };
-    print "$k, (@v)";
+    print $k, @v;
   };
 };

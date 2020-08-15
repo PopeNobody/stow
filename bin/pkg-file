@@ -8,8 +8,8 @@ BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
-use Data::Dumper;
 use Getopt::WonderBra;
+use Data::Dumper;
 use File::Basename;
 use File::Copy;
 our($debug);

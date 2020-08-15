@@ -7,11 +7,11 @@ BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
-use Data::Dumper;
 use Getopt::WonderBra;
 use File::Basename;
 use File::Copy;
 use Carp qw(cluck);
+use Data::Dumper;
 
 sub help() {
   print "$0 [ -n ] <files>\n";
