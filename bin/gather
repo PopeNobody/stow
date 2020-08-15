@@ -2,6 +2,31 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
+use Getopt::WonderBra;
+sub help
+{
+  print "$0: [-d|-u] <files>";
+};
+sub version
+{
+  print "$0: version 0.2.0";
+};
+@ARGV=getopt("du",@ARGV);
+our(%hand);
+my ($dup) = ( 0, 0 );
+$hand{-u}=sub {
+  $dup=-1;
+};
+$hand{-d}=sub {
+  $dup=1;
+};
+while(($_=shift)ne'--'){
+  my $hand=$hand{$_};
+  if( !defined($hand) ) {
+    help(1);
+  };
+  $hand->( @ARGV );
+};
 
 my %data;
 my $k;
@@ -9,12 +34,19 @@ my @v;
 
 while(<>) {
 	($k,@v) =split;
+  next unless @v;
 	push(@{$data{$k}}, @v);
 };
-$,=" ";
-$\="\n";
-for $k (sort keys %data){
-	@v=@{$data{$k}};
-	print $k, @v;
-	
+{
+  $,=" ";
+  $\="\n";
+  for $k (sort keys %data){
+    @v=@{$data{$k}};
+    if( $dup == 1 && @v < 2 ) {
+      next;
+    } elsif ( $dup == -1 && @v >= 2 ) {
+      next;
+    };
+    print "$k, (@v)";
+  };
 };
