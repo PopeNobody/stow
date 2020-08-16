@@ -2,8 +2,10 @@
 
 use strict;
 use warnings;
+use autodie;
+$|++;
 
-
+open(STDIN,"apt-cache pkgnames|") or die;
 sub match($);
 sub order(@) {
 	sort @_;
@@ -15,7 +17,7 @@ if (@ARGV) {
 	*match=sub($){ return 1; };
 }
 sub getnames() {
-	return order grep { match($_) } qx{apt-cache pkgnames} ;
+	return order grep { match($_) } 
 }
 
 my @pkg;

@@ -2,7 +2,10 @@ rsync_sync ()
 {
   while(($#)); do
     ssh $1 mkdir -p "$PWD"
-    rsync -Parv $1 :$PWD/. . && rsync -Parv . $1 :$PWD/.
+    rsync -Parv $1:$PWD/. .
+    rsync -Parv . $1:$PWD/.
     shift;
   done
 }
+set -xv
+rsync_sync "$@"

@@ -2,8 +2,8 @@
 #
 BEGIN {
   use FindBin qw($Bin);
-  use lib "$Bin/../lib/perl5";
-}l
+  use lib "$Bin/../lib/perl";
+};
 
 # GNU Stow - manage farms of symbolic links
 # Copyright (C) 1993, 1994, 1995, 1996 by Bob Glickstein

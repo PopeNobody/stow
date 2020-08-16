@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use Data::Dumper;
+use AutoLess;
+$|++;
+$\="\n";
+use ReportHash;
+open(STDIN,"xbps-query -Rs .|") or die;
+while(<STDIN>){
+	chomp;
+	s{^\s*\S+\s+}{};
+	s{\s*$}{};
+	print;
+};
+#    open(STDOUT,"|bash") or die;
+#    while(<STDIN>)
+#    {
+#      @_=split;
+#      $_=$_[1];
+#      s{[-]([0-9_.]+[a-z]*[0-9_.]+)$}{};
+#      $_="xbps-query -S $_";
+#      print;
+#    };
+#    sub match($);
+#    sub order(@) {
+#    	sort @_;
+#    }
+#    if (@ARGV) {
+#    	my @re = map { qr/$_/ } @ARGV;
+#    	*match=sub($){ my $a=$_; for(@re) { return 1 if $a=~$_; } return 0;};
+#    } else {
+#    	*match=sub($){ return 1; };
+#    }
+#    
+#    
+#    my @pkg;
+#    @pkg=getnames();
+#    
+#    
+#    
+#    @pkg=grep { match($_) } @pkg;
+#    @pkg=sort @pkg;
+#    
+#    print for @pkg;
+#    print sprintf("%d pkgs found\n",0+@pkg) if -t STDOUT;
+#    
+#    pkg-names () 
+#    { 
+#          awk '{print $2}' |
+#          sed -n 's,[0-9_.-]*$,,p;' |
+#          grep -i "$1" 
+#    }
+#    pkg-names "$1"
