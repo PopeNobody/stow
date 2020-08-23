@@ -13,16 +13,10 @@
 # from a generic kernel source tree, and the image will be installed to
 # the proper place for Debian GNU/Linux.
 
-set -e -T
+set -e 
 stderr() {
   echo >&2 "$@"
 };
-if (($EUID)); then
-  set -- sudo $0 "$@"
-  stderr "need to be root.  running: ($@)"
-  exec "$@"
-  exit 1
-fi
 case "x$verbose" in
   (xtrue|xfalse) ;;
   (x) verbose=true;;
