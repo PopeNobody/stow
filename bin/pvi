@@ -1,16 +1,22 @@
 #!/usr/bin/perl
 
-my $debug=1;
-use Data::Dumper;
-use File::stat;
-use Getopt::WonderBra;
 use strict;
-use warnings; 
+use warnings;
+use autodie qw(:all);
+our($Lib);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib ($Lib="$Bin/../lib/perl");
+};
+use Getopt::WonderBra;
+use Data::Dumper;
+use File::Basename;
+use File::Copy;
+use File::stat;
 use Fcntl ':mode';
 use Cwd qw(getcwd realpath);
-
 $|++;
-
+my $debug=1;
 my ($defcmd, $cmd) = qw(vim);
 sub help {
   print "usage: $0 [-c cmd] script";
@@ -31,8 +37,6 @@ for( get_path() ) {
   push(@script, $fname);
 };
 
-#my @script = map { "$_/$script" } get_path();
-  # grep { my $stat=lstat($_); defined($stat) && -f ($stat) } map { "$_/$script" } get_path();
 if( @script > 1 ) {
   my $i=0;
   for(@script) {
