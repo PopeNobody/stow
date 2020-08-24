@@ -35,10 +35,10 @@ sub main()
       print "failed: $_\n";
     };
   };
-  $\="\n";
-  open(STDOUT,"|nl");
-  open(STDOUT,"|bash");
-  print "xbps-query -S $_ > $_.pkg" for sort keys %seen;
+  #  my @fds = map { my $fd; open($fd,"|bash"); $fd; } map { undef } 1 .. 8;
+  #my $fd=0;
+  print "$_\n" for sort keys %seen;
+  #push(@fds,shift(@fds));
 };
 @ARGV=handle_args(@ARGV);
 main;
