@@ -15,9 +15,7 @@ use File::Copy;
 use File::stat;
 use Fcntl ':mode';
 use Cwd qw(getcwd realpath);
-
 $|++;
-
 my $debug=1;
 my ($defcmd, $cmd) = qw(vim);
 sub help {
