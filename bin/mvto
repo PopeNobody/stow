@@ -1,10 +1,15 @@
 #!/usr/bin/perl
-
 use strict;
 use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use Getopt::WonderBra;
+use Data::Dumper;
 use File::Basename;
 use File::Copy;
-use GetOpt::WonderBra;
 
 if ( @ARGV < 1 ) {
 	print STDERR "usage: $0 <dest> <files...>\n";
