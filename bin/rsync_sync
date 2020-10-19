@@ -1,5 +1,9 @@
 rsync_sync () 
 {
+  if (($#==0)); then
+    echo >&2 "usage:  don't"
+      exit 1
+  fi
   while(($#)); do
     ssh $1 mkdir -p "$PWD"
     rsync -Parv $1:$PWD/. .
