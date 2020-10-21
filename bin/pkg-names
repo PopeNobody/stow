@@ -10,6 +10,7 @@ BEGIN {
 };
 use Util;
 use Data::Dumper;
+$Data::Dumper::Deparse=1;
 my $match;
 sub handle_args(\@)
 {
@@ -19,59 +20,56 @@ sub handle_args(\@)
     $match=sub($){ my $a=$_; for(@re) { return 1 if $a=~$_; } return 0;};
   };
 };
+sub void_line($) {
+  local ($_)=shift;
+  s{^\s*\S+\s+}{};
+  if( @_=m{(\S*)(-(alpha|)[Bv0-9]\S+)} ) {
+    return shift;
+  } else {
+    print "failed: $_\n";
+  };
+};
+sub void_source() {
+    return "xbps-query -s . -R|";
+};
+sub debian_source() {
+    return "apt-cache pkgnames|";
+};
+sub debian_line($) {
+  local ($_)=shift;
+  return unless @_=split;
+  return shift;
+};
+sub get_os_type() {
+  local (@_);
+  @_ = map { split } qx(os);
+  return shift;
+};
+sub line($);
+sub source();
+
+my $os_type=get_os_type();
+if( $os_type eq "void" ) {
+  *line=\&void_line;
+  *source=\&void_source;
+} elsif ( $os_type eq "debian" ) {
+  *line=\&debian_line;
+  *source=\&debian_source;
+} else {
+    die "os_type neither debian nor void\n";
+};
 sub main()
 {
   my %seen;
-  @ARGV="xbps-query -s . -R|";
+  @ARGV=source();
   while( <> )
   {
     if(defined($match)) {
       next unless $match->($_);
     };
-    s{^\s*\S+\s+}{};
-    if( @_=m{(\S*)(-(alpha|)[Bv0-9]\S+)} ) {
-      $seen{$_[0]}++;
-    } else {
-      print "failed: $_\n";
-    };
+    $seen{line($_)}++;
   };
-  #  my @fds = map { my $fd; open($fd,"|bash"); $fd; } map { undef } 1 .. 8;
-  #my $fd=0;
   print "$_\n" for sort keys %seen;
-  #push(@fds,shift(@fds));
 };
 @ARGV=handle_args(@ARGV);
-main;
-
-
-#    exit(0);
-#      print Dumper(\@_);
-#      exit(0);
-#      while(<STDIN>){
-#        print;
-#      };
-#      close(STDIN);
-#    };
-#    
-#    handle_args(@ARGV);
-#    if (@ARGV) {
-#    	my @re = map { qr/$_/ } @ARGV;
-#    	*match=sub($){ my $a=$_; for(@re) { return 1 if $a=~$_; } return 0;};
-#    } else {
-#    	*match=sub($){ return 1; };
-#    }
-#    sub getnames() {
-#    	return order grep { match($_) } ;
-#    }
-#    
-#    my @pkg;
-#    @pkg=getnames();
-#    
-#    
-#    
-#    @pkg=grep { match($_) } @pkg;
-#    @pkg=sort @pkg;
-#    
-#    print for @pkg;
-#    print sprintf("%d pkgs found\n",0+@pkg) if -t STDOUT;
-#    
+main();
