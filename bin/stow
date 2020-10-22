@@ -4,7 +4,6 @@ BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
-
 # GNU Stow - manage farms of symbolic links
 # Copyright (C) 1993, 1994, 1995, 1996 by Bob Glickstein
 # Copyright (C) 2000, 2001 Guillaume Morin
@@ -475,7 +474,6 @@ main() unless caller();
 
 sub main {
     my ($options, $pkgs_to_unstow, $pkgs_to_stow) = process_options();
-
     my $stow = new Stow(%$options);
     # current dir is now the target directory
 
