@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  $|++;
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use Util;
+use Data::Dumper;
+$Data::Dumper::Deparse=1;
+
+our(@ARGS) = splice(@ARGV);
+use IO::Pipe;
+my $err = new IO::Pipe;
+if(!fork) {
+  {
+    my $tmp;
+    open($tmp,">&STDOUT");
+    open(STDOUT,">&STDERR");
+    open(STDERR,">&".fileno($tmp));
+    undef($tmp);
+  };
+  our(@err);
+  while(<STDIN>){
+    chomp;
+    next unless length;
+    push(@err, "err:$.:$_\n");
+  };
+  select(STDERR);
+  print for @err;
+  exit(0);
+} elsif(!open(STDIN,"-|")) {
+  print "$_\0" for @ARGS;
+} elsif(!open(STDIN,"-|")) {
+  exec "xargs -0 pkg-names", @ARGV;
+} elsif (!open(STDOUT,"|-")) {
+  exec "xargs apt-cache show";
+} else {
+  while(<STDIN>) {
+    print;
+  };
+  close(STDIN);
+  close(STDOUT);
+  print STDERR "\n";
+  close(STDERR);
+};
