@@ -401,7 +401,7 @@ sub stow_contents {
     next NODE if $self->ignore($stow_path, $package, $node_target);
 
     if ($self->{dotfiles}) {
-      print STDERR "node_target=$node_target\n";
+      #print STDERR "node_target=$node_target\n";
       next NODE if $node_target =~ m{/dot$};
       my $adj_node_target = adjust_dotfile($node_target);
       debug(4, "  Adjusting: $node_target => $adj_node_target");
