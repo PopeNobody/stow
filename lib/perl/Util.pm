@@ -32,9 +32,8 @@ sub eval_and_warn
   };
   print DD({ @_ });
 };
-1;
-__DATA__
-BEGIN {
+sub dump_env
+{
   local(@ARGV) = qw( $0 \@ARGV \@INC \%INC \%ENV  );
   @ARGV= map { split } @ARGV;
   eval_and_warn(@ARGV);

@@ -1,14 +1,18 @@
 #!/bin/bash
 
-exec 2>/dev/null
-if tty -s <&1; then
-  exec 99>&1
-elif tty -s <&0; then
-  exec 99>&0
-elif tty -s <&2; then
-  exec 99>&2
-else
-  exec 99>/dev/tty
-fi
-echo "$@" >&99
+tty_say() {
+  exec 2>/dev/null
+  if tty -s <&1; then
+    exec 99>&1
+  elif tty -s <&0; then
+    exec 99>&0
+  elif tty -s <&2; then
+    exec 99>&2
+  else
+    exec 99>/dev/tty
+  fi
+  echo "$@" >&99
+};
+return 2>/dev/null
+tty_say "$@"
 

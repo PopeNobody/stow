@@ -10,6 +10,17 @@ BEGIN {
 };
 use Util;
 use Data::Dumper;
+use Getopt::WonderBra;
+
+sub help {
+  print "I can't help you.";
+}
+sub version {
+  print "some other version";
+};
+
+
+
 $Data::Dumper::Deparse=1;
 my $match;
 sub handle_args(\@)

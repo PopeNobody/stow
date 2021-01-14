@@ -16,9 +16,13 @@ sub version
 {
   print "$0: version 0.2.0";
 };
-@ARGV=getopt("du",@ARGV);
+@ARGV=getopt("bdu",@ARGV);
 our(%hand);
 my ($dup) = ( 0, 0 );
+my $block=0;
+$hand{-b}=sub {
+  $block=1;
+};
 $hand{-u}=sub {
   $dup=-1;
 };
@@ -43,15 +47,43 @@ while(<>) {
 	push(@{$data{$k}}, @v);
 };
 {
-  $,=" ";
-  $\="\n";
-  for $k (sort keys %data){
-    @v=@{$data{$k}};
-    if( $dup == 1 && @v < 2 ) {
-      next;
-    } elsif ( $dup == -1 && @v >= 2 ) {
-      next;
+  if( $block ) {
+    my ($max) = 0;
+    for $k (keys %data) {
+      for( @{$data{$k}} ) {
+        $max=length if $max<length;
+      };
     };
-    print $k, @v;
-  };
+    $max+=2;
+    print "max:\n";
+    my $col = $ENV{COLUMNS} || 80;
+    for $k (sort keys %data){
+      print "\n$k";
+      my $pos = $col;
+      @v=@{$data{$k}};
+      for(@v)
+      {
+        if ( $pos >= ($col-$max) ) {
+          print "\n     ";
+          ($pos) = 5;
+        };
+        $_=$_.(' 'x($max-length));
+        print $_;
+        $pos+=$max;
+      };
+      print "\n";
+    };
+  } else {
+    $,=" ";
+    $\="\n";
+    for $k (sort keys %data){
+      @v=@{$data{$k}};
+      if( $dup == 1 && @v < 2 ) {
+        next;
+      } elsif ( $dup == -1 && @v >= 2 ) {
+        next;
+      };
+      print $k, @v;
+    }
+  }
 };

@@ -28,34 +28,46 @@ sub fix_name($)
 {
 	for(shift)
   {
-    return $_ unless s/[^.a-zA-Z0-9-]/_/g;
+    return $_ unless s/[^.a-zA-Z0-9%:+-]/_/g;
     use Data::Dumper;
     s/__+/_/g;
     return $_;
 	};
   die "no arg for fix_name!";
 };
+sub version {
+  print "usage: $0 version 1.0.0";
+};
+sub help {
+  print "usage: $0 -[yd]";
+  print "   -y:  yes, do it ( dry run otherwise )";
+  print "   -d:  debug";
+};
 sub handle_args()
 {
-  local (@_)=splice(@ARGV);
-  for(@_)
+  use Getopt::WonderBra;
+  local (@_)=getopt("yd",@ARGV);
+  while($_[0] ne '--')
   {  
-    if (/^-y$/){
-      $dry_run=0;
-    } elsif ( /^-d/ ) {
-      $debug=1;
-    } else {
-      push(@ARGV,$_);
+    for(shift) {
+      if (/^-y$/){
+        $dry_run=0;
+      } elsif ( /^-d/ ) {
+        $debug=1;
+      };
     };
   };
+  shift;
+  @ARGV=@_;
 };
 sub main
 {
   handle_args;
-  open(STDERR,">&STDOUT") if $dry_run;
+  #open(STDERR,">&STDOUT") if $dry_run;
   $debug=1 if $dry_run;
   my @dir;
-  push(@dir, @ARGV || $ENV{PWD} );
+  push(@dir, @ARGV);
+  push(@dir,$ENV{PWD}) unless @dir;
   my @todo;
   $\="\n";
   while(@dir) {
@@ -68,20 +80,25 @@ sub main
       @_;
     };
     for(@dents) {
+      my $is_dir=0;
       my $orig=$_;
       my $dest=fix_name($_);
       my $forig="$dir/$orig";
       my $fdest="$dir/$dest";
+      if( $orig ne $dest ) {
+        if( -e $dest ) {
+          warn "will not clobber $dest with $orig\n";
+          next;
+        };
+        xrename($forig,$fdest);
+      };
       if( -d "$forig" ) {
-        push(@dir,"$forig");
+        if($dry_run) {
+          push(@dir,"$forig");
+        } else {
+          push(@dir,"$fdest");
+        };
       };
-      next if $orig eq $dest;
-      next if -l $forig && readlink($forig) eq $dest;
-      if( -e $dest ) {
-        warn "will not clobber $dest with $orig\n";
-        next;
-      };
-      xrename($forig,$fdest);
     };
   };
 };
