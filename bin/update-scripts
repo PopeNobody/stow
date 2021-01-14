@@ -1,0 +1,9 @@
+#!/bin/bash
+
+export PATH=/usr/local/bin:$PATH
+exec >> /tmp/scripts.update 2>&1
+echo "running $$ at $(serdate)"
+cd /usr/local/stow/scripts
+git fetch
+cd ..
+stow scripts

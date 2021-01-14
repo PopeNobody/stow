@@ -21,16 +21,8 @@ sub version {
 
 
 
+open(STDIN,"</dev/null");
 $Data::Dumper::Deparse=1;
-my $match;
-sub handle_args(\@)
-{
-  local(*_)=shift;
-  if(@_) {
-    my @re = map { qr/$_/ } @ARGV;
-    $match=sub($){ my $a=$_; for(@re) { return 1 if $a=~$_; } return 0;};
-  };
-};
 sub void_line($) {
   local ($_)=shift;
   s{^\s*\S+\s+}{};
@@ -41,46 +33,61 @@ sub void_line($) {
   };
 };
 sub void_source() {
-    return "xbps-query -s . -R|";
+    open(STDIN,"xbps-query -s . -R|");
 };
 sub debian_source() {
-    return "apt-cache pkgnames|";
+    open(STDIN,"apt-cache pkgnames|");
 };
 sub debian_line($) {
-  local ($_)=shift;
-  return unless @_=split;
-  return shift;
+  chomp;
+  $_;
 };
 sub get_os_type() {
   local (@_);
   @_ = map { split } qx(os);
   return shift;
 };
+sub match($);
 sub line($);
-sub source();
+sub handle_args(\@);
 
 my $os_type=get_os_type();
 if( $os_type eq "void" ) {
   *line=\&void_line;
-  *source=\&void_source;
+  void_source();
 } elsif ( $os_type eq "debian" ) {
   *line=\&debian_line;
-  *source=\&debian_source;
+  debian_source();
 } else {
     die "os_type neither debian nor void\n";
 };
 sub main()
 {
   my %seen;
-  @ARGV=source();
-  while( <> )
+  while( <STDIN> )
   {
-    if(defined($match)) {
-      next unless $match->($_);
-    };
+    next unless match($_);
     $seen{line($_)}++;
   };
   print "$_\n" for sort keys %seen;
 };
 @ARGV=handle_args(@ARGV);
 main();
+sub handle_args(\@)
+{
+  local(*_)=shift;
+  if(@_) {
+    my @re = map { qr/$_/ } @ARGV;
+    *match=sub ($){
+      my $a=$_;
+      for(@re) {
+        return 1 if $a=~$_;
+      }
+      return 0;
+    };
+  } else {
+    *match=sub ($){
+      1;
+    };
+  };
+};

@@ -35,7 +35,7 @@ while ( ( $_ = shift ) ne '--' )
   } elsif ( /^-c$/ ) {
     $cluck=1;
   } elsif ( /^-n$/ ) {
-    print "neg\n";
+    cluck "warning:  double-negative" if $neg;
     $neg=!$neg;
   } else {
     die "I do not grok -", $_;
@@ -55,7 +55,7 @@ if(@ARGV) {
   while(<STDIN>){
     chomp;
     if($cluck) {
-      cluck "$_\n" if eval $test;
+      cluck "cluck $_\n" if eval $test;
     } else {
       print "$_\n" if eval $test;
     };

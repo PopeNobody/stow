@@ -2,8 +2,21 @@
 
 findext () 
 { 
+  if [ "$*" == "-r" ]; then
+    findext |
+      awk '{print $2,$1}' |
+      column -t |
+      sort;
+
+  else
+
     find -type f -not -name '.*' -name '*.*' |
-      sed 's,.*\.,,' | sort | uniq -c | sort -n
+      sed 's,.*\.,,' |
+      sort |
+      uniq -c |
+      column -t |
+      sort -n
+  fi
 }
 export -f findext
 return 0 2>/dev/null
