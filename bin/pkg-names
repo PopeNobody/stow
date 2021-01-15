@@ -58,6 +58,9 @@ if( $os_type eq "void" ) {
 } elsif ( $os_type eq "debian" ) {
   *line=\&debian_line;
   debian_source();
+} elsif ( $os_type eq "ubuntu" ) {
+  *line=\&debian_line;
+  debian_source();
 } else {
     die "os_type neither debian nor void\n";
 };
