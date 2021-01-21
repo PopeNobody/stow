@@ -111,7 +111,7 @@ sub handle_arg($)
 	return @_;
 };
 sub update() {
-	if(grep { defined } map { $args{$_} } qw(type whold qr ))
+	if(grep { defined } map { $args{$_} } qw(type whole qr ))
 	{
 		die "update should be used alone."
 	};

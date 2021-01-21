@@ -121,7 +121,7 @@ sub run_filt($$$@)
         $sel->remove($pipe);
         close($pipe) or die "close:$!";
         $_="$_\n" if length($$ref);
-      }
+      };
       next unless chomp;
       if($stream && s{ at (\S+) line (\d+)\.*}{})
       {

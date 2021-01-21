@@ -1,8 +1,15 @@
 #!/usr/bin/perl
  
-$|++;
 use strict;
 use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+};
+use Getopt::WonderBra;
 
 our($dry_run, $debug, $link, $replace);
 ($dry_run, $debug, $link, $replace) = qw( 1 0 1 1 );
