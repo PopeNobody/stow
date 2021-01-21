@@ -1,0 +1,27 @@
+#!/bin/perl
+
+my @rows;
+my $max=0;
+my @lens;
+my @keep;
+my @argv;
+
+for(@ARGV)
+{
+  if(/^\d+$/){
+    push(@keep,$_);
+  } else {
+    push(@argv,$_);
+  };
+};
+@ARGV=splice(@argv);
+
+$\="\n";
+$,="    ";
+
+my ($max) = sort { $b <=> $a } @keep;
+while(<>)
+{
+  my @row=split;
+  print join(" ", map { $row[$_] } @keep ) if @row > $max;
+};
