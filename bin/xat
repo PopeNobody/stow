@@ -1,0 +1,4 @@
+#!/bin/bash
+
+
+echo env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY "$@" | at now
