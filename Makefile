@@ -1,2 +1,2 @@
 all:
-	vi_perl bin/fixpath.pl
+	vi_perl bin/fixpath
