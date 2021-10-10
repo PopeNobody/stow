@@ -1,4 +1,16 @@
 #!/bin/bash
 
+if test -z "$*"; then
+	echo >&2 usage: xat "<program>"
+	echo >&2 "  runs x program detached, using at"
+	echo >&2
+	exit 1
+fi
+if (( ! $EUID )); then
+	echo 0
+	exit 2
+else
+	echo "!0"
+fi
 
 echo env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY "$@" | at now
