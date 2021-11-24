@@ -14,6 +14,8 @@ BEGIN {
 $|++;
 $\="\n";
 
+our($verbose);
+
 sub main(@);
 main(@ARGV);
 
@@ -47,8 +49,8 @@ sub main(@)
     };
   };
   die "no script found" unless defined $script;
-  print STDERR "script=$script";
-  print STDERR "realscript=$realscript";
+  print STDERR "script=$script" if $verbose;
+  print STDERR "realscript=$realscript" if $verbose;
 
   my ($pipe1,$pipe2);
   $pipe1=new IO::Pipe;
