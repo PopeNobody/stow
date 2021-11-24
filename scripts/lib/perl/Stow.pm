@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 #
+#
 # This file is part of GNU Stow.
 #
 # GNU Stow is free software: you can redistribute it and/or modify it
@@ -370,7 +371,6 @@ sub stow_contents {
   my ($stow_path, $package, $target, $source) = @_;
 
   my $path = join_paths($stow_path, $package, $target);
-
   return if $self->should_skip_target_which_is_stow_dir($target);
 
   my $cwd = getcwd();
@@ -382,6 +382,19 @@ sub stow_contents {
   if( ! -d $path ) {
     $DB::single=1;
     $DB::single=1;
+    my @parts = split(m{/+},$path);
+    my $parts = ".";
+    while(@parts) {
+      my $part = shift @parts;
+      my $new_parts = "$parts/$part";
+      if(-d "$new_parts"){
+        $parts=$new_parts;
+        next;
+      };
+      last unless $part =~ s{^[.]}{dot-};
+      $parts = "$parts/$part";
+    };
+    $path=$parts if -d $parts;
   }
   error("stow_contents() called with non-directory path: $path")
   unless -d $path;
