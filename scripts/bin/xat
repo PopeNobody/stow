@@ -13,4 +13,7 @@ else
 	echo "!0"
 fi
 
-echo env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY "$@" | at now
+{
+  echo "exec > $HOME/tmp/xat.log 2>&1" 
+  echo "env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY" $(printf ' %q ' "$@")
+} | at now
