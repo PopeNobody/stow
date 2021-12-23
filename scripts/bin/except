@@ -5,15 +5,6 @@ use warnings;
 use strict;
 use Data::Dumper;
 use autodie qw(:all);
-#    BEGIN {
-#      open(STDOUT,"|less -S");
-#      open(STDERR,">&STDOUT");
-#    };
-#    END {
-#      close(STDERR);
-#      close(STDOUT);
-#    };
-
 our(@filter);
 sub help()
 {
