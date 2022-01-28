@@ -55,13 +55,10 @@ my $os_type=get_os_type();
 if( $os_type eq "void" ) {
   *line=\&void_line;
   void_source();
-} elsif ( $os_type eq "ubuntu" ) {
+} elsif ( $os_type eq "debian" ) {
   *line=\&debian_line;
   debian_source();
 } elsif ( $os_type eq "linuxmint" ) {
-  *line=\&debian_line;
-  debian_source();
-} elsif ( $os_type eq "debian" ) {
   *line=\&debian_line;
   debian_source();
 } elsif ( $os_type eq "ubuntu" ) {

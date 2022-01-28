@@ -1,4 +1,4 @@
 #!/bin/bash
 
-env=( TERM="$TERM" HOME="$HOME" PATH="$PATH" )
+env=( TERM="$TERM" HOME="$HOME" PATH="$PATH" CLEANMAKE=1 )
 exec /usr/bin/env -i "${env[@]}" make "$@"

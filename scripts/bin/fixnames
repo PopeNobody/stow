@@ -24,7 +24,7 @@ sub xrename($$) {
     my $to=shift or die;
     die "too many args" if @_;
     if($dry_run) {
-        debug("will not rename ($from) to ($to)");
+        print ("$from =>\n  $to") if $dry_run;
         return $from;
     }else{
 				rename($from,$to) or die "rename:$from,$to:$!";
@@ -71,7 +71,6 @@ sub main
 {
   handle_args;
   #open(STDERR,">&STDOUT") if $dry_run;
-  $debug=1 if $dry_run;
   my @dir;
   push(@dir, @ARGV);
   push(@dir,$ENV{PWD}) unless @dir;
@@ -107,6 +106,9 @@ sub main
         };
       };
     };
+  };
+  if($dry_run){
+    print "\nuse -y to actually move files\n";
   };
 };
 main;
