@@ -379,23 +379,7 @@ sub stow_contents {
   debug(3, $msg);
   debug(4, "  => $source");
 
-  if( ! -d $path ) {
-    $DB::single=1;
-    $DB::single=1;
-    my @parts = split(m{/+},$path);
-    my $parts = ".";
-    while(@parts) {
-      my $part = shift @parts;
-      my $new_parts = "$parts/$part";
-      if(-d "$new_parts"){
-        $parts=$new_parts;
-        next;
-      };
-      last unless $part =~ s{^[.]}{dot-};
-      $parts = "$parts/$part";
-    };
-    $path=$parts if -d $parts;
-  }
+  $path =~ s{/[.]}{/dot-}g if $self->{dotfiles};
   error("stow_contents() called with non-directory path: $path")
   unless -d $path;
   error("stow_contents() called with non-directory target: $target")
@@ -408,14 +392,21 @@ sub stow_contents {
 
   NODE:
   for my $node (@listing) {
-    next NODE if $node eq '.';
-    next NODE if $node eq '..';
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $path";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
     my $node_target = join_paths($target, $node);
     next NODE if $self->ignore($stow_path, $package, $node_target);
 
     if ($self->{dotfiles}) {
       #print STDERR "node_target=$node_target\n";
-      next NODE if $node_target =~ m{/dot$};
       my $adj_node_target = adjust_dotfile($node_target);
       debug(4, "  Adjusting: $node_target => $adj_node_target");
       $node_target = $adj_node_target;
@@ -659,8 +650,16 @@ sub unstow_contents_orig {
 
   NODE:
   for my $node (@listing) {
-    next NODE if $node eq '.';
-    next NODE if $node eq '..';
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $target";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
     my $node_target = join_paths($target, $node);
     next NODE if $self->ignore($stow_path, $package, $node_target);
     $self->unstow_node_orig($stow_path, $package, $node_target);
@@ -770,9 +769,9 @@ sub unstow_contents {
   $msg =~ s!$ENV{HOME}/!~/!g;
   debug(3, $msg);
   debug(4, "  source path is $path");
+  $path =~ s{/[.]}{/dot-}g if $self->{dotfiles};
   # We traverse the source tree not the target tree, so $path must exist.
-  error("unstow_contents() called with non-directory path: $path")
-  unless -d $path;
+  error("unstow_contents() called with non-directory path: $path") unless -d $path;
   # When called at the top level, $target should exist.  And
   # unstow_node() should only call this via mutual recursion if
   # $target exists.
@@ -786,8 +785,16 @@ sub unstow_contents {
 
   NODE:
   for my $node (@listing) {
-    next NODE if $node eq '.';
-    next NODE if $node eq '..';
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $path";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
     my $node_target = join_paths($target, $node);
     next NODE if $self->ignore($stow_path, $package, $node_target);
 
@@ -795,6 +802,9 @@ sub unstow_contents {
       my $adj_node_target = adjust_dotfile($node_target);
       debug(4, "  Adjusting: $node_target => $adj_node_target");
       $node_target = $adj_node_target;
+
+      # double check ignore
+      next NODE if $self->ignore($stow_path, $package, $node_target);
     }
 
     $self->unstow_node($stow_path, $package, $node_target);
@@ -1033,8 +1043,16 @@ sub cleanup_invalid_links {
 
   NODE:
   for my $node (@listing) {
-    next NODE if $node eq '.';
-    next NODE if $node eq '..';
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $dir";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
 
     my $node_path = join_paths($dir, $node);
 
@@ -1089,8 +1107,16 @@ sub foldable {
   NODE:
   for my $node (@listing) {
 
-    next NODE if $node eq '.';
-    next NODE if $node eq '..';
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $target";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
 
     my $path =  join_paths($target, $node);
 
@@ -1153,8 +1179,17 @@ sub fold_tree {
 
   NODE:
   for my $node (@listing) {
-    next NODE if $node eq '.';
-    next NODE if $node eq '..';
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $target";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
+
     next NODE if not $self->is_a_node(join_paths($target, $node));
     $self->do_unlink(join_paths($target, $node));
   }

@@ -208,6 +208,20 @@ sub restore_cwd {
     chdir($prev) or error("Your current directory $prev seems to have vanished");
 }
 
+sub reverse_dotfile {
+    my ($target) = @_;
+
+    my @result = ();
+    for my $part (split m{/+}, $target) {
+        if (($part ne ".") && ($part ne "..")) {
+            $part =~ s/^[.]/dot-/;
+        }
+        push @result, $part;
+    }
+
+    return join '/', @result;
+}
+
 sub adjust_dotfile {
     my ($target) = @_;
 
