@@ -1051,6 +1051,7 @@ sub skipnode {
   if($self->{dotfiles}) {
     return 1 if $node eq '.';
     return 1 if $node eq '..';
+    return 0 if $node eq $LOCAL_IGNORE_FILE;
     if(substr($node,0,1) eq '.') {
       warn "skipping $node with dotfiles on in $path";
       return 1;
