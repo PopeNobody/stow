@@ -22,15 +22,12 @@ sub version() {
 my $test;
 my $neg=0;
 my $cluck=0;
-sub is_regular {
-  grep { -f } @_;
-};
 
 @ARGV = getopt( 'fdnlec', @ARGV );
 while ( ( $_ = shift ) ne '--' )
 {
   if ( /^-[fdle]$/ ) {
-    die "repeated specification of -[fdle]" if defined $test;
+    die "repeated specification of -[fdle]" if defined $test && $test ne $_;
     $test="$_ \$_";
   } elsif ( /^-c$/ ) {
     $cluck=1;
@@ -62,19 +59,3 @@ if(@ARGV) {
   };
 };
 
-__DATA__
-my $present=1;
-if(@ARGV && $ARGV[0] eq '-m')
-{
-  $present=0;
-};
-
-if(@ARGV) {
-	print "$_\n" for grep { $present xor -f } @ARGV;
-	exit(0);
-};
-warn "reading from STDIN\n" if -t STDIN;
-$,=$\="\n";
-while(<>){
-	print for grep { -f } split;
-};
