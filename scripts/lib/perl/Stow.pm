@@ -1048,10 +1048,10 @@ sub skipnode {
   die "missing node name to check" unless @_;
   my $node=shift;
   die "extra args " if @_;
+  return 1 if $node eq '.';
+  return 1 if $node eq '..';
+  return 1 if $node eq $LOCAL_IGNORE_FILE;
   if($self->{dotfiles}) {
-    return 1 if $node eq '.';
-    return 1 if $node eq '..';
-    return 0 if $node eq $LOCAL_IGNORE_FILE;
     if(substr($node,0,1) eq '.') {
       warn "skipping $node with dotfiles on in $path";
       return 1;
@@ -1060,9 +1060,6 @@ sub skipnode {
       warn "skipping degenerate dotfile $node in $path";
       return 1;
     };
-  } else {
-    return 1 if $node eq '.';
-    return 1 if $node eq '..';
   };
   return 0;
 };
