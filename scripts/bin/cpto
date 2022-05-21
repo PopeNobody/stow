@@ -9,9 +9,9 @@ BEGIN {
 use File::Spec;
 print STDERR "Script: $Script\n";
 my (%cmd,$cmd);
-$cmd{cpto}=[ "cp","-v" ];
-$cmd{mvto}=[ "mv","-v" ];
-$cmd{lnto}=[ "ln","-s", "-v" ];
+$cmd{cpto}=[ "cp","-vi" ];
+$cmd{mvto}=[ "mv","-vi" ];
+$cmd{lnto}=[ "ln","-s", "-vi" ];
 $cmd=$cmd{$Script};
 use Getopt::WonderBra;
 use Data::Dumper;
