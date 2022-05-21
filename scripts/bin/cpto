@@ -6,46 +6,36 @@ BEGIN {
   use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
 };
+use File::Spec;
 print STDERR "Script: $Script\n";
-my %cmd;
-$cmd{cpto}=sub {
-  unshift(@_,$Script);
-  print STDERR Dumper(\@_), "\n";
-};
-$cmd{mvto}=$cmd{cpto};
-$cmd{lnto}=$cmd{cpto};
-sub cmd($) {
-  local (@_);
-  @_=@{$cmd{$Script}};
-};
-my $name=$Script;
-my $func=$cmd{$name};
+my (%cmd,$cmd);
+$cmd{cpto}=[ "cp" ];
+$cmd{mvto}=[ "mv" ];
+$cmd{lnto}=[ "ln","-s" ];
+$cmd=$cmd{$Script};
 use Getopt::WonderBra;
 use Data::Dumper;
 use File::Basename;
+use Cwd;
 
 if ( @ARGV < 1 ) {
 	print STDERR "usage: $0 <dest> <files...>\n";
 	exit 1;
 }
 
-
 my $dir=shift;
-unless ( -d $dir ) {
-	mkdir $dir or die "mkdir:$dir:$!";
-};
+mkdir $dir unless -d $dir;
 
-for(@ARGV) {
-	unless( -e "$_" ) {
-		warn "'$_' does not exist";
-		next;
-	};
-	my $dst="$dir/".basename($_);
-	if( -e $dst ) {
-		warn "'$dst' exists.  Skipping\n";
-		next;
-	}
-	unless(doit($_,$dst)) {
-		warn "$name($_,$dst) failed:$!";
-	};
+for(@ARGV){
+  $_=File::Spec->rel2abs($_);
+};
+chdir($dir);
+for(@ARGV){
+  my $dst=basename($_);
+  my $src=File::Spec->abs2rel($_);
+  if(-e "$dst") {
+    print "'$dst' exists, skipping\n";
+  } else {
+    system(@$cmd,$src,$dst);
+  };
 };

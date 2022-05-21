@@ -10,7 +10,6 @@ BEGIN {
 use Data::Dumper;
 use Getopt::WonderBra;
 use File::Basename;
-use File::Copy;
 use Carp qw(cluck);
 
 sub help() {
