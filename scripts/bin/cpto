@@ -1,17 +1,39 @@
 #!/usr/bin/perl
-
 use strict;
 use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin $Script);
+  use lib "$Bin/../lib/perl";
+};
+print STDERR "Script: $Script\n";
+my %cmd;
+$cmd{cpto}=sub {
+  unshift(@_,$Script);
+  print STDERR Dumper(\@_), "\n";
+};
+$cmd{mvto}=$cmd{cpto};
+$cmd{lnto}=$cmd{cpto};
+sub cmd($) {
+  local (@_);
+  @_=@{$cmd{$Script}};
+};
+my $name=$Script;
+my $func=$cmd{$name};
+use Getopt::WonderBra;
+use Data::Dumper;
 use File::Basename;
-use File::Copy;
 
 if ( @ARGV < 1 ) {
 	print STDERR "usage: $0 <dest> <files...>\n";
 	exit 1;
 }
 
+
 my $dir=shift;
--d "$dir" || die "$dir is not a dir";
+unless ( -d $dir ) {
+	mkdir $dir or die "mkdir:$dir:$!";
+};
 
 for(@ARGV) {
 	unless( -e "$_" ) {
@@ -23,7 +45,7 @@ for(@ARGV) {
 		warn "'$dst' exists.  Skipping\n";
 		next;
 	}
-	unless(copy($_,$dst)) {
-		warn "copy($_,$dst) failed:$!";
+	unless(doit($_,$dst)) {
+		warn "$name($_,$dst) failed:$!";
 	};
 };
