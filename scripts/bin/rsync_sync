@@ -5,6 +5,7 @@ rsync_sync ()
       exit 1
   fi
   while(($#)); do
+    set -e
     ssh $1 mkdir -p "$PWD"
     rsync -Parv $1:$PWD/. .
     rsync -Parv . $1:$PWD/.

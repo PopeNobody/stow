@@ -13,6 +13,8 @@ $cmd{cpto}=[ "cp","-vi" ];
 $cmd{mvto}=[ "mv","-vi" ];
 $cmd{lnto}=[ "ln","-s", "-vi" ];
 $cmd=$cmd{$Script};
+my $copying = ($Script eq "cpto");
+die "script should be named cpto, mvto, or lnto; not $Script" unless defined $cmd;
 use Getopt::WonderBra;
 use Data::Dumper;
 use File::Basename;
@@ -37,7 +39,7 @@ for(@ARGV){
   my $src=File::Spec->abs2rel($_);
   if(-e "$dst") {
     warn "'$dst' exists, skipping\n";
-  } elsif(-d "$src") {
+  } elsif($copying && -d "$src") {
     warn "'$src' is a dir, skipping";
   } else {
     system(@$cmd,$src,$dst);

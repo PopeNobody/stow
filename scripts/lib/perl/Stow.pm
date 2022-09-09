@@ -1051,9 +1051,15 @@ sub skipnode {
   return 1 if $node eq '.';
   return 1 if $node eq '..';
   return 1 if $node eq $LOCAL_IGNORE_FILE;
+  return 1 if $node eq ".keep";
+  return 1 if $node eq ".git";
   if($self->{dotfiles}) {
     if(substr($node,0,1) eq '.') {
-      warn "skipping $node with dotfiles on in $path";
+      my $msg="skipping $node with dotfiles on in $path";
+      if($path eq '.') {
+        $msg=join("\n", $msg, "  path=".getcwd());
+      }
+      warn($msg);
       return 1;
     };
     if($node eq 'dot-' || $node eq 'dot-.'){

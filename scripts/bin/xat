@@ -15,5 +15,5 @@ fi
 
 {
   echo "exec >> $HOME/tmp/xat.log 2>&1" 
-  echo "env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY" $(printf ' %q ' "$@")
+  echo "env DISPLAY=$DISPLAY XAUTHORITY=$XAUTHORITY" setsid nohup $(printf ' %q ' "$@")
 } | at now
