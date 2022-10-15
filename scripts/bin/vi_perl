@@ -85,8 +85,12 @@ sub main(@)
   die "wtf?";
 
 };
+
 my ($out,$err);
 sub run_perl($$$@) {
+  for(sort keys %SIG){
+    $SIG{$_}='IGNORE';
+  };
   my ($out,$err,$script,@args) = splice(@_);
   open(STDOUT,">&".fileno($out->writer)) or die;
   close($out);

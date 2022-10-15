@@ -70,7 +70,7 @@ sub handle_args()
 sub main
 {
   handle_args;
-  #open(STDERR,">&STDOUT") if $dry_run;
+  open(STDERR,">&STDOUT") if $dry_run;
   my @dir;
   push(@dir, @ARGV);
   push(@dir,$ENV{PWD}) unless @dir;
