@@ -1,0 +1,19 @@
+#!/usr/bin/perl
+
+$\="\n";
+my @groups;
+while(<STDIN>){
+  chomp;
+  my @parts = split /\b(\d+)\b/;
+  for(@parts) {
+    if(/^\d\d\d\d+$/) {
+      my @digits = split '';
+      while(@digits>3){
+        unshift(@groups, join("",reverse(pop(@digits),pop(@digits),pop(@digits))));
+      };
+      unshift(@groups,join("",@digits));
+      $_=join(",",@groups);
+    };
+  };
+  print @parts;
+};
