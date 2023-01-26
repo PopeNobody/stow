@@ -1,0 +1,131 @@
+#!/usr/bin/perl
+$|++;
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+};
+use Getopt::WonderBra;
+use File::Basename;
+use File::Copy;
+
+use vars qw( %args );
+$args{fn}="/var/cache/apt/apt-file-search-slash";
+sub help() {
+  print "usage: $0 [-ud] [-p qr | -f qr]\n";
+	print "       -u update:   our cache file, using apt-file\n";
+	print "       -p package:  match our regex against the pkg side\n";
+	print "       -f file:     match our regex agaisnt the file side\n";
+	print "       -l line:     match our regex against the line side\n";
+};
+sub set_type($);
+my $hands={
+	'-u' => sub{ $_=1 for $args{update}; },
+	'-p' => sub{ set_type('package'); },
+	'-f' => sub{ set_type('file'); },
+	'-l' => sub{ set_type('line'); },
+};
+sub version {
+  print "$0 version 0.2.0\n";
+};
+sub main(@);
+use Getopt::WonderBra;
+exit(main(@ARGV));
+die "wtf?";
+
+
+
+sub file_match($) {
+};
+sub pack_match($) {
+};
+sub line_match($) {
+	my $qr=shift;
+};
+sub loop($) {
+	my $qr=shift;
+	open(STDIN,"<$args{fn}");
+	if( $args{type} eq 'file' ) {
+		while(<STDIN>){
+      next unless m{:.*$qr};
+			chomp;
+			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+			print if $file=~m{$qr};
+		};
+	} elsif ( $args{type} eq 'package' ) {
+		while(<STDIN>){
+      next unless m{$qr.*:};
+			chomp;
+			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+			print if $pkg=~m{$qr};
+		};
+	} elsif ( $args{type} eq 'line' ) {
+		while(<STDIN>){
+			next unless m{$qr};
+			chomp;
+      print;
+		};
+	} else {
+		die "idk how to handle $args{type}";
+	};
+	close(STDIN);
+	die "$@" if "$@";
+	open(STDIN,"</dev/null");
+	return 0;
+};
+sub main(@)
+{
+	local $_;
+	$_=undef for @args{ qw( qr type ) };
+	$args{orig}=[\@_];
+	@_=getopt('uwpflzdD',@_);
+	while(($_=shift(@_))ne'--')
+	{
+		@_=handle_arg($_,@_);
+	};
+	return update() if $args{update};
+	die "need pattern" unless @_;
+	$args{qr}=shift;
+	die "extra args (@_)" if @_;
+	$args{qr}=qr{$args{qr}};
+
+
+	$args{type}='line' unless defined $args{type};
+	return loop($args{qr});
+
+};
+
+sub set_type($) {
+	local *_=\$args{type};
+	die "THERE CAN BE ONLY ONE!" if defined;
+	$_=shift;
+};
+sub handle_arg($)
+{
+	local ($_)=shift;
+	my $hand=$hands->{$_};
+	die "I do not grok '$_'" unless defined $hand;
+	$hand->($_,@_);
+	return @_;
+};
+sub update() {
+	if(grep { defined } map { $args{$_} } qw(type whole qr ))
+	{
+		die "update should be used alone."
+	};
+	open(STDOUT,">$args{fn}.new");
+	open(STDIN,"apt-file search /|");
+	local($\)="";
+	while(<STDIN>){
+		print;
+		print STDERR "." unless $.%1000;
+	};
+	rename("$args{fn}",     "$args{fn}.old");
+	rename("$args{fn}.new", "$args{fn}"    );
+	return 0;
+};
