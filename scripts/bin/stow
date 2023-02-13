@@ -1,5 +1,5 @@
 #!/usr/bin/perl
-#
+
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
@@ -778,7 +778,7 @@ sub _safe_expand_env_var {
 sub expand_tilde {
     my ($path) = @_;
     # Replace tilde with home path.
-	$path =~ s{ ^ ~ ( [^/]* ) }
+	  $path =~ s{ ^ ~ ( [^/]* ) }
                   { $1
                     ? (getpwnam($1))[7]
                     : ( $ENV{HOME} || $ENV{LOGDIR}

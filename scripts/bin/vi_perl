@@ -30,7 +30,6 @@ sub main(@)
     die "usage: $0 [script and args ...] ...\n...";
   };
   $realscript=$script=shift;
-
   if( $realscript ne "-e" ) {
     if( ! -f $realscript ) {
       s{^sudo:}{} for $realscript;
@@ -38,8 +37,7 @@ sub main(@)
     if( ! -f $realscript ) {
       my @path;
       @path = split(/:/, $ENV{PATH});
-      $_=join('/',$_,$realscript) for @path;
-      @path = grep { -e } @path;
+      @path = grep { -e } map { join('/',$_,$realscript) } @path;
       $realscript=shift @path;
     };
     if( ! -f $realscript ) {

@@ -1,4 +1,0 @@
-#!/bin/bash
-# vim: ts=2 sw=2 ft=sh
-
-{ printf '%q\n' "$@"; "$@"; } </dev/tty >&0 2>&0

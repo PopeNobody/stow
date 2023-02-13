@@ -52,20 +52,23 @@ sub loop($) {
 	open(STDIN,"<$args{fn}");
 	if( $args{type} eq 'file' ) {
 		while(<STDIN>){
+      next unless m{:.*$qr};
 			chomp;
 			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
 			print if $file=~m{$qr};
 		};
 	} elsif ( $args{type} eq 'package' ) {
 		while(<STDIN>){
+      next unless m{$qr.*:};
 			chomp;
 			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
 			print if $pkg=~m{$qr};
 		};
 	} elsif ( $args{type} eq 'line' ) {
 		while(<STDIN>){
+			next unless m{$qr};
 			chomp;
-			print if m{$qr};
+      print;
 		};
 	} else {
 		die "idk how to handle $args{type}";
@@ -122,6 +125,7 @@ sub update() {
 		print;
 		print STDERR "." unless $.%1000;
 	};
+  print "\n";
 	rename("$args{fn}",     "$args{fn}.old");
 	rename("$args{fn}.new", "$args{fn}"    );
 	return 0;

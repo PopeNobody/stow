@@ -38,6 +38,11 @@ for( get_path() ) {
   next unless defined(stat($fname));
   push(@script, $fname);
 };
+sub uniq(@){
+  my %seen;
+  @_=grep { !$seen{$_}++ } @_;
+};
+@script=uniq(@script);
 
 if( @script > 1 ) {
   my $i=0;

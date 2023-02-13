@@ -13,7 +13,7 @@ use Data::Dumper;
 use Getopt::WonderBra;
 
 sub help {
-  print "I can't help you.";
+   
 }
 sub version {
   print "some other version";
