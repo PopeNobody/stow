@@ -4,7 +4,7 @@ use strict;
 use warnings;
 use autodie qw(:all);
 BEGIN {
-  use FindBin qw($Bin);
+  use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
 };
 use Data::Dumper;
@@ -18,10 +18,25 @@ sub help() {
 sub version() {
   print "$0 version 0.2\n";
 };
+sub debug(@){
+}
+
 my $test;
 my $neg=0;
 my $cluck=0;
-
+debug("script: $Script\n");
+for($Script) {
+  if(/^lsfiles$/){
+    $test="-f";
+  } elsif ( /^lsdirs$/ ) {
+    $test="-d";
+  } elsif ( /^lslinks$/ ) {
+    $test="-l";
+  } else {
+    print "name not recognized.  no default test";
+  }
+}
+debug("test: $test\n");
 @ARGV = getopt( 'fdnlec', @ARGV );
 while ( ( $_ = shift ) ne '--' )
 {
@@ -37,24 +52,16 @@ while ( ( $_ = shift ) ne '--' )
     die "I do not grok -", $_;
   };
 };
-$test="-f \$_" unless defined $test;
 $test="!($test)" if( $neg );
-if(@ARGV) {
-  for(@ARGV) {
-    if($cluck) {
-      cluck "cluck $_\n" if eval $test;
-    } else {
-      print "$_\n" if eval $test;
-    };
-  };
-} else {
-  while(<STDIN>){
-    chomp;
-    if($cluck) {
-      cluck "cluck $_\n" if eval $test;
-    } else {
-      print "$_\n" if eval $test;
-    };
+if(!@ARGV) {
+  -t STDIN && print STDERR "items: ";
+  @ARGV=grep { chomp || 1 } <STDIN>;
+};
+@ARGV = grep { chomp || length } <STDIN> unless(@ARGV);
+for(@ARGV) {
+  if($cluck) {
+    cluck "$_\n" if eval $test;
+  } else {
+    print "$_\n" if eval $test;
   };
 };
-
