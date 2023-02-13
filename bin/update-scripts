@@ -1,8 +1,0 @@
-#!/bin/bash
-
-export PATH=/usr/local/bin:$PATH
-echo "running $$ at $(serdate)"
-cd /usr/local/stow/scripts
-git fetch
-cd ..
-stow scripts
