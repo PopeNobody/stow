@@ -1,6 +1,0 @@
-allfish () 
-{ 
-    seq 2 4 | xargs printf '%02dfish.copblock.app\n'
-}
-return 2>/dev/null
-allfish "$@"
