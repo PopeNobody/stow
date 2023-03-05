@@ -1,2 +1,2 @@
 all:
-	vi_perl bin/fixpath
+	vi_perl bin/pkg-inst
