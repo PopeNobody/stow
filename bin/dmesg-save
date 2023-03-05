@@ -14,10 +14,12 @@ BEGIN {
 };
 use Data::Dumper;
 
-my @lines = qx(dmesg -c);
+my @lines = qx(dmesg);
 my ($serdate) = qx(serdate);
-
+my ($fn)= "/var/log/dmesg-$serdate";
 chomp(@lines);
-open(STDOUT,">/var/log/dmesg-$serdate");
+open(STDOUT,">$fn");
 print for @lines;
 close(STDOUT);
+print STDERR "write dmesg output to $fn\n";
+system("dmesg -c > /dev/null");
