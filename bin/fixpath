@@ -10,7 +10,7 @@ our ($PATH,@PATH,%PATH);
 
 for(map { split qr{:+} } $ENV{PATH}){
   next unless length;
-  next if defined $PATH{$_};
+  next if $PATH{$_};
   my $stat = stat($_);
   next unless $stat;
   my $fiid = join(":",$stat->dev,$stat->ino);
@@ -19,5 +19,4 @@ for(map { split qr{:+} } $ENV{PATH}){
   push(@PATH,$_);
 };
 
-$"=":";
-print "PATH=@PATH";
+print "PATH=".join(":",@PATH);
