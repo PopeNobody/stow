@@ -1,1 +1,3 @@
-/bin/true
+#!/bin/bash
+exit 0
+
