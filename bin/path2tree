@@ -1,11 +1,10 @@
 #!/bin/bash
 
 for path; do
-  echo path=$path
   sub=""
   test ${path:0:1} == / || sub=.
   for part in ${path//\// }; do
     sub="$sub/$part";
-    echo $'\t'"$sub"
+    echo "$sub"
   done
 done
