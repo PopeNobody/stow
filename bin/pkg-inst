@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+#! -*- perl -*- -p
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+  use AutoLess;
+};
+use Data::Dumper;
+
+open(STDIN,"dpkg -l|");
+my %seen;
+while(<STDIN>){
+	chomp;
+	print if s{^ii\s+(\S+).*}{$1};
+};

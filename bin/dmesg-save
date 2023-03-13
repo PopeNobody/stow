@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+#! -*- perl -*- -p
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n";
+};
+use Data::Dumper;
+
+my @lines = qx(dmesg);
+my ($serdate) = qx(serdate);
+my ($fn)= "/var/log/dmesg-$serdate";
+chomp(@lines);
+open(STDOUT,">$fn");
+print for @lines;
+close(STDOUT);
+print STDERR "write dmesg output to $fn\n";
+system("dmesg -c > /dev/null");

@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+};
+use Nobody::Dumper;
+if(!@ARGV){
+  @ARGV=grep { length } join("",qx(xboard -out));
+};
+die "usage: google <question>\n" unless @ARGV;
+my $q=join("+", map{s/ /+/g;$_;} @ARGV);
+$q=join("'",qw(http://google.com/search?q=),$q,"");
+exec("xdg-open",$q);
+

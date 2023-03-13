@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use autodie qw(:all);
+select(STDERR);
+$\="\n";
+select(STDOUT);
+$\="\n";
+
+@ARGV = grep { defined && length } @ARGV;
+if(!@ARGV) {
+	print STDERR "usage: xat <program>\n";
+	print STDERR "  runs x program detached, using at\n";
+  exit(1);
+};
+if(!$< || !$>) {
+  print STDERR "not running as root\n";
+  exit(2);
+};
+
+open(STDOUT,"|at now");
+print "set -xv\n";
+print "echo running script\n";
+print "export PATH=$ENV{PATH}\n";
+print "export HOME=$ENV{HOME}\n";
+print "export DISPLAY=$ENV{DISPLAY}";
+print "export XAUTHORITY=$ENV{XAUTHORITY}";
+print "@ARGV";
+close(STDOUT);

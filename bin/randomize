@@ -1,0 +1,36 @@
+#!/usr/bin/perl
+# vim: sw=2 ts=2
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+};
+use Data::Dumper;
+use Getopt::WonderBra;
+@ARGV=getopt("n:",@ARGV);
+sub help {
+}
+sub version {
+}
+print Dumper(\@ARGV);
+my $lines=-1;
+while(($_=shift)ne'--'){
+  if(/^-n/){
+    $lines=shift;
+  } else {
+    die "wtf?";
+  };
+};
+exit(0);
+my @text=<>;
+while(@text) {
+  last unless $lines<0 || $.>$lines;
+  print splice(@text,int(rand(@text)),1);
+};

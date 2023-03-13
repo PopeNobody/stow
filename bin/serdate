@@ -1,0 +1,12 @@
+#!/bin/bash
+
+serdate() {
+  if (($#)); then
+    printf "$(serdate)-%s\n" "$*"
+  else
+    date +%Y%m%d-%H%M%S
+  fi
+}
+export -f serdate
+return 0 2>/dev/null
+serdate "$@"
