@@ -392,7 +392,16 @@ sub stow_contents {
 
   NODE:
   for my $node (@listing) {
-    next NODE if($self->skipnode($path,$node));
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $path";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
     my $node_target = join_paths($target, $node);
     next NODE if $self->ignore($stow_path, $package, $node_target);
 
@@ -641,7 +650,16 @@ sub unstow_contents_orig {
 
   NODE:
   for my $node (@listing) {
-    next NODE if($self->skipnode($target,$node));
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $target";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
     my $node_target = join_paths($target, $node);
     next NODE if $self->ignore($stow_path, $package, $node_target);
     $self->unstow_node_orig($stow_path, $package, $node_target);
@@ -767,7 +785,16 @@ sub unstow_contents {
 
   NODE:
   for my $node (@listing) {
-    next NODE if($self->skipnode($path,$node));
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $path";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
     my $node_target = join_paths($target, $node);
     next NODE if $self->ignore($stow_path, $package, $node_target);
 
@@ -1016,7 +1043,17 @@ sub cleanup_invalid_links {
 
   NODE:
   for my $node (@listing) {
-    next NODE if($self->skipnode($dir,$node));
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $dir";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
+
     my $node_path = join_paths($dir, $node);
 
     if (-l $node_path and not exists $self->{link_task_for}{$node_path}) {
@@ -1097,7 +1134,18 @@ sub foldable {
   my $parent = '';
   NODE:
   for my $node (@listing) {
-    next NODE if($self->skipnode($target,$node));
+
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $target";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
+
     my $path =  join_paths($target, $node);
 
     # Skip nodes scheduled for removal
@@ -1159,7 +1207,17 @@ sub fold_tree {
 
   NODE:
   for my $node (@listing) {
-    next NODE if($self->skipnode($target,$node));
+    if($self->{dotfiles}) {
+      next NODE if substr($node,0,1) eq '.';
+      if($node eq 'dot-' || $node eq 'dot-.'){
+        warn "skipping degenerate dotfile $node in $target";
+        next NODE;
+      };
+    } else {
+      next NODE if $node eq '.';
+      next NODE if $node eq '..';
+    };
+
     next NODE if not $self->is_a_node(join_paths($target, $node));
     $self->do_unlink(join_paths($target, $node));
   }

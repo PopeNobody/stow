@@ -6,6 +6,7 @@ use autodie qw(:all);
 use autodie qw(fork);
 use File::stat;
 use Data::Dumper;
+
 BEGIN {
   $Data::Dumper::Useqq=1;
   $Data::Dumper::Deparse=1;
@@ -69,7 +70,7 @@ sub main(@)
       } elsif( $pid == $filt_pid ) {
         $filt_res=$?/256;
         $filt_sig=$?%256;
-        warn "perl done, res=$filt_res, sig=$filt_sig\n" if ($filt_res||$filt_sig);
+        warn "filter done, res=$filt_res, sig=$filt_sig\n" if ($filt_res||$filt_sig);
       } else {
         die "unknown pid: $pid (\$?=$?)\n";
       };
