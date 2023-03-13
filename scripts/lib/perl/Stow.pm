@@ -1078,7 +1078,6 @@ sub cleanup_invalid_links {
   return;
 }
 
-
 #===== METHOD ===============================================================
 # Name      : foldable()
 # Purpose   : determine whether a tree can be folded
