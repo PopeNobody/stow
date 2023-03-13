@@ -3,6 +3,7 @@
 use strict;
 use warnings;
 use autodie qw(:all);
+$ENV{LANG}="C";
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
@@ -40,16 +41,18 @@ while(($_=shift)ne'--'){
 my %data;
 my $k;
 my @v;
+my @k;
 
 while(<>) {
 	($k,@v) =split;
   next unless @v;
+  push(@k,$k);
 	push(@{$data{$k}}, @v);
 };
 {
   if( $block ) {
     my ($max) = 0;
-    for $k (keys %data) {
+    for $k (@k) {
       for( @{$data{$k}} ) {
         $max=length if $max<length;
       };
@@ -57,7 +60,7 @@ while(<>) {
     $max+=2;
     print "max:\n";
     my $col = $ENV{COLUMNS} || 80;
-    for $k (sort keys %data){
+    for $k (@k){
       print "\n$k";
       my $pos = $col;
       @v=@{$data{$k}};
@@ -76,7 +79,7 @@ while(<>) {
   } else {
     $,=" ";
     $\="\n";
-    for $k (sort keys %data){
+    for $k (keys %data){
       @v=@{$data{$k}};
       if( $dup == 1 && @v < 2 ) {
         next;
