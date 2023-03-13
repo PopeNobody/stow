@@ -12,14 +12,9 @@ BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
-use Data::Dumper;
+use Data::Dump;
 use Getopt::WonderBra;
 @ARGV=getopt("n:",@ARGV);
-sub help {
-}
-sub version {
-}
-print Dumper(\@ARGV);
 my $lines=-1;
 while(($_=shift)ne'--'){
   if(/^-n/){
@@ -28,9 +23,17 @@ while(($_=shift)ne'--'){
     die "wtf?";
   };
 };
-exit(0);
 my @text=<>;
 while(@text) {
   last unless $lines<0 || $.>$lines;
   print splice(@text,int(rand(@text)),1);
 };
+sub help {
+  print "randomize [-n #]";
+  print "  print a random line from a file";
+  print "  -n: # of lines to print" ;
+}
+sub version {
+  print "randomize: version 1";
+  print "  by dev\@copblock.app";
+}
