@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PERL5LIB="/opt/lib/perl"; 
+PERL_LOCAL_LIB_ROOT="/opt/lib/perl${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; 
+PERL_MB_OPT="--install_base \"/opt\""; 
+PERL_MM_OPT="INSTALL_BASE=/opt"; 
+export PERL5LIB PERL_LOCAL_LIB_ROOT PERL_MB_OPT PERL_MM_OPT
+exec cpan "$@"

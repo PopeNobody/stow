@@ -1,13 +1,27 @@
 #!/bin/bash
 
 lspath() {
+  local inodes=false
+  local IFS="$IFS"
+  set -- $(getopt i "$@")
+  while [ "x$1" != "x--" ]; do
+    case "x$1" in
+      (x-i) inodes=true;;
+      (*) printf >&2 'illegal arg: %q\n' "$1"; return 1;;
+    esac
+    shift
+  done
+  shift
   (($#)) || set PATH
+  local i
   for i; do 
-    local -n "r=$i" 
-    local IFS=:
-    set -- $r
-    IFS=$' \t\n'
-    printf '%s\n' "$@"
+    local -n "r=$i"
+    set -- ${r//:/ }
+    if $inodes; then
+      ls -fH1id "$@"
+    else
+      printf '%s\n' "$@"
+    fi
   done
 };
 export -f lspath
