@@ -2,11 +2,11 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
-use autodie qw(:all);
 BEGIN {
   use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
 };
+use autodie qw(:all);
 use Data::Dumper;
 use Getopt::WonderBra;
 use File::Basename;
