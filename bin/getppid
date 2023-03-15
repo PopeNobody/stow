@@ -3,31 +3,41 @@
 
 getppid () 
 {
-	local args=""
-	local recurse=false
-  local run_ps=false
-  local script=false
-
-  set -- $(getopt -u -o xrp -- "$@")
-  while (($#)) && test "x${1:0:1}" == "x-"; do
-    case $1 in
-      (-r) recurse=true; shift;;
-      (-x) script=true; shift;;
-      (-p) run_ps=true; shift;;
-      (--) shift;;
+	local args="" script=false recurse=false run_ps=false count=0;
+  if test "$1" == "--script"; then
+    script=true
+    shift
+  fi
+  local -a A
+  if ! A=( $(getopt -u -o rp123456789 -- "$@") ); then
+    return 1
+  fi
+  set -- "${A[@]}"
+  while [ -n "$1" ] && [ "$1" != "--" ]; do
+    case "$1" in
+      (-r) recurse=true;;
+      (-x) script=true;;
+      (-p) run_ps=true;;
+      (-[1-9]) count=${1#-};;
+      (*) echo >&2 bad arg "$1"; return 1 ;;
     esac
+    shift
   done
+  shift
 
   (($# == 0)) && set -- $$
   (($# > 1)) && echo "usage: getppid [-r] [-p] <pid>" >&2 && return 1
 
-  $script && (( $1 == $$ )) && set -- $PPID
 
-	# (($1==1)) && echo 0 && return 0
-
-  if $recurse; then
+  if (( $count )); then
+    $script && set "$$" || set "$PPID"
+    for((i=1;i<$count && $1>1;i++)); do
+      set -- $(ps h -oppid "$1") "$@";
+    done
+  elif $recurse; then
+    # ok, technically, this is not recursion. Hysterical pourposes
     while (($1>1)); do
-      set -- $(getppid "$1") "$@"
+      set -- $(ps h -oppid "$1") "$@"
     done
   else
     set -- $(ps h -oppid "$@")
@@ -40,4 +50,4 @@ getppid ()
 }
 return 0 2>/dev/null
 
-getppid -x "$@"
+getppid --script "$@"
