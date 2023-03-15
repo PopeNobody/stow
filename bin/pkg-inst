@@ -19,5 +19,8 @@ open(STDIN,"dpkg -l|");
 my %seen;
 while(<STDIN>){
 	chomp;
-	print if s{^ii\s+(\S+).*}{$1};
+	if(s{^ii\s+(\S+).*}{$1}){
+    s{:.*}{};
+    print;
+  };
 };
