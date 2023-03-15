@@ -2,12 +2,12 @@
 
 use strict;
 use warnings;
-use autodie qw(:all);
 BEGIN {
   $|++;
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
+use autodie qw(:all);
 use Util;
 use Data::Dumper;
 use Getopt::WonderBra;

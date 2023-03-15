@@ -1,17 +1,11 @@
-#!/bin/bash
-
-tty_say() {
-  if tty -s <&1; then
-    exec 99>&1
-  elif tty -s <&0; then
-    exec 99>&0
-  elif tty -s <&2; then
-    exec 99>&2
-  else
-    exec 99>/dev/tty
-  fi
-  echo "$@" >&99
-} 2>/dev/null
+tty_say () 
+{ 
+    for ((i=0; i<=2; i++))
+    do
+        test -t $i && eval "echo \"$*\" >&$i" && return 0;
+    done;
+    return 1
+}
+export -f tty_say
 return 2>/dev/null
 tty_say "$@"
-

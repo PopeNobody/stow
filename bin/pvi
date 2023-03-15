@@ -2,12 +2,12 @@
 
 use strict;
 use warnings;
-use autodie qw(:all);
 our($Lib);
 BEGIN {
   use FindBin qw($Bin);
   use lib ($Lib="$Bin/../lib/perl");
 };
+use autodie qw(:all);
 use Getopt::WonderBra;
 use Data::Dump qw(dd);
 use File::Basename;
@@ -20,7 +20,7 @@ $|++;
 sub get_path();
 sub proc_argv(@);
 our($debug, @cmd, @script);
-$debug = 1;
+$debug = 0;
 push(@cmd,map { split } grep {defined} $ENV{VISUAL}) unless @cmd;
 push(@cmd,map { split } grep {defined} $ENV{EDITOR}) unless @cmd;
 
