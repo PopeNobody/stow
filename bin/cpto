@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
-use autodie qw(:all);
 BEGIN {
   use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
 };
+use autodie qw(:all);
 use File::Spec;
 print STDERR "Script: $Script\n";
 my (%cmd,$cmd);
