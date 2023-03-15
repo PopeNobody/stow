@@ -1,28 +1,58 @@
 #!/bin/bash
 
 lspath() {
-  local inodes=false
+  local inodes=false source=false uniq=false
   local IFS="$IFS"
-  set -- $(getopt i "$@")
+  set -- $( getopt isu "$@" || echo fail )
   while [ "x$1" != "x--" ]; do
     case "x$1" in
+      (x-u) uniq=true;;
+      (x-s) source=true;;
       (x-i) inodes=true;;
       (*) printf >&2 'illegal arg: %q\n' "$1"; return 1;;
     esac
+    if $source && $inodes; then
+      echo >&2 "can't do both source and inodes!"
+      return 1;
+    fi
     shift
   done
   shift
   (($#)) || set PATH
-  local i
-  for i; do 
-    local -n "r=$i"
-    set -- ${r//:/ }
+  (($#!=1)) && echo >&2 "expected one name, got $*" && return 1
+  local -n var="$1"
+  shift
+  if $uniq; then
+    local -a "seen=()" "res=()"
+    set -- $(lspath -i "${!var}"); 
+    while [ -n "$*" ]; do
+      local inode="$1" path="$2"
+      shift 2
+      if test -z "${seen[$inode]}"; then
+        res+=( "$path" )
+        seen[$inode]=x
+      fi
+    done
+    if $source; then
+      IFS=":"
+    else
+      IFS=$'\n'
+    fi
+    echo "${res[*]}" 
+  else
+    set -- ${var//:/ }
+    local num=$#
+    for j; do test -d "$j" && set -- "$@" "$j"; done
+    shift $num
     if $inodes; then
       ls -fH1id "$@"
+    elif $source; then
+      IFS=:
+      echo "PATH=$*"
     else
       printf '%s\n' "$@"
     fi
-  done
+  fi
 };
 export -f lspath
 return 0 2>/dev/null
