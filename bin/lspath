@@ -1,14 +1,18 @@
 #!/bin/bash
 
 lspath() {
-  local inodes=false source=false uniq=false
+  local inodes=false source=false uniq=false dirs=false exist=false
   local IFS="$IFS"
-  set -- $( getopt isu "$@" || echo fail )
+  local -a argv
+  argv=( $(getopt edisu "$@" ) ) || return 1
+  set -- "${argv[@]}"
   while [ "x$1" != "x--" ]; do
     case "x$1" in
-      (x-u) uniq=true;;
-      (x-s) source=true;;
+      (x-d) dirs=true;;
+      (x-e) exist=true;;
       (x-i) inodes=true;;
+      (x-s) source=true;;
+      (x-u) uniq=true;;
       (*) printf >&2 'illegal arg: %q\n' "$1"; return 1;;
     esac
     if $source && $inodes; then
@@ -22,9 +26,11 @@ lspath() {
   (($#!=1)) && echo >&2 "expected one name, got $*" && return 1
   local -n var="$1"
   shift
+  set -- ${var//:/ }
   if $uniq; then
+    #printf 'debug1: %s\n' "$@" >&2
     local -a "seen=()" "res=()"
-    set -- $(lspath -i "${!var}"); 
+    set -- $( ls -fH1id "$@" 2>/dev/null )
     while [ -n "$*" ]; do
       local inode="$1" path="$2"
       shift 2
@@ -33,25 +39,24 @@ lspath() {
         seen[$inode]=x
       fi
     done
-    if $source; then
-      IFS=":"
-    else
-      IFS=$'\n'
-    fi
-    echo "${res[*]}" 
-  else
-    set -- ${var//:/ }
-    local num=$#
-    for j; do test -d "$j" && set -- "$@" "$j"; done
+    set -- "${res[@]}"
+  fi
+  if $dirs || $exist; then
+    local test=e
+    $dirs && test=d
+    #printf 'debug2: %s\n' "$@" >&2
+    local -i num=$#
+    for j; do test -$test "$j" && set -- "$@" "$j"; done
     shift $num
-    if $inodes; then
-      ls -fH1id "$@"
-    elif $source; then
-      IFS=:
-      echo "PATH=$*"
-    else
-      printf '%s\n' "$@"
-    fi
+  fi
+  #printf 'debug3: %s\n' "$@" >&2
+  if $inodes; then
+    ls -fH1id "$@"
+  elif $source; then
+    IFS=:
+    echo "${!var}=$*"
+  else
+    printf '%s\n' "$@"
   fi
 };
 export -f lspath
