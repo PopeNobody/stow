@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++;
+  $\="\n"; $,=" "; $"=" ";
+};
+use Data::Dump qw(pp dd ddx);
+my @stack;
+sub main(@);
+exit(main(@ARGV));
+sub do_dir($);
+my %skip;
+BEGIN {
+  %skip = map { $_, 1 } qw( . .. .git );
+}
+sub do_dir($){
+  my ($name)=shift;
+  if($name eq '.'){
+    die "name=., stack not empty" if @stack;
+    my ($pwd)=map { split } qx(pwd -P);
+    my (@pwd)=map { split(m{/+}); } $pwd; 
+    $name=pop(@pwd);
+    ddx({pwd=>\@pwd, name=>$name});
+    push(@stack,join("/",@pwd));
+  } elsif ( length($name)==0 ) {
+    die "name is empty";
+  } elsif ( $name =~ m{/} ) {
+    die "name contains slash";
+  };
+  push(@stack,$name);
+  my ($path)=join("/",@stack);
+  print STDERR "path=$path";
+  my ($hand);
+  opendir($hand,"$path");
+  my @list = grep { !$skip{$_} } readdir($hand);
+  closedir($hand);
+  my (@dlist);
+  for(@list){
+    print STDERR "\t$_";
+    if(-l "$path/$_"){
+      print "$path/$_/ is link";
+    } elsif(-d "$path/$_"){
+      push(@dlist,$_);
+    } else {
+      die "is dir!" if -d "$path/$_/";
+      print "$path/$_" unless /~$/;
+    }
+  };
+  for(@dlist){
+    do_dir($_) unless /^build$/;
+  }
+  pop(@stack);
+}
+sub main(@){
+  do_dir(".");
+  return 0;
+}
