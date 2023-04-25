@@ -16,7 +16,6 @@ getppid ()
   while [ -n "$1" ] && [ "$1" != "--" ]; do
     case "$1" in
       (-r) recurse=true;;
-      (-x) script=true;;
       (-p) run_ps=true;;
       (-[1-9]) count=${1#-};;
       (*) echo >&2 bad arg "$1"; return 1 ;;
@@ -25,12 +24,16 @@ getppid ()
   done
   shift
 
-  (($# == 0)) && set -- $$
-  (($# > 1)) && echo "usage: getppid [-r] [-p] <pid>" >&2 && return 1
-
+  if (($# == 0)); then
+    if $script; then
+      set -- $PPID
+    else
+      set -- $$
+    fi
+  fi
+  (($# > 1)) && echo "usage: getppid [-r] [-p] <-[0-9]> <pid>" >&2 && return 1
 
   if (( $count )); then
-    $script && set "$$" || set "$PPID"
     for((i=1;i<$count && $1>1;i++)); do
       set -- $(ps h -oppid "$1") "$@";
     done
