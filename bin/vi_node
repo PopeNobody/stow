@@ -5,16 +5,13 @@ use warnings;
 use autodie qw(:all);
 use autodie qw(fork);
 use File::stat;
-use Data::Dumper;
+use Data::Dump qw(pp ppx dd ddx);
 
-BEGIN {
-  $Data::Dumper::Useqq=1;
-  $Data::Dumper::Deparse=1;
-  $Data::Dumper::Sortkeys=1;
-};
 $|++;
 $\="\n";
 
+my $debug = defined($ENV{VI_NODE_DEBUG});
+die if $debug;
 $ENV{NODE_OPTIONS}='--openssl-legacy-provider';
 
 sub main(@);
@@ -101,14 +98,26 @@ sub run_node($$$@) {
   die "failed!";
 };
 sub edit_err(){
-  @_=m{^( *at )(.*)[(](.*)[)]$};
-  return $_ unless @_;
-  shift;
-  unshift(@_,map { split /:/ } pop(@_));
-  if($_[0]eq'node'){
-    unshift(@_,join(':',splice(@_,0,2)));
-  };
-  $_=join(":",@_);
+  if(@_=m{^( *at )(.*)[(](.*)[)]$}){
+    shift;
+    print STDERR ppx(\@_) if $debug;
+    unshift(@_,map { split /:/ } pop(@_));
+    print STDERR ppx(\@_) if $debug;
+    if($_[0]eq'node'){
+      unshift(@_,join(':',splice(@_,0,2)));
+      print STDERR ppx(\@_) if $debug;
+    };
+    $_=join(":",@_);
+    print STDERR ppx(\@_,$_) if $debug;
+  } elsif( @_=m{^( *at )(:?file:|)([-A-Za-z0-9_/.]+:[0-9]+:[0-9]+)$} ) {
+    shift;
+    shift;
+    $_="@_";
+    print;
+    s{^/+}{/};
+    s{$}{:err};
+    print STDERR ppx(\@_,\$_) if $debug;
+  }
 };
 sub run_filt($$$@)
 {

@@ -45,48 +45,51 @@ my @k;
 
 while(<>) {
 	($k,@v) =split;
-  next unless @v;
   push(@k,$k);
 	push(@{$data{$k}}, @v);
 };
-{
-  if( $block ) {
-    my ($max) = 0;
-    for $k (@k) {
-      for( @{$data{$k}} ) {
-        $max=length if $max<length;
-      };
+
+if( $block ) {
+  my ($max) = 0;
+  for $k (@k) {
+    for( @{$data{$k}} ) {
+      $max=length if $max<length;
     };
-    $max+=2;
-    print "max:\n";
-    my $col = $ENV{COLUMNS} || 80;
-    for $k (@k){
-      print "\n$k";
-      my $pos = $col;
-      @v=@{$data{$k}};
-      for(@v)
-      {
-        if ( $pos >= ($col-$max) ) {
-          print "\n     ";
-          ($pos) = 5;
-        };
-        $_=$_.(' 'x($max-length));
-        print $_;
-        $pos+=$max;
+  };
+  $max+=2;
+  print "max:\n";
+  my $col = $ENV{COLUMNS} || 80;
+  for $k (@k){
+    print "\n$k";
+    my $pos = $col;
+    my $a=delete $data{$k};
+    next unless defined $a;
+    @v=@{$a};
+    for(@v)
+    {
+      if ( $pos >= ($col-$max) ) {
+        print "\n     ";
+        ($pos) = 5;
       };
-      print "\n";
+      $_=$_.(' 'x($max-length));
+      print $_;
+      $pos+=$max;
     };
-  } else {
-    $,=" ";
-    $\="\n";
-    for $k (keys %data){
-      @v=@{$data{$k}};
-      if( $dup == 1 && @v < 2 ) {
-        next;
-      } elsif ( $dup == -1 && @v >= 2 ) {
-        next;
-      };
-      print $k, @v;
-    }
+    print "\n";
+  };
+} else {
+  $,=" ";
+  $\="\n";
+  for $k (@k){
+    my ($a) = delete $data{$k};
+    next unless defined $a;
+    @v=@{$a};
+    if( $dup == 1 && @v < 2 ) {
+      next;
+    } elsif ( $dup == -1 && @v >= 2 ) {
+      next;
+    };
+    print $k, @v;
   }
-};
+}
+

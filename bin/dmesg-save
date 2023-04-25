@@ -15,7 +15,7 @@ BEGIN {
 use Data::Dumper;
 
 my @lines = qx(dmesg);
-my ($serdate) = qx(serdate);
+my ($serdate) = map { split } qx(serdate);
 my ($fn)= "/var/log/dmesg-$serdate";
 chomp(@lines);
 open(STDOUT,">$fn");

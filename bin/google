@@ -12,7 +12,6 @@ BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
-use Nobody::Dumper;
 if(!@ARGV){
   @ARGV=grep { length } join("",qx(xboard -out));
 };
