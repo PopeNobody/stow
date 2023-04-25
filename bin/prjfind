@@ -14,12 +14,16 @@ BEGIN {
 };
 use Data::Dump qw(pp dd ddx);
 my @stack;
-sub main(@);
-exit(main(@ARGV));
+die "no args expected" if @ARGV;
+sub main();
+exit(main());
 sub do_dir($);
 my %skip;
 BEGIN {
   %skip = map { $_, 1 } qw( . .. .git );
+}
+sub debug {
+	return 0;
 }
 sub do_dir($){
   my ($name)=shift;
@@ -37,14 +41,14 @@ sub do_dir($){
   };
   push(@stack,$name);
   my ($path)=join("/",@stack);
-  print STDERR "path=$path";
+  print STDERR "path=$path" if debug;
   my ($hand);
   opendir($hand,"$path");
   my @list = grep { !$skip{$_} } readdir($hand);
   closedir($hand);
   my (@dlist);
   for(@list){
-    print STDERR "\t$_";
+    print STDERR "\t$_" if debug;
     if(-l "$path/$_"){
       print "$path/$_/ is link";
     } elsif(-d "$path/$_"){
@@ -59,7 +63,7 @@ sub do_dir($){
   }
   pop(@stack);
 }
-sub main(@){
+sub main(){
   do_dir(".");
   return 0;
 }
