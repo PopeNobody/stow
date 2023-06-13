@@ -6,8 +6,8 @@ use subs qq(dump);
 
 require Exporter;
 *import = \&Exporter::import;
-@EXPORT = qw(dd ddx pp quote);
-@EXPORT_OK = qw(dump pp dumpf quote);
+@EXPORT_OK = qw(dump dumpf);
+@EXPORT = qw(dd ddx pp ppx quote);
 
 $VERSION = "1.25";
 $DEBUG = 0;
@@ -82,6 +82,13 @@ sub dd {
     print dump(@_), "\n";
 }
 
+sub ppx {
+    my(undef, $file, $line) = caller;
+    $file =~ s,.*[\\/],,;
+    my $out = "$file:$line: " . dump(@_) . "\n";
+    $out =~ s/^/# /gm;
+    return $out;
+}
 sub ddx {
     my(undef, $file, $line) = caller;
     $file =~ s,.*[\\/],,;

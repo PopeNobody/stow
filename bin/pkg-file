@@ -25,8 +25,7 @@ sub help() {
 };
 sub set_type($);
 my $hands={
-	'-U' => sub{ $_|=2 for $args{update}; },
-	'-u' => sub{ $_|=1 for $args{update}; },
+	'-u' => sub{ $args{update}=1; },
 	'-p' => sub{ set_type('package'); },
 	'-f' => sub{ set_type('file'); },
 	'-l' => sub{ set_type('line'); },
@@ -90,17 +89,7 @@ sub main(@)
 		@_=handle_arg($_,@_);
 	};
 	if($args{update}){
-		my $r;
-		if($args{update}&1){
-			print "update1";
-			$r=update();
-		}
-		if($args{update}&2){
-			print "update2";
-			$r=update2();
-		};
-		die "update was $args{update}" unless defined $r;
-		return 0;
+    return $args{update} && update();
 	}
 
 	die "need pattern" unless @_;
@@ -133,24 +122,10 @@ sub update() {
 		die "update should be used alone."
 	};
 	open(STDOUT,">$args{fn}.new");
-	open(STDIN,"apt-file search /|");
+	open(STDIN,"apt-file search /|ts");
 	local($\)="";
-	while(<STDIN>){
-		print;
-		print STDERR "." unless $.%1000;
-	};
   print "\n";
 	rename("$args{fn}",     "$args{fn}.old");
 	rename("$args{fn}.new", "$args{fn}"    );
 	return 0;
 };
-sub update2() {
-	open(STDIN,"<$args{fn}");
-	open(my $pkgs,">$args{fn}.files.new");
-	open(my $paths,">$args{fn}.packs.new");
-	my ($pkg,$path)=m{(\S*)\s+(.*)};
-	$pkgs->print($pkg);
-	$pkgs->print($path);
-	close($_) for $pkgs, $paths;
-	return 0;
-}

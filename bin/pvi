@@ -15,7 +15,9 @@ use File::Copy;
 use File::stat;
 use Fcntl ':mode';
 use Cwd qw(getcwd realpath);
-
+sub debug {
+  return 1;
+};
 $|++;
 sub get_path();
 sub proc_argv(@);
@@ -81,7 +83,9 @@ sub find_scripts(){
   my %script;
   for( get_path() ) {
     my $fname="$_/$script";
+    print STDERR "fname=$fname\n" if debug;
     $fname=realpath($fname);
+    print STDERR "fname=$fname\n" if debug;
     next unless -f $fname;
     $script{$fname}=1+(keys %script);
   };

@@ -6,6 +6,6 @@ report() {
 	echo $( printf '%q ' "$@" returned $x ) >&2;
 	return $x
 }
-export report
+export -f report
 return 0 2>/dev/null
 report "$@"

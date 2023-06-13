@@ -10,7 +10,6 @@ use autodie qw(:all);
 use Data::Dumper;
 use Getopt::WonderBra;
 use File::Basename;
-use File::stat qw(:FIELDS);
 use Carp qw(cluck);
 
 sub help() {
@@ -26,14 +25,6 @@ my $test;
 my $neg=0;
 my $cluck=0;
 debug("script: $Script\n");
-sub is_mount() {
-  system("mountpoint $_ >/dev/null 2>&1");
-  if($?) {
-    return 0;
-  } else {
-    return 1;
-  }
-}
 for($Script) {
   if(/^lsfiles$/){
     $test="-f";
@@ -41,10 +32,6 @@ for($Script) {
     $test="-d";
   } elsif ( /^lslinks$/ ) {
     $test="-l";
-  } elsif ( /^lsexist$/ ) {
-    $test="-e";
-  } elsif ( /^lsmounts$/ ) {
-    $test="is_mount()";
   } else {
     print "name not recognized.  no default test";
   }
@@ -53,7 +40,7 @@ debug("test: $test\n");
 @ARGV = getopt( 'fdnlec', @ARGV );
 while ( ( $_ = shift ) ne '--' )
 {
-  if ( /^-[fdlem]$/ ) {
+  if ( /^-[fdle]$/ ) {
     die "repeated specification of -[fdle]" if defined $test && $test ne $_;
     $test="$_ \$_";
   } elsif ( /^-c$/ ) {

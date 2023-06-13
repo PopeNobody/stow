@@ -12,13 +12,17 @@ BEGIN {
   $|++;
   $\="\n";
 };
-use Data::Dumper;
+use Data::Dump qw(ddx dd ppx pp);
+use Getopt::Wonderbra;
+
+@ARGV = getopt("a",@ARGV);
+ddt(\@ARGV);
 
 my @lines = qx(dmesg);
 my ($serdate) = map { split } qx(serdate);
-my ($fn)= "/var/log/dmesg-$serdate";
+my ($fn)= "/var/log/dmesg-$serdate.gz";
 chomp(@lines);
-open(STDOUT,">$fn");
+open(STDOUT,"|gzip>$fn");
 print for @lines;
 close(STDOUT);
 print STDERR "write dmesg output to $fn\n";
