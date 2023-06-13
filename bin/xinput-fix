@@ -1,0 +1,25 @@
+#!/usr/bin/perl
+
+@ARGV=q(xinput|);
+while(<>){
+  my $line="$_";
+  if(m{ImPS/2|Touchpad}){
+    s{.*id=}{};
+    s{\s.*}{};
+    print "$line";
+    system("xinput disable $_");
+  }
+};
+__DATA__
+#!/bin/bash
+
+set -- $(xinput --list --id-only | sort -n)
+
+for i ; do 
+  name=$(xinput --list --name-only $i)
+  case "$name" in
+    (ImPS/2*) echo "enable $name ($i)"; xinput --enable $i;;
+    (*Touchpad*) echo "disable $name ($i)"; xinput --disable $i;;
+    (*);;
+  esac
+done
