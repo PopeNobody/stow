@@ -6,6 +6,7 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 use strict;
 use warnings;
 use autodie qw(:all);
+our ($VERSION) = join("-",qw ( 1 0 0 ));
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
@@ -13,10 +14,17 @@ BEGIN {
   $\="\n";
 };
 use Data::Dump qw(ddx dd ppx pp);
-use Getopt::Wonderbra;
-
+use Getopt::WonderBra;
+sub version {
+  print "version $VERSION";
+}
+sub help {
+  print "usage: $0 [ -a ]";
+  print "       -a: append to existing output";
+  print "";
+}
 @ARGV = getopt("a",@ARGV);
-ddt(\@ARGV);
+ddx(\@ARGV);
 
 my @lines = qx(dmesg);
 my ($serdate) = map { split } qx(serdate);

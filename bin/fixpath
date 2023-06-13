@@ -1,22 +1,3 @@
-#!/usr/bin/perl
-use Data::Dumper;
-use File::stat;
-use strict;
-use warnings;
-use autodie qw(:all);
+#!/bin/bash
 
-$\="\n";
-our ($PATH,@PATH,%PATH);
-
-for(map { split qr{:+} } $ENV{PATH}){
-  next unless length;
-  next if $PATH{$_};
-  my $stat = stat($_);
-  next unless $stat;
-  my $fiid = join(":",$stat->dev,$stat->ino);
-  next if defined $PATH{$fiid};
-  $PATH{$fiid}=$PATH{$_}=$stat;
-  push(@PATH,$_);
-};
-
-print "PATH=".join(":",@PATH);
+lspath -su
