@@ -9,21 +9,16 @@ BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
   $|++;
-  $/="\n"; $\="\n"; $,=" "; $"=" ";
+  $\="\n"; $,=" "; $"=" ";
 };
 use autodie qw(:all);
 use Data::Dump;
 
-
 open(STDIN,"</dev/null");
-open(STDIN,"ifconfig|");
+open(STDIN,"ifconfig -a|");
 while(<STDIN>){
+  next if /^\s/;
+  s/:\s.*//;
   chomp;
-  next unless /^\S/;
-  s{:.*}{};
   print;
-};
-close(STDOUT);
-close(STDERR);
-exit(0);
-	
+}

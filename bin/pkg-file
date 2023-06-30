@@ -14,22 +14,18 @@ use Getopt::WonderBra;
 use File::Basename;
 use File::Copy;
 
-use vars qw( %args );
-$args{fn}="/var/cache/apt/apt-file-search-slash";
-sub help() {
-  print "usage: $0 [-ud] [-p qr | -f qr]\n";
-	print "       -u update:   our cache file, using apt-file\n";
-	print "       -p package:  match our regex against the pkg side\n";
-	print "       -f file:     match our regex agaisnt the file side\n";
-	print "       -l line:     match our regex against the line side\n";
+use vars qw( %data );
+$data{fn}="/var/cache/apt/apt-file-search-slash";
+
+sub help {
+  print join("",<DATA>);
+}
+
+sub set_type() {
+  die "type already specified, got '$_'" if defined($data{type});
+  $data{type}=$_;
 };
-sub set_type($);
-my $hands={
-	'-u' => sub{ $args{update}=1; },
-	'-p' => sub{ set_type('package'); },
-	'-f' => sub{ set_type('file'); },
-	'-l' => sub{ set_type('line'); },
-};
+
 sub version {
   print "$0 version 0.2.0\n";
 };
@@ -42,36 +38,33 @@ die "wtf?";
 
 sub file_match($) {
 };
-sub pack_match($) {
-};
-sub line_match($) {
-	my $qr=shift;
-};
 sub loop($) {
-	my $qr=shift;
-	open(STDIN,"<$args{fn}");
-	if( $args{type} eq 'file' ) {
+	my $qr=eval {
+    return 1 if m{$_} 
+	open(STDIN,"<$data{fn}");
+	if( $data{type} eq 'file' ) {
 		while(<STDIN>){
       next unless m{:.*$qr};
 			chomp;
 			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
 			print if $file=~m{$qr};
 		};
-	} elsif ( $args{type} eq 'package' ) {
+	} elsif ( $data{type} eq 'package' ) {
 		while(<STDIN>){
       next unless m{$qr.*:};
 			chomp;
 			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
 			print if $pkg=~m{$qr};
 		};
-	} elsif ( $args{type} eq 'line' ) {
+	} elsif ( $data{type} eq 'line' ) {
 		while(<STDIN>){
 			next unless m{$qr};
 			chomp;
       print;
 		};
+  } elsif ( $data{type} eq 'dir' ) {
 	} else {
-		die "idk how to handle $args{type}";
+		die "idk how to handle $data{type}";
 	};
 	close(STDIN);
 	die "$@" if "$@";
@@ -81,51 +74,56 @@ sub loop($) {
 sub main(@)
 {
 	local $_;
-	$_=undef for @args{ qw( qr type ) };
-	$args{orig}=[\@_];
+	$_=undef for @data{ qw( qr type ) };
+  our(@_);
+	$data{orig}=[@_];
 	@_=getopt('uUwpflzdD',@_);
-	while(($_=shift(@_))ne'--')
-	{
-		@_=handle_arg($_,@_);
-	};
-	if($args{update}){
-    return $args{update} && update();
-	}
+  $data{prod}=[@_];
+  my @pat;
+  while(($_=shift(@_))ne'--')
+  {
+    die "too many flags, last was $_" if defined $data{type};
 
+    if(/^-r$/){
+      die "-r as last arg!" unless @_;
+      push(@{$data{pats}},shift);
+    } elsif ( /^-[dD]$/ ) {
+    $data{type}=$_;
+    if(/^-[dD]$/){
+      $data{pattern}=
+    };
+  }
+  
 	die "need pattern" unless @_;
-	$args{qr}=shift;
-	die "extra args (@_)" if @_;
-	$args{qr}=qr{$args{qr}};
+  $data{pr}=[ map { qr{$a} } @_ ];
+	$data{qr}=shift;
+	$data{qr}=qr{$data{qr}};
 
 
-	$args{type}='line' unless defined $args{type};
-	return loop($args{qr});
+	$data{type}='line' unless defined $data{type};
+	return loop($data{qr});
 
 };
 
-sub set_type($) {
-	local *_=\$args{type};
-	die "THERE CAN BE ONLY ONE!" if defined;
-	$_=shift;
-};
-sub handle_arg($)
-{
-	local ($_)=shift;
-	my $hand=$hands->{$_};
-	die "I do not grok '$_'" unless defined $hand;
-	$hand->($_,@_);
-	return @_;
-};
 sub update() {
-	if(grep { defined } map { $args{$_} } qw(type whole qr ))
+	if(grep { defined } map { $data{$_} } qw(type whole qr ))
 	{
 		die "update should be used alone."
 	};
-	open(STDOUT,">$args{fn}.new");
+	open(STDOUT,">$data{fn}.new");
 	open(STDIN,"apt-file search /|ts");
 	local($\)="";
   print "\n";
-	rename("$args{fn}",     "$args{fn}.old");
-	rename("$args{fn}.new", "$args{fn}"    );
+	rename("$data{fn}",     "$data{fn}.old");
+	rename("$data{fn}.new", "$data{fn}"    );
 	return 0;
 };
+__DATA__
+usage: - [-ud] [-p qr | -f qr]
+       -u update:   our cache file, using apt-file
+       -p package:  match our regex against the pkg side
+       -f file:     match our regex agaisnt the file side
+       -l line:     match our regex against the line side
+       -d           use the pwd, anchored on the left, as your pattern
+       -D           do the same, but don't anchor the pattern.
+       -r           add the following token to the regex list

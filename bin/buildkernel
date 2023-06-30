@@ -1,0 +1,24 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use autodie qw(:all);
+use Data::Dump;
+$|++; $\="\n"; $,=" "; $"=" "; $/="\n";
+
+
+push(@ARGV, "/usr/src/linux") unless @ARGV;
+for(@ARGV) {
+  chdir($_);
+  system("make -j 8 bzImage");
+  system("make -j 8 modules");
+  system("make -j 8 modules_install");
+  system("make install");
+};

@@ -58,7 +58,7 @@ sub get_path() {
   return @path;
 }
 sub proc_argv(@) {
-  local @_=getopt("dc:",@_);
+  local @_=getopt("dc[0-9]:",@_);
   my (%seen);
   while( ($_=shift) ne '--' )
   {
