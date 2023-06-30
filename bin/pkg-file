@@ -19,8 +19,7 @@ $data{fn}="/var/cache/apt/apt-file-search-slash";
 
 sub help {
   print join("",<DATA>);
-}
-
+};
 sub set_type() {
   die "type already specified, got '$_'" if defined($data{type});
   $data{type}=$_;
@@ -36,11 +35,8 @@ die "wtf?";
 
 
 
-sub file_match($) {
-};
 sub loop($) {
-	my $qr=eval {
-    return 1 if m{$_} 
+	my $qr=shift;
 	open(STDIN,"<$data{fn}");
 	if( $data{type} eq 'file' ) {
 		while(<STDIN>){
