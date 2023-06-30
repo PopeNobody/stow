@@ -7,7 +7,7 @@ BEGIN {
   use lib "$Bin/../lib/perl";
 };
 use autodie qw(:all);
-use Data::Dumper;
+use Data::Dump qw(ddx ppx dd pp);
 use Getopt::WonderBra;
 use File::Basename;
 use File::stat qw(:FIELDS);
@@ -25,6 +25,8 @@ sub debug(@){
 my $test;
 my $neg=0;
 my $cluck=0;
+my $glob;
+
 debug("script: $Script\n");
 sub is_mount() {
   system("mountpoint $_ >/dev/null 2>&1");
@@ -50,12 +52,14 @@ for($Script) {
   }
 }
 debug("test: $test\n");
-@ARGV = getopt( 'fdnlec', @ARGV );
+@ARGV = getopt( 'fdnlecg', @ARGV );
 while ( ( $_ = shift ) ne '--' )
 {
   if ( /^-[fdlem]$/ ) {
     die "repeated specification of -[fdle]" if defined $test && $test ne $_;
     $test="$_ \$_";
+  } elsif ( /^-g$/ ) {
+    $glob=1;
   } elsif ( /^-c$/ ) {
     $cluck=1;
   } elsif ( /^-n$/ ) {
@@ -67,10 +71,18 @@ while ( ( $_ = shift ) ne '--' )
 };
 $test="!($test)" if( $neg );
 if(!@ARGV) {
-  -t STDIN && print STDERR "items: ";
-  @ARGV=grep { chomp || 1 } <STDIN>;
+  if ( -t STDIN ) {
+    print STDERR "reading terminal for items: ";
+  } else {
+    print STDERR "reading items: ";
+  }
+  @ARGV=map { split } grep { chomp || 1 } <STDIN>;
+  printf STDERR "%d items:\n", scalar(@ARGV);
 };
 @ARGV = grep { chomp || length } <STDIN> unless(@ARGV);
+if($glob){
+  @ARGV = map { glob($_) } @ARGV;
+};
 for(@ARGV) {
   if($cluck) {
     cluck "$_\n" if eval $test;
