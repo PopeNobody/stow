@@ -1,0 +1,82 @@
+#!/bin/bash
+
+set -e
+
+export SSH_AGENT_FILE="$HOME/.ssh/agent.sh"
+
+test -z "$HOME" && tty_say "HOME not set" && exit 1
+type  -p  "ssh-agent" || { tty_say "ssh-agent not found"; exit 2; }
+type  -p  "ssh-add"   || { tty_say "ssh-add   not found"; exit 2; };
+mkdir -p $(dirname "$SSH_AGENT_FILE")
+verbose(){
+  return 1; # 0 is true, 1 is false.
+}
+vreport() {
+  verbose && set report "$0"
+  "$@"
+};
+silent() {
+  "$@" </dev/null >/dev/null 2>&1;
+};
+check_agent() {
+  tty_say "${FUNCNAME}($@)";
+  test -z "$1" && tty_say "usage: check_agent [filename]" && return 1;
+  local res=2
+  for((i=0;i<3;i++)); do
+    #test -r "$1" || tty_say "$1 is not readable" && break;
+    silent source "$1"
+    if vreport test -z "$SSH_AUTH_SOCK"; then
+      break;
+    fi
+    if vreport test -z "$SSH_AGENT_PID"; then
+      break;
+    fi
+    if ! vreport silent /usr/bin/kill -0 "$SSH_AGENT_PID"; then
+      break;
+    fi
+    vreport silent ssh-add
+    res="$?"
+    if ((res==2)); then
+      tty_say "not running";
+      rm -f "$HOME/.ssh/agent.sock" "$1";
+    fi
+  done
+  return 1;
+};
+agent() {
+  tty_say "${FUNCNAME}($@)";
+  bash -c 'ssh-agent -a "${SSH_AGENT_FILE%.sh}.sock" -s'
+};
+start_agent()
+{
+  tty_say "${FUNCNAME}($@)";
+  agent >$SSH_AGENT_FILE.new;
+  set -xv
+  if check_agent "$SSH_AGENT_FILE.new"; then
+    tty_say "agent is up"
+    mv "$SSH_AGENT_FILE"{.new,};
+    set +xv
+    return 0
+  else
+    tty_say "unable to start agent;"
+    set +xv
+    return 1;
+  fi
+};
+main() {
+  if check_agent "$SSH_AGENT_FILE"; then
+    tty_say agent_is up;
+  elif start_agent; then
+    tty_say started agent
+  else
+    tty_say failed;
+    exit 1;
+  fi
+  (($#)) || exit 0;
+  exec "$@"
+  tty_say "failed to exec";
+  exit 1;
+}
+main
+
+

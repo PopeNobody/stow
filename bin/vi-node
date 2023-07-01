@@ -1,0 +1,154 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use autodie qw(:all);
+use autodie qw(fork);
+use File::stat;
+use Data::Dump qw(pp ppx dd ddx);
+
+$|++;
+$\="\n";
+
+my $debug = defined($ENV{VI_NODE_DEBUG});
+die if $debug;
+$ENV{NODE_OPTIONS}='--openssl-legacy-provider';
+
+sub main(@);
+main(@ARGV);
+
+use IO::Pipe;
+sub run_node($$$@);
+sub run_filt($$$@);
+
+my $realscript;
+sub main(@)
+{
+  my ($script);
+  local (*ARGV)=(\@_);
+  $realscript=$script=shift;
+
+  die "no script" unless defined($realscript);
+  if( $realscript ne "-e" ) {
+    for($realscript){
+      s{^sudo:}{};
+    }
+    if( ! -f $realscript ) {
+      my @path;
+      @path = split(/:/, $ENV{PATH});
+      $_=join('/',$_,$realscript) for @path;
+      @path = grep { -e } @path;
+      $realscript=shift @path;
+    };
+    if( ! -f $realscript ) {
+      undef $script;
+    };
+  };
+  die "no script found" unless defined $script;
+
+  my ($pipe1,$pipe2);
+  $pipe1=new IO::Pipe;
+  $pipe2=new IO::Pipe;
+  my ($perl_pid, $filt_pid);
+  my ($perl_res, $filt_res);
+  my ($perl_sig, $filt_sig);
+  if(($perl_pid=fork)==0) {
+    exit(run_node($pipe1,$pipe2,$realscript,@ARGV));
+  } elsif(($filt_pid=fork)==0) {
+    exit(run_filt($pipe1,$pipe2,$script,@ARGV));
+  } else {
+    my $pid;
+    close($pipe1->writer);
+    close($pipe2->writer);
+    while(($pid=wait)!=-1)
+    {
+      if( $pid == $perl_pid ) {
+        $perl_res=$?/256;
+        $perl_sig=$?%256;
+        #warn "perl done, res=$perl_res, sig=$perl_sig\n" if ($perl_res||$perl_sig);
+      } elsif( $pid == $filt_pid ) {
+        $filt_res=$?/256;
+        $filt_sig=$?%256;
+        #warn "perl done, res=$filt_res, sig=$filt_sig\n" if ($filt_res||$filt_sig);
+      } else {
+        die "unknown pid: $pid (\$?=$?)\n";
+      };
+    };
+    if($perl_sig||$filt_sig){
+      exit(255);
+    } else {
+      exit($perl_res|$filt_res);
+    };
+  };
+  die "wtf?";
+
+};
+
+my ($out,$err);
+sub run_node($$$@) {
+  for(sort keys %SIG){
+    $SIG{$_}='IGNORE';
+  };
+  my ($out,$err,$script,@args) = splice(@_);
+  open(STDOUT,">&".fileno($out->writer)) or die;
+  close($out);
+  open(STDERR,">&".fileno($err->writer)) or die;
+  close($err);
+  exec "node", $script, @args;
+  die "failed!";
+};
+sub edit_err(){
+  if(@_=m{^( *at )(.*)[(](.*)[)]$}){
+    shift;
+    print STDERR ppx(\@_) if $debug;
+    unshift(@_,map { split /:/ } pop(@_));
+    print STDERR ppx(\@_) if $debug;
+    if($_[0]eq'node'){
+      unshift(@_,join(':',splice(@_,0,2)));
+      print STDERR ppx(\@_) if $debug;
+    };
+    $_=join(":",@_);
+    print STDERR ppx(\@_,$_) if $debug;
+  } elsif( @_=m{^( *at )(:?file:|)([-A-Za-z0-9_/.]+:[0-9]+:[0-9]+)$} ) {
+    shift;
+    shift;
+    $_="@_";
+    print;
+    s{^/+}{/};
+    s{$}{:err};
+    print STDERR ppx(\@_,\$_) if $debug;
+  }
+};
+sub run_filt($$$@)
+{
+  my ($out,$err,$script,@args) = splice(@_);
+  open(STDIN,"</dev/null");
+  use IO::Select;
+  my $sel = new IO::Select;
+  my $out_buf="";
+  my $err_buf="";
+  $sel->add( [ $out->reader(), \$out_buf, 0, 'O' ] );
+  $sel->add( [ $err->reader(), \$err_buf, 1, 'E' ] );
+  while($sel->handles){
+    my @can=$sel->can_read;
+    for(@can)
+    {
+      my ($pipe,$ref,$stream,$prefix);
+      ( $pipe, $ref, $stream,$prefix ) = @$_;
+      local (*_)=$ref;
+      my $res=sysread($pipe,$_,1,length);
+      if(!defined($res)) {
+        die "sysread:$!";
+      } elsif ( !$res ) {
+        $sel->remove($pipe);
+        close($pipe) or die "close:$!";
+      } else{
+        next unless chomp;
+      }
+      edit_err() if($prefix eq 'E');
+      print;
+      $_="";
+    };
+  };
+  exit(0);
+};
