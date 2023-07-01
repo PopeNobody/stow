@@ -41,6 +41,7 @@ sub help {
 };
 sub set_type() {
   die "type already specified, got '$_'" if defined($data{type});
+  ddx([ \$_, \@_ ]);
   $data{type}=$_;
 };
 
@@ -51,6 +52,7 @@ sub main();
 exit(main());
 die "wtf?";
 
+<<<<<<< HEAD
 our(%type);
 BEGIN {
   $type{file}='^\S+:\s+(.*)';
@@ -101,10 +103,51 @@ sub opt($$$){
   $tmp{type}=shift;
   $tmp{dir}=shift;
   $tmp{update}=shift;
+=======
+
+
+sub loop() {
+  use Data::Dump;
+  #  ddx([ \@_, \%data ]);
+  my $qr=$data{qr};
+  die "no qr in:\n", pp(\%data) unless defined $qr;
+  open(STDIN,"<$data{fn}");
+  my $pre;
+  if( $data{type} eq 'file' ) {
+    $pre=qr{^\S+:\s+(.*)};
+  } elsif ( $data{type} eq 'package' ) {
+    $pre=qr{^(\S+):\s+(.*)};
+  };
+  if(defined($pre)){
+    if(open(STDOUT,"|-")){
+      print "TRUE";
+    } else {
+      print "FALSE";
+    }
+  }
+
+  while(<STDIN>){
+    next unless m{:.*$qr};
+    chomp;
+    my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+    print if $file=~m{$qr};
+  };
+  close(STDIN);
+  die "$@" if "$@";
+  open(STDIN,"</dev/null");
+  return 0;
+};
+our(%opt);
+sub opt($$){
+  my (%tmp);
+  $tmp{type}=shift;
+  $tmp{dir}=shift;
+>>>>>>> 40963ce (fixed up pkg-file and several more.  renamed scripts with _ to -)
   $tmp{start}=0;
   return \%tmp;  
 };
 BEGIN {
+<<<<<<< HEAD
   $opt{-d}=opt( 'file', 1, 0);
   $opt{-d}{start}=1;
   $opt{-D}=opt( 'file', 1, 0);
@@ -123,18 +166,41 @@ sub main()
   my $sel;
   #my $ddx=[ \$_, \$sel, \%data, \%opt, \@_ ];
   my $update = 0;
+=======
+  #ddx(\%opt);
+  $opt{-d}=opt( 'file', 1);
+  #  ddx(\%opt);
+  $opt{-d}{start}=1;
+  $opt{-D}=opt( 'file', 1);
+  $opt{-f}=opt( 'file', 0);
+  $opt{-l}=opt( 'line', 0);
+  $opt{-p}=opt( 'package', 0);
+}
+ddx(\%opt);
+sub main(@)
+{
+  local $_;
+  our(@_);
+  my $sel;
+  my $ddx=[ \$_, \$sel, \%data, \%opt, \@_ ];
+>>>>>>> 40963ce (fixed up pkg-file and several more.  renamed scripts with _ to -)
 
   $data{orig}=[@_];
   @_=getopt('upfldD',@_);
   $data{prod}=[@_];
   if(@_){
+<<<<<<< HEAD
     while(($_=shift)ne'--')
+=======
+    while(($_=shift(@_))ne'--')
+>>>>>>> 40963ce (fixed up pkg-file and several more.  renamed scripts with _ to -)
     {
       die "more than opt flag!" if defined $sel;
       $sel=$opt{$_};
     }
   }
   $sel = $opt{-l} unless $sel;
+<<<<<<< HEAD
   if($sel->{update}){
     print STDERR "running update";
     update();
@@ -143,12 +209,19 @@ sub main()
     for(keys %{$sel}){
       $data{$_}=$sel->{$_};
     };
+=======
+  die "sel is not a ref: ",pp($ddx) unless ref($sel) eq 'HASH';
+  for(keys %{$sel}){
+    $data{$_}=$sel->{$_};
+  };
+>>>>>>> 40963ce (fixed up pkg-file and several more.  renamed scripts with _ to -)
 
     die "need exactly one pattern" unless @_==1;
     die "qr already defined" if defined $data{qr};
     $data{qr}=shift;
     die "missing type: ", pp(\%data) unless defined($data{type});
 
+<<<<<<< HEAD
     #ddx( [ { "pos" => "about to call" }, $ddx  ] );
     #die "need pattern" unless defined($data{qr});
     print STDERR "running loop";
@@ -169,3 +242,40 @@ sub update() {
   rename("$data{fn}.new", "$data{fn}"    );
   return 0;
 };
+=======
+  if(@_) {
+    die if defined $data{qr};
+    $data{qr}=shift;
+  } else {
+    die "no qr: ", ppx(\%data) unless defined($data{qr});
+  };
+  die "missing type: ", pp(\%data) unless defined($data{type});
+
+  #ddx( [ { "pos" => "about to call" }, $ddx  ] );
+  die "need pattern" unless defined($data{qr});
+  return loop();
+};
+
+sub update() {
+  if(grep { defined } map { $data{$_} } qw(type whole qr ))
+  {
+    die "update should be used alone."
+  };
+  open(STDOUT,">$data{fn}.new");
+  open(STDIN,"apt-file search /|ts");
+  local($\)="";
+  print "\n";
+  rename("$data{fn}",     "$data{fn}.old");
+  rename("$data{fn}.new", "$data{fn}"    );
+  return 0;
+};
+__DATA__
+usage: - [-ud] [-p qr | -f qr]
+-u update:   our cache file, using apt-file
+-p package:  match our regex against the pkg side
+-f file:     match our regex agaisnt the file side
+-l line:     match our regex against the line side
+-d           use the pwd, anchored on the left, as your pattern
+-D           do the same, but don't anchor the pattern.
+-r           add the following token to the regex list
+>>>>>>> 40963ce (fixed up pkg-file and several more.  renamed scripts with _ to -)
