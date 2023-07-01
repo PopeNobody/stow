@@ -1,11 +1,1 @@
-tty_say () 
-{ 
-    for ((i=0; i<=2; i++))
-    do
-        test -t $i && eval "echo \"$*\" >&$i" && return 0;
-    done;
-    return 1
-}
-export -f tty_say
-return 2>/dev/null
-tty_say "$@"
+tty-run

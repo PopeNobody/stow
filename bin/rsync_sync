@@ -1,16 +1,1 @@
-rsync_sync () 
-{
-  if (($#==0)); then
-    echo >&2 "usage:  don't"
-      exit 1
-  fi
-  while(($#)); do
-    set -e
-    ssh $1 mkdir -p "$PWD"
-    rsync -Parv $1:$PWD/. .
-    rsync -Parv . $1:$PWD/.
-    shift;
-  done
-}
-set -xv
-rsync_sync "$@"
+rsync-sync
