@@ -11,14 +11,33 @@ BEGIN {
 };
 use autodie qw(:all);
 use Data::Dump;
+use Getopt::WonderBra;
+
+exec "sudo", "perl", $0, @ARGV
+  if $< or $>;
+
+my ($procs) = map { split } qx(nproc);
+$procs = 1 unless defined $procs;
 $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
-
-
-push(@ARGV, "/usr/src/linux") unless @ARGV;
-for(@ARGV) {
-  chdir($_);
-  system("make -j 8 bzImage");
-  system("make -j 8 modules");
-  system("make -j 8 modules_install");
-  system("make install");
+sub help {
+  print "usage: $0 [-j #]";
+  print "   -j: number of jobs";
+  print "";
 };
+our($VERSION)=join("-",qw(1 0 0));
+sub version {
+  print "$0: version $VERSION;";
+};
+@ARGV = getopt("j:", @ARGV);
+while(($_=shift)ne'--'){
+  if(/^-j$/){
+    $procs=shift;
+    die "missing required int arg for -j" unless defined($procs);
+    print "procs=$procs";
+  } else {
+    die "unexpected: $_";
+  };
+};
+chdir("/usr/src/linux");
+system("make -j $procs bzImage modules");
+system("make -j $procs modules_install install");

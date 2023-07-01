@@ -22,6 +22,7 @@ sub help {
 };
 sub set_type() {
   die "type already specified, got '$_'" if defined($data{type});
+  ddx([ \$_, \@_ ]);
   $data{type}=$_;
 };
 
@@ -35,91 +36,112 @@ die "wtf?";
 
 
 
-sub loop($) {
-	my $qr=shift;
-	open(STDIN,"<$data{fn}");
-	if( $data{type} eq 'file' ) {
-		while(<STDIN>){
-      next unless m{:.*$qr};
-			chomp;
-			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
-			print if $file=~m{$qr};
-		};
-	} elsif ( $data{type} eq 'package' ) {
-		while(<STDIN>){
-      next unless m{$qr.*:};
-			chomp;
-			my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
-			print if $pkg=~m{$qr};
-		};
-	} elsif ( $data{type} eq 'line' ) {
-		while(<STDIN>){
-			next unless m{$qr};
-			chomp;
-      print;
-		};
-  } elsif ( $data{type} eq 'dir' ) {
-	} else {
-		die "idk how to handle $data{type}";
-	};
-	close(STDIN);
-	die "$@" if "$@";
-	open(STDIN,"</dev/null");
-	return 0;
+sub loop() {
+  use Data::Dump;
+  #  ddx([ \@_, \%data ]);
+  my $qr=$data{qr};
+  die "no qr in:\n", pp(\%data) unless defined $qr;
+  open(STDIN,"<$data{fn}");
+  my $pre;
+  if( $data{type} eq 'file' ) {
+    $pre=qr{^\S+:\s+(.*)};
+  } elsif ( $data{type} eq 'package' ) {
+    $pre=qr{^(\S+):\s+(.*)};
+  };
+  if(defined($pre)){
+    if(open(STDOUT,"|-")){
+      print "TRUE";
+    } else {
+      print "FALSE";
+    }
+  }
+
+  while(<STDIN>){
+    next unless m{:.*$qr};
+    chomp;
+    my ($pkg,$file) = m{^(\S+):\s+(\S.*\S)};
+    print if $file=~m{$qr};
+  };
+  close(STDIN);
+  die "$@" if "$@";
+  open(STDIN,"</dev/null");
+  return 0;
 };
+our(%opt);
+sub opt($$){
+  my (%tmp);
+  $tmp{type}=shift;
+  $tmp{dir}=shift;
+  $tmp{start}=0;
+  return \%tmp;  
+};
+BEGIN {
+  #ddx(\%opt);
+  $opt{-d}=opt( 'file', 1);
+  #  ddx(\%opt);
+  $opt{-d}{start}=1;
+  $opt{-D}=opt( 'file', 1);
+  $opt{-f}=opt( 'file', 0);
+  $opt{-l}=opt( 'line', 0);
+  $opt{-p}=opt( 'package', 0);
+}
+ddx(\%opt);
 sub main(@)
 {
-	local $_;
-	$_=undef for @data{ qw( qr type ) };
+  local $_;
   our(@_);
-	$data{orig}=[@_];
-	@_=getopt('uUwpflzdD',@_);
+  my $sel;
+  my $ddx=[ \$_, \$sel, \%data, \%opt, \@_ ];
+
+  $data{orig}=[@_];
+  @_=getopt('upfldD',@_);
   $data{prod}=[@_];
-  my @pat;
-  while(($_=shift(@_))ne'--')
-  {
-    die "too many flags, last was $_" if defined $data{type};
-
-    if(/^-r$/){
-      die "-r as last arg!" unless @_;
-      push(@{$data{pats}},shift);
-    } elsif ( /^-[dD]$/ ) {
-    $data{type}=$_;
-    if(/^-[dD]$/){
-      $data{pattern}=
-    };
+  if(@_){
+    while(($_=shift(@_))ne'--')
+    {
+      die "more than opt flag!" if defined $sel;
+      $sel=$opt{$_};
+    }
   }
-  
-	die "need pattern" unless @_;
-  $data{pr}=[ map { qr{$a} } @_ ];
-	$data{qr}=shift;
-	$data{qr}=qr{$data{qr}};
+  $sel = $opt{-l} unless $sel;
+  die "sel is not a ref: ",pp($ddx) unless ref($sel) eq 'HASH';
+  for(keys %{$sel}){
+    $data{$_}=$sel->{$_};
+  };
 
 
-	$data{type}='line' unless defined $data{type};
-	return loop($data{qr});
+  if(@_) {
+    die if defined $data{qr};
+    $data{qr}=shift;
+  } else {
+    die "no qr: ", ppx(\%data) unless defined($data{qr});
+  };
+  die "missing type: ", pp(\%data) unless defined($data{type});
 
+  #ddx( [ { "pos" => "about to call" }, $ddx  ] );
+  die "need pattern" unless defined($data{qr});
+  return loop();
 };
 
 sub update() {
-	if(grep { defined } map { $data{$_} } qw(type whole qr ))
-	{
-		die "update should be used alone."
-	};
-	open(STDOUT,">$data{fn}.new");
-	open(STDIN,"apt-file search /|ts");
-	local($\)="";
+  if(grep { defined } map { $data{$_} } qw(type whole qr ))
+  {
+    die "update should be used alone."
+  };
+  open(STDOUT,">$data{fn}.new");
+  open(STDIN,"apt-file search /|ts");
+  local($\)="";
   print "\n";
-	rename("$data{fn}",     "$data{fn}.old");
-	rename("$data{fn}.new", "$data{fn}"    );
-	return 0;
+  rename("$data{fn}",     "$data{fn}.old");
+  rename("$data{fn}.new", "$data{fn}"    );
+  return 0;
 };
 __DATA__
 usage: - [-ud] [-p qr | -f qr]
-       -u update:   our cache file, using apt-file
-       -p package:  match our regex against the pkg side
-       -f file:     match our regex agaisnt the file side
-       -l line:     match our regex against the line side
-       -d           use the pwd, anchored on the left, as your pattern
-       -D           do the same, but don't anchor the pattern.
-       -r           add the following token to the regex list
+-u update:   our cache file, using apt-file
+-p package:  match our regex against the pkg side
+-f file:     match our regex agaisnt the file side
+-l line:     match our regex against the line side
+-d           use the pwd, anchored on the left, as your pattern
+-D           do the same, but don't anchor the pattern.
+-r           add the following token to the regex list
