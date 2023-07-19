@@ -2,12 +2,12 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
-use autodie qw(:all);
 $ENV{LANG}="C";
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
+use autodie qw(:all);
 use Data::Dump;
 use Getopt::WonderBra;
 sub help
