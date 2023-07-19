@@ -14,8 +14,6 @@ use Data::Dumper;
 $Data::Dumper::Deparse=1;
 
 our(@ARGS) = splice(@ARGV);
-use IO::Pipe;
-my $err = new IO::Pipe;
 if(!fork) {
   {
     my $tmp;

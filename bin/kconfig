@@ -1,0 +1,27 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+
+BEGIN {
+  use FindBin qw($Bin $Script);
+  use lib "$Bin/../lib/perl";
+  $|++; $\="\n"; $,=" "; $"=" ";
+};
+use autodie qw(:all);
+use Data::Dump;
+
+for(@ARGV){
+  $_="cat $_";
+  $_="z$_" if /.gz$/;
+  open(STDIN,"$_|");
+  while(<STDIN>){
+    chomp;
+    s{^#\s*CONFIG_}{CONFIG_} && s/\s*is not set.*/=n/;
+    print;
+  };
+  close(STDIN);
+};

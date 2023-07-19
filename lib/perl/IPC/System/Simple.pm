@@ -15,36 +15,36 @@ use constant VMS     => ($^O eq 'VMS');
 
 BEGIN {
 
-    # It would be lovely to use the 'if' module here, but it didn't
-    # enter core until 5.6.2, and we want to keep 5.6.0 compatibility.
+  # It would be lovely to use the 'if' module here, but it didn't
+  # enter core until 5.6.2, and we want to keep 5.6.0 compatibility.
 
 
-    if (WINDOWS) {
+  if (WINDOWS) {
 
-        ## no critic (ProhibitStringyEval)
+    ## no critic (ProhibitStringyEval)
 
-        eval q{
-            use Win32::Process qw(INFINITE NORMAL_PRIORITY_CLASS);
-            use File::Spec;
-            use Win32;
-            use Win32::ShellQuote;
+    eval q{
+    use Win32::Process qw(INFINITE NORMAL_PRIORITY_CLASS);
+    use File::Spec;
+    use Win32;
+    use Win32::ShellQuote;
 
-            # This uses the same rules as the core win32.c/get_shell() call.
-            use constant WINDOWS_SHELL => eval { Win32::IsWinNT() }
-                ? [ File::Spec->catfile(Win32::GetFolderPath(Win32::CSIDL_SYSTEM), 'cmd.exe'), '/x/d/c' ]
-                : [ File::Spec->catfile(Win32::GetFolderPath(Win32::CSIDL_SYSTEM), 'command.com'), '/c' ];
+    # This uses the same rules as the core win32.c/get_shell() call.
+    use constant WINDOWS_SHELL => eval { Win32::IsWinNT() }
+    ? [ File::Spec->catfile(Win32::GetFolderPath(Win32::CSIDL_SYSTEM), 'cmd.exe'), '/x/d/c' ]
+    : [ File::Spec->catfile(Win32::GetFolderPath(Win32::CSIDL_SYSTEM), 'command.com'), '/c' ];
 
-            # These are used when invoking _win32_capture
-            use constant NO_SHELL  => 0;
-            use constant USE_SHELL => 1;
+    # These are used when invoking _win32_capture
+    use constant NO_SHELL  => 0;
+    use constant USE_SHELL => 1;
 
-        };
+    };
 
-        ## use critic
+    ## use critic
 
-        # Die nosily if any of the above broke.
-        die $@ if $@;
-    }
+    # Die nosily if any of the above broke.
+    die $@ if $@;
+  }
 }
 
 # Note that we don't use WIFSTOPPED because perl never uses
@@ -81,10 +81,10 @@ require Exporter;
 our @ISA = qw(Exporter);
 
 our @EXPORT_OK = qw( 
-    capture  capturex
-    run      runx
-    system   systemx
-    $EXITVAL EXIT_ANY
+capture  capturex
+run      runx
+system   systemx
+$EXITVAL EXIT_ANY
 );
 
 our $VERSION = '1.30';
@@ -97,10 +97,10 @@ my @Signal_from_number = split(' ', $Config{sig_name});
 # Environment variables we don't want to see tainted.
 my @Check_tainted_env = qw(PATH IFS CDPATH ENV BASH_ENV);
 if (WINDOWS) {
-	push(@Check_tainted_env, 'PERL5SHELL');
+  push(@Check_tainted_env, 'PERL5SHELL');
 }
 if (VMS) {
-	push(@Check_tainted_env, 'DCL$PATH');
+  push(@Check_tainted_env, 'DCL$PATH');
 }
 
 # Not all systems implement the WIFEXITED calls, but POSIX
@@ -111,13 +111,13 @@ if (VMS) {
 eval { WIFEXITED(0); };
 
 if ($@ =~ UNDEFINED_POSIX_RE) {
-        no warnings 'redefine';  ## no critic
-	*WIFEXITED   = sub { not $_[0] & 0xff };
-	*WEXITSTATUS = sub { $_[0] >> 8  };
-	*WIFSIGNALED = sub { $_[0] & 127 };
-	*WTERMSIG    = sub { $_[0] & 127 };
+  no warnings 'redefine';  ## no critic
+  *WIFEXITED   = sub { not $_[0] & 0xff };
+  *WEXITSTATUS = sub { $_[0] >> 8  };
+  *WIFSIGNALED = sub { $_[0] & 127 };
+  *WTERMSIG    = sub { $_[0] & 127 };
 } elsif ($@) {
-	croak sprintf FAIL_POSIX, $@;
+  croak sprintf FAIL_POSIX, $@;
 }
 
 # None of the POSIX modules I've found define WCOREDUMP, although
@@ -132,18 +132,18 @@ my $NATIVE_WCOREDUMP;
 eval { POSIX::WCOREDUMP(1); };
 
 if ($@ =~ UNDEFINED_POSIX_RE) {
-	*WCOREDUMP = sub { $_[0] & 128 };
-        $NATIVE_WCOREDUMP = 0;
+  *WCOREDUMP = sub { $_[0] & 128 };
+  $NATIVE_WCOREDUMP = 0;
 } elsif ($@) {
-	croak sprintf FAIL_POSIX, $@;
+  croak sprintf FAIL_POSIX, $@;
 } else {
-	# POSIX actually has it defined!  Huzzah!
-	*WCOREDUMP = \&POSIX::WCOREDUMP;
-        $NATIVE_WCOREDUMP = 1;
+  # POSIX actually has it defined!  Huzzah!
+  *WCOREDUMP = \&POSIX::WCOREDUMP;
+  $NATIVE_WCOREDUMP = 1;
 }
 
 sub _native_wcoredump {
-    return $NATIVE_WCOREDUMP;
+  return $NATIVE_WCOREDUMP;
 }
 
 # system simply calls run
@@ -157,98 +157,98 @@ use warnings;
 
 sub run {
 
-	_check_taint(@_);
+  _check_taint(@_);
 
-	my ($valid_returns, $command, @args) = _process_args(@_);
+  my ($valid_returns, $command, @args) = _process_args(@_);
 
-        # If we have arguments, we really want to call systemx,
-        # so we do so.
+  # If we have arguments, we really want to call systemx,
+  # so we do so.
 
-	if (@args) {
-                return systemx($valid_returns, $command, @args);
-	}
+  if (@args) {
+    return systemx($valid_returns, $command, @args);
+  }
 
-    if (WINDOWS) {
-        my $pid = _spawn_or_die(&WINDOWS_SHELL->[0], join ' ', @{&WINDOWS_SHELL}, $command);
-        $pid->Wait(INFINITE);	# Wait for process exit.
-        $pid->GetExitCode($EXITVAL);
-        return _check_exit($command,$EXITVAL,$valid_returns);
-    }
+  if (WINDOWS) {
+    my $pid = _spawn_or_die(&WINDOWS_SHELL->[0], join ' ', @{&WINDOWS_SHELL}, $command);
+    $pid->Wait(INFINITE);	# Wait for process exit.
+    $pid->GetExitCode($EXITVAL);
+    return _check_exit($command,$EXITVAL,$valid_returns);
+  }
 
-    # Without arguments, we're calling system, and checking
-        # the results.
+  # Without arguments, we're calling system, and checking
+  # the results.
 
-	# We're throwing our own exception on command not found, so
-	# we don't need a warning from Perl.
+  # We're throwing our own exception on command not found, so
+  # we don't need a warning from Perl.
 
-        {
-            # silence 'Statement unlikely to be reached' warning
-            no warnings 'exec';             ## no critic
-            CORE::system($command,@args);
-        }
+  {
+    # silence 'Statement unlikely to be reached' warning
+    no warnings 'exec';             ## no critic
+    CORE::system($command,@args);
+  }
 
-	return _process_child_error($?,$command,$valid_returns);
+  return _process_child_error($?,$command,$valid_returns);
 }
 
 # runx is just like system/run, but *never* invokes the shell.
 
 sub runx {
-    _check_taint(@_);
+  _check_taint(@_);
 
-    my ($valid_returns, $command, @args) = _process_args(@_);
+  my ($valid_returns, $command, @args) = _process_args(@_);
 
-    if (WINDOWS) {
-        our $EXITVAL = -1;
+  if (WINDOWS) {
+    our $EXITVAL = -1;
 
-        my $pid = _spawn_or_die($command, Win32::ShellQuote::quote_native($command, @args));
+    my $pid = _spawn_or_die($command, Win32::ShellQuote::quote_native($command, @args));
 
-        $pid->Wait(INFINITE);	# Wait for process exit.
-        $pid->GetExitCode($EXITVAL);
-        return _check_exit($command,$EXITVAL,$valid_returns);
-    }
+    $pid->Wait(INFINITE);	# Wait for process exit.
+    $pid->GetExitCode($EXITVAL);
+    return _check_exit($command,$EXITVAL,$valid_returns);
+  }
 
-    # If system() fails, we throw our own exception.  We don't
-    # need to have perl complain about it too.
+  # If system() fails, we throw our own exception.  We don't
+  # need to have perl complain about it too.
 
-    no warnings; ## no critic
+  no warnings; ## no critic
 
-    CORE::system { $command } $command, @args;
+  CORE::system { $command } $command, @args;
 
-    return _process_child_error($?, $command, $valid_returns);
+  return _process_child_error($?, $command, $valid_returns);
 }
 
 # capture is our way of running a process with backticks/qx semantics
 
 sub capture {
-	_check_taint(@_);
+  _check_taint(@_);
 
-	my ($valid_returns, $command, @args) = _process_args(@_);
+  my ($valid_returns, $command, @args) = _process_args(@_);
 
-        if (@args) {
-            return capturex($valid_returns, $command, @args);
-        }
+  if (@args) {
+    return capturex($valid_returns, $command, @args);
+  }
 
-        if (WINDOWS) {
-            # USE_SHELL really means "You may use the shell if you need it."
-            return _win32_capture(USE_SHELL, $valid_returns, $command);
-        }
+  if (WINDOWS) {
+    # USE_SHELL really means "You may use the shell if you need it."
+    return _win32_capture(USE_SHELL, $valid_returns, $command);
+  }
 
-	our $EXITVAL = -1;
+  our $EXITVAL = -1;
 
-	my $wantarray = wantarray();
+  my $wantarray = wantarray();
 
-	# We'll produce our own warnings on failure to execute.
-	no warnings 'exec';	## no critic
+  # We'll produce our own warnings on failure to execute.
+  no warnings 'exec';	## no critic
 
-        if ($wantarray) {
-                my @results = qx($command);
-                _process_child_error($?,$command,$valid_returns);
-                return @results;
-        } 
+  if ($wantarray) {
+    my @results = qx($command);
+    _process_child_error($?,$command,$valid_returns);
+    return @results;
+  } 
 
-        my $results = qx($command);
-        _process_child_error($?,$command,$valid_returns);
-        return $results;
+  my $results = qx($command);
+  _process_child_error($?,$command,$valid_returns);
+  return $results;
 }
 
 # _win32_capture implements the capture and capurex commands on Win32.
@@ -256,197 +256,197 @@ sub capture {
 # an if (WINDOWS) block to avoid it being compiled on non-Win32 systems.
 
 sub _win32_capture {
-    if (not WINDOWS) {
-        croak sprintf(FAIL_INTERNAL, "_win32_capture called when not under Win32");
-    } else {
+  if (not WINDOWS) {
+    croak sprintf(FAIL_INTERNAL, "_win32_capture called when not under Win32");
+  } else {
 
-        my ($use_shell, $valid_returns, $command, @args) = @_;
+    my ($use_shell, $valid_returns, $command, @args) = @_;
 
-        my $wantarray = wantarray();
+    my $wantarray = wantarray();
 
-        # Perl doesn't support multi-arg open under
-        # Windows.  Perl also doesn't provide very good
-        # feedback when normal backtails fail, either;
-        # it returns exit status from the shell
-        # (which is indistinguishable from the command
-        # running and producing the same exit status).
+    # Perl doesn't support multi-arg open under
+    # Windows.  Perl also doesn't provide very good
+    # feedback when normal backtails fail, either;
+    # it returns exit status from the shell
+    # (which is indistinguishable from the command
+    # running and producing the same exit status).
 
-        # As such, we essentially have to write our own
-        # backticks.
+    # As such, we essentially have to write our own
+    # backticks.
 
-        # We start by dup'ing STDOUT.
+    # We start by dup'ing STDOUT.
 
-        open(my $saved_stdout, '>&', \*STDOUT)  ## no critic
-                or croak sprintf(FAIL_PLUMBING, "Can't dup STDOUT", $!);
+    open(my $saved_stdout, '>&', \*STDOUT)  ## no critic
+      or croak sprintf(FAIL_PLUMBING, "Can't dup STDOUT", $!);
 
-        # We now open up a pipe that will allow us to	
-        # communicate with the new process.
+    # We now open up a pipe that will allow us to	
+    # communicate with the new process.
 
-        pipe(my ($read_fh, $write_fh))
-                or croak sprintf(FAIL_PLUMBING, "Can't create pipe", $!);
+    pipe(my ($read_fh, $write_fh))
+      or croak sprintf(FAIL_PLUMBING, "Can't create pipe", $!);
 
-        # Allow CRLF sequences to become "\n", since
-        # this is what Perl backticks do.
+    # Allow CRLF sequences to become "\n", since
+    # this is what Perl backticks do.
 
-        binmode($read_fh, ':crlf');
+    binmode($read_fh, ':crlf');
 
-        # Now we re-open our STDOUT to $write_fh...
+    # Now we re-open our STDOUT to $write_fh...
 
-        open(STDOUT, '>&', $write_fh)  ## no critic
-                or croak sprintf(FAIL_PLUMBING, "Can't redirect STDOUT", $!);
+    open(STDOUT, '>&', $write_fh)  ## no critic
+      or croak sprintf(FAIL_PLUMBING, "Can't redirect STDOUT", $!);
 
-        # If we have args, or we're told not to use the shell, then
-        # we treat $command as our shell.  Otherwise we grub around
-        # in our command to look for a command to run.
-        #
-        # Note that we don't actually *use* the shell (although in
-        # a future version we might).  Being told not to use the shell
-        # (capturex) means we treat our command as really being a command,
-        # and not a command line.
+    # If we have args, or we're told not to use the shell, then
+    # we treat $command as our shell.  Otherwise we grub around
+    # in our command to look for a command to run.
+    #
+    # Note that we don't actually *use* the shell (although in
+    # a future version we might).  Being told not to use the shell
+    # (capturex) means we treat our command as really being a command,
+    # and not a command line.
 
-        my $exe =   @args                      ? $command :
-                    (! $use_shell)             ? $command :
-                    $command =~ m{^"([^"]+)"}x ? $1       :
-                    $command =~ m{(\S+)     }x ? $1       :
-                    croak sprintf(FAIL_CMD_BLANK, $command);
+    my $exe =   @args                      ? $command :
+    (! $use_shell)             ? $command :
+    $command =~ m{^"([^"]+)"}x ? $1       :
+    $command =~ m{(\S+)     }x ? $1       :
+    croak sprintf(FAIL_CMD_BLANK, $command);
 
-        # And now we spawn our new process with inherited
-        # filehandles.
+    # And now we spawn our new process with inherited
+    # filehandles.
 
-        my $err;
-        my $pid = eval { 
-                _spawn_or_die($exe, @args ? Win32::ShellQuote::quote_native($command, @args) : $command);
-        }
-        or do {
-                $err = $@;
-        };
-
-        # Regardless of whether our command ran, we must restore STDOUT.
-        # RT #48319
-        open(STDOUT, '>&', $saved_stdout)  ## no critic
-                or croak sprintf(FAIL_PLUMBING,"Can't restore STDOUT", $!);
-
-        # And now, if there was an actual error , propagate it.
-        die $err if defined $err;   # If there's an error from _spawn_or_die
-
-        # Clean-up the filehandles we no longer need...
-
-        close($write_fh)
-                or croak sprintf(FAIL_PLUMBING,q{Can't close write end of pipe}, $!);
-        close($saved_stdout)
-                or croak sprintf(FAIL_PLUMBING,q{Can't close saved STDOUT}, $!);
-
-        # Read the data from our child...
-
-        my (@results, $result);
-
-        if ($wantarray) {
-                @results = <$read_fh>;
-        } else {
-                $result = join("",<$read_fh>);
-        }
-
-        # Tidy up our windows process and we're done!
-
-        $pid->Wait(INFINITE);	# Wait for process exit.
-        $pid->GetExitCode($EXITVAL);
-
-        _check_exit($command,$EXITVAL,$valid_returns);
-
-        return $wantarray ? @results : $result;
-
+    my $err;
+    my $pid = eval { 
+      _spawn_or_die($exe, @args ? Win32::ShellQuote::quote_native($command, @args) : $command);
     }
+      or do {
+      $err = $@;
+    };
+
+    # Regardless of whether our command ran, we must restore STDOUT.
+    # RT #48319
+    open(STDOUT, '>&', $saved_stdout)  ## no critic
+      or croak sprintf(FAIL_PLUMBING,"Can't restore STDOUT", $!);
+
+    # And now, if there was an actual error , propagate it.
+    die $err if defined $err;   # If there's an error from _spawn_or_die
+
+    # Clean-up the filehandles we no longer need...
+
+    close($write_fh)
+      or croak sprintf(FAIL_PLUMBING,q{Can't close write end of pipe}, $!);
+    close($saved_stdout)
+      or croak sprintf(FAIL_PLUMBING,q{Can't close saved STDOUT}, $!);
+
+    # Read the data from our child...
+
+    my (@results, $result);
+
+    if ($wantarray) {
+      @results = <$read_fh>;
+    } else {
+      $result = join("",<$read_fh>);
+    }
+
+    # Tidy up our windows process and we're done!
+
+    $pid->Wait(INFINITE);	# Wait for process exit.
+    $pid->GetExitCode($EXITVAL);
+
+    _check_exit($command,$EXITVAL,$valid_returns);
+
+    return $wantarray ? @results : $result;
+
+  }
 }
 
 # capturex() is just like backticks/qx, but never invokes the shell.
 
 sub capturex {
-	_check_taint(@_);
+  _check_taint(@_);
 
-	my ($valid_returns, $command, @args) = _process_args(@_);
+  my ($valid_returns, $command, @args) = _process_args(@_);
 
-	our $EXITVAL = -1;
+  our $EXITVAL = -1;
 
-	my $wantarray = wantarray();
+  my $wantarray = wantarray();
 
-	if (WINDOWS) {
-            return _win32_capture(NO_SHELL, $valid_returns, $command, @args);
-        }
+  if (WINDOWS) {
+    return _win32_capture(NO_SHELL, $valid_returns, $command, @args);
+  }
 
-	# We can't use a multi-arg piped open here, since 5.6.x
-	# doesn't like them.  Instead we emulate what 5.8.x does,
-	# which is to create a pipe(), set the close-on-exec flag
-	# on the child, and the fork/exec.  If the exec fails, the
-	# child writes to the pipe.  If the exec succeeds, then
-	# the pipe closes without data.
+  # We can't use a multi-arg piped open here, since 5.6.x
+  # doesn't like them.  Instead we emulate what 5.8.x does,
+  # which is to create a pipe(), set the close-on-exec flag
+  # on the child, and the fork/exec.  If the exec fails, the
+  # child writes to the pipe.  If the exec succeeds, then
+  # the pipe closes without data.
 
-	pipe(my ($read_fh, $write_fh))
-		or croak sprintf(FAIL_PLUMBING, "Can't create pipe", $!);
+  pipe(my ($read_fh, $write_fh))
+    or croak sprintf(FAIL_PLUMBING, "Can't create pipe", $!);
 
-	# This next line also does an implicit fork.
-	my $pid = open(my $pipe, '-|');	 ## no critic
+  # This next line also does an implicit fork.
+  my $pid = open(my $pipe, '-|');	 ## no critic
 
-	if (not defined $pid) {
-		croak sprintf(FAIL_START, $command, $!);
-	} elsif (not $pid) {
-		# Child process, execs command.
+  if (not defined $pid) {
+    croak sprintf(FAIL_START, $command, $!);
+  } elsif (not $pid) {
+    # Child process, execs command.
 
-		close($read_fh);
+    close($read_fh);
 
-		# TODO: 'no warnings exec' doesn't get rid
-		# of the 'unlikely to be reached' warnings.
-		# This is a bug in perl / perldiag / perllexwarn / warnings.
+    # TODO: 'no warnings exec' doesn't get rid
+    # of the 'unlikely to be reached' warnings.
+    # This is a bug in perl / perldiag / perllexwarn / warnings.
 
-		no warnings;   ## no critic
+    no warnings;   ## no critic
 
-		CORE::exec { $command } $command, @args;
+    CORE::exec { $command } $command, @args;
 
-		# Oh no, exec fails!  Send the reason why to
-		# the parent.
+    # Oh no, exec fails!  Send the reason why to
+    # the parent.
 
-		print {$write_fh} int($!);
-		exit(-1);
-	}
+    print {$write_fh} int($!);
+    exit(-1);
+  }
 
-	{
-		# In parent process.
+  {
+    # In parent process.
 
-		close($write_fh);
+    close($write_fh);
 
-		# Parent process, check for child error.
-		my $error = <$read_fh>;
+    # Parent process, check for child error.
+    my $error = <$read_fh>;
 
-		# Tidy up our pipes.
-		close($read_fh);
+    # Tidy up our pipes.
+    close($read_fh);
 
-		# Check for error.
-		if ($error) {
-			# Setting $! to our child error number gives
-			# us nice looking strings when printed.
-			local $! = $error;
-			croak sprintf(FAIL_START, $command, $!);
-		}
-	}
+    # Check for error.
+    if ($error) {
+      # Setting $! to our child error number gives
+      # us nice looking strings when printed.
+      local $! = $error;
+      croak sprintf(FAIL_START, $command, $!);
+    }
+  }
 
-	# Parent process, we don't care about our pid, but we
-	# do go and read our pipe.
+  # Parent process, we don't care about our pid, but we
+  # do go and read our pipe.
 
-	if ($wantarray) {
-		my @results = <$pipe>;
-		close($pipe);
-		_process_child_error($?,$command,$valid_returns);
-		return @results;
-	}
+  if ($wantarray) {
+    my @results = <$pipe>;
+    close($pipe);
+    _process_child_error($?,$command,$valid_returns);
+    return @results;
+  }
 
-	# NB: We don't check the return status on close(), since
-	# on failure it sets $?, which we then inspect for more
-	# useful information.
+  # NB: We don't check the return status on close(), since
+  # on failure it sets $?, which we then inspect for more
+  # useful information.
 
-	my $results = join("",<$pipe>);
-	close($pipe);
-	_process_child_error($?,$command,$valid_returns);
-	
-	return $results;
+  my $results = join("",<$pipe>);
+  close($pipe);
+  _process_child_error($?,$command,$valid_returns);
+
+  return $results;
 
 }
 
@@ -455,67 +455,67 @@ sub capturex {
 
 sub _spawn_or_die {
 
-	# We need to wrap practically the entire sub in an
-	# if block to ensure it doesn't get compiled under non-Win32
-	# systems.  Compiling on these systems would not only be a
-	# waste of time, but also results in complaints about
-	# the NORMAL_PRIORITY_CLASS constant.
+  # We need to wrap practically the entire sub in an
+  # if block to ensure it doesn't get compiled under non-Win32
+  # systems.  Compiling on these systems would not only be a
+  # waste of time, but also results in complaints about
+  # the NORMAL_PRIORITY_CLASS constant.
 
-	if (not WINDOWS) {
-		croak sprintf(FAIL_INTERNAL, "_spawn_or_die called when not under Win32");
-	} else {
-		my ($orig_exe, $cmdline) = @_;
-		my $pid;
+  if (not WINDOWS) {
+    croak sprintf(FAIL_INTERNAL, "_spawn_or_die called when not under Win32");
+  } else {
+    my ($orig_exe, $cmdline) = @_;
+    my $pid;
 
-		my $exe = $orig_exe;
+    my $exe = $orig_exe;
 
-		# If our command doesn't have an extension, add one.
-		$exe .= $Config{_exe} if ($exe !~ m{\.});
+    # If our command doesn't have an extension, add one.
+    $exe .= $Config{_exe} if ($exe !~ m{\.});
 
-		Win32::Process::Create(
-			$pid, $exe, $cmdline, 1, NORMAL_PRIORITY_CLASS, "."
-		) and return $pid;
+    Win32::Process::Create(
+      $pid, $exe, $cmdline, 1, NORMAL_PRIORITY_CLASS, "."
+    ) and return $pid;
 
-		my @path = split(/;/,$ENV{PATH});
+    my @path = split(/;/,$ENV{PATH});
 
-		foreach my $dir (@path) {
-			my $fullpath = File::Spec->catfile($dir,$exe);
+    foreach my $dir (@path) {
+      my $fullpath = File::Spec->catfile($dir,$exe);
 
-			# We're using -x here on the assumption that stat()
-			# is faster than spawn, so trying to spawn a process
-			# for each path element will be unacceptably
-			# inefficient.
+      # We're using -x here on the assumption that stat()
+      # is faster than spawn, so trying to spawn a process
+      # for each path element will be unacceptably
+      # inefficient.
 
-			if (-x $fullpath) {
-				Win32::Process::Create(
-					$pid, $fullpath, $cmdline, 1,
-					NORMAL_PRIORITY_CLASS, "."
-				) and return $pid;
-			}
-		}
+      if (-x $fullpath) {
+        Win32::Process::Create(
+          $pid, $fullpath, $cmdline, 1,
+          NORMAL_PRIORITY_CLASS, "."
+        ) and return $pid;
+      }
+    }
 
-		croak sprintf(FAIL_START, $orig_exe, $^E);
-	}
+    croak sprintf(FAIL_START, $orig_exe, $^E);
+  }
 }
 
 # Complain on tainted arguments or environment.
 # ASSUME_TAINTED is true for 5.6.x, since it's missing ${^TAINT}
 
 sub _check_taint {
-	return if not (ASSUME_TAINTED or ${^TAINT});
-	my $caller = (caller(1))[3];
-	foreach my $var (@_) {
-		if (tainted $var) {
-			croak sprintf(FAIL_TAINT, $caller, $var);
-		}
-	}
-	foreach my $var (@Check_tainted_env) {
-		if (tainted $ENV{$var} ) {
-			croak sprintf(FAIL_TAINT_ENV, $caller, $var);
-		}
-	}
+  return if not (ASSUME_TAINTED or ${^TAINT});
+  my $caller = (caller(1))[3];
+  foreach my $var (@_) {
+    if (tainted $var) {
+      croak sprintf(FAIL_TAINT, $caller, $var);
+    }
+  }
+  foreach my $var (@Check_tainted_env) {
+    if (tainted $ENV{$var} ) {
+      croak sprintf(FAIL_TAINT_ENV, $caller, $var);
+    }
+  }
 
-	return;
+  return;
 
 }
 
@@ -525,40 +525,40 @@ sub _check_taint {
 # change in the future.
 
 sub _process_child_error {
-	my ($child_error, $command, $valid_returns) = @_;
-	
-	$EXITVAL = -1;
+  my ($child_error, $command, $valid_returns) = @_;
 
-	my $coredump = WCOREDUMP($child_error);
+  $EXITVAL = -1;
 
-        # There's a bug in perl 5.8.9 and 5.10.0 where if the system
-        # does not provide a native WCOREDUMP, then $? will
-        # never contain coredump information.  This code
-        # checks to see if we have the bug, and works around
-        # it if needed.
+  my $coredump = WCOREDUMP($child_error);
 
-        if ($] >= 5.008009 and not $NATIVE_WCOREDUMP) {
-            $coredump ||= WCOREDUMP( ${^CHILD_ERROR_NATIVE} );
-        }
+  # There's a bug in perl 5.8.9 and 5.10.0 where if the system
+  # does not provide a native WCOREDUMP, then $? will
+  # never contain coredump information.  This code
+  # checks to see if we have the bug, and works around
+  # it if needed.
 
-	if ($child_error == -1) {
-		croak sprintf(FAIL_START, $command, $!);
+  if ($] >= 5.008009 and not $NATIVE_WCOREDUMP) {
+    $coredump ||= WCOREDUMP( ${^CHILD_ERROR_NATIVE} );
+  }
 
-	} elsif ( WIFEXITED( $child_error ) ) {
-		$EXITVAL = WEXITSTATUS( $child_error );
+  if ($child_error == -1) {
+    croak sprintf(FAIL_START, $command, $!);
 
-		return _check_exit($command,$EXITVAL,$valid_returns);
+  } elsif ( WIFEXITED( $child_error ) ) {
+    $EXITVAL = WEXITSTATUS( $child_error );
 
-	} elsif ( WIFSIGNALED( $child_error ) ) {
-		my $signal_no   = WTERMSIG( $child_error );
-		my $signal_name = $Signal_from_number[$signal_no] || "UNKNOWN";
+    return _check_exit($command,$EXITVAL,$valid_returns);
 
-		croak sprintf FAIL_SIGNAL, $command, $signal_name, $signal_no, ($coredump ? " and dumped core" : "");
+  } elsif ( WIFSIGNALED( $child_error ) ) {
+    my $signal_no   = WTERMSIG( $child_error );
+    my $signal_name = $Signal_from_number[$signal_no] || "UNKNOWN";
+
+    croak sprintf FAIL_SIGNAL, $command, $signal_name, $signal_no, ($coredump ? " and dumped core" : "");
 
 
-	} 
+  } 
 
-	croak sprintf(FAIL_INTERNAL, qq{'$command' ran without exit value or signal});
+  croak sprintf(FAIL_INTERNAL, qq{'$command' ran without exit value or signal});
 
 }
 
@@ -567,18 +567,18 @@ sub _process_child_error {
 # for new features in I::S::S.
 
 sub _check_exit {
-	my ($command, $exitval, $valid_returns) = @_;
+  my ($command, $exitval, $valid_returns) = @_;
 
-	# If we have a single-value list consisting of the EXIT_ANY
-	# value, then we're happy with whatever exit value we're given.
-	if (@$valid_returns == 1 and $valid_returns->[0] == EXIT_ANY_CONST) {
-		return $exitval;
-	}
+  # If we have a single-value list consisting of the EXIT_ANY
+  # value, then we're happy with whatever exit value we're given.
+  if (@$valid_returns == 1 and $valid_returns->[0] == EXIT_ANY_CONST) {
+    return $exitval;
+  }
 
-	if (not defined first { $_ == $exitval } @$valid_returns) {
-		croak sprintf FAIL_BADEXIT, $command, $exitval;
-	}	
-	return $exitval;
+  if (not defined first { $_ == $exitval } @$valid_returns) {
+    croak sprintf FAIL_BADEXIT, $command, $exitval;
+  }	
+  return $exitval;
 }
 
 
@@ -586,28 +586,28 @@ sub _check_exit {
 # name, and any arguments that we need to pass to it.
 
 sub _process_args {
-	my $valid_returns = [ 0 ];
-	my $caller = (caller(1))[3];
+  my $valid_returns = [ 0 ];
+  my $caller = (caller(1))[3];
 
-	if (not @_) {
-		croak "$caller called with no arguments";
-	}
+  if (not @_) {
+    croak "$caller called with no arguments";
+  }
 
-	if (ref $_[0] eq "ARRAY") {
-		$valid_returns = shift(@_);
-	}
+  if (ref $_[0] eq "ARRAY") {
+    $valid_returns = shift(@_);
+  }
 
-	if (not @_) {
-		croak "$caller called with no command";
-	}
+  if (not @_) {
+    croak "$caller called with no command";
+  }
 
-	my $command = shift(@_);
+  my $command = shift(@_);
 
-        if (not defined $command) {
-                croak sprintf( FAIL_UNDEF, $caller );
-        }
+  if (not defined $command) {
+    croak sprintf( FAIL_UNDEF, $caller );
+  }
 
-	return ($valid_returns,$command,@_);
+  return ($valid_returns,$command,@_);
 
 }
 
@@ -843,24 +843,24 @@ values by passing an I<array reference> as the first argument.  The
 special constant C<EXIT_ANY> can be used to allow I<any> exit value
 to be returned.
 
-	use IPC::System::Simple qw(run system capture EXIT_ANY);
+  use IPC::System::Simple qw(run system capture EXIT_ANY);
 
-	run( [0..5], "cat *.txt");             # Exit values 0-5 are OK
+  run( [0..5], "cat *.txt");             # Exit values 0-5 are OK
 
-	system( [0..5], "cat *.txt");          # This works the same way
+  system( [0..5], "cat *.txt");          # This works the same way
 
-	my @lines = capture( EXIT_ANY, "cat *.txt"); # Any exit is fine.
+  my @lines = capture( EXIT_ANY, "cat *.txt"); # Any exit is fine.
 
 The C<run> and replacement C<system> subroutines returns the exit
 value of the process:
 
-	my $exit_value = run( [0..5], "cat *.txt");
+  my $exit_value = run( [0..5], "cat *.txt");
 
-	# OR:
+  # OR:
 
-	my $exit_value = system( [0..5] "cat *.txt");
+  my $exit_value = system( [0..5] "cat *.txt");
 
-	print "Program exited with value $exit_value\n";
+  print "Program exited with value $exit_value\n";
 
 =head3 $EXITVAL
 
@@ -871,11 +871,11 @@ variable:
 This is particularly useful when inspecting results from C<capture>,
 which returns the captured text from the command.
 
-	use IPC::System::Simple qw(capture $EXITVAL EXIT_ANY);
+  use IPC::System::Simple qw(capture $EXITVAL EXIT_ANY);
 
-	my @enemies_defeated = capture(EXIT_ANY, "defeat_evil", "/dev/mordor");
+  my @enemies_defeated = capture(EXIT_ANY, "defeat_evil", "/dev/mordor");
 
-	print "Program exited with value $EXITVAL\n";
+  print "Program exited with value $EXITVAL\n";
 
 C<$EXITVAL> will be set to C<-1> if the command did not exit normally (eg,
 being terminated by a signal) or did not start.  In this situation an

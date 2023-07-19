@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 # vim: ts=2 sw=2 ft=perl
-echo "\$0=$0"
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
@@ -13,10 +12,14 @@ BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
-use Data::Dumper;
-open(STDIN,"+</dev/tty");
-open(STDOUT,"+<&STDIN");
-open(STDERR,"+<&STDIN");
-exec @ARGV;
+use Data::Dump qw(pp dd ppx ddx);
 
-#{ printf '%q\n' "$@"; "$@"; } </dev/tty >&0 2>&0
+our(@_);
+while(<>){
+  chomp;
+  my $line="$_";
+  my @line=[ split({ m{([0-9]+\|[^0-9]+)} }, $_) ];
+  ddx(\$line,\@line);
+}
+
+ddx(\@_);

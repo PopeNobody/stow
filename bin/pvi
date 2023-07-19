@@ -9,27 +9,29 @@ BEGIN {
 };
 use autodie qw(:all);
 use Getopt::WonderBra;
-use Data::Dump qw(dd);
 use File::Basename;
 use File::Copy;
 use File::stat;
 use Fcntl ':mode';
 use Cwd qw(getcwd realpath);
+use Data::Dump;
 sub debug {
-  return 1;
+  return 0;
 };
 $|++;
 sub get_path();
 sub proc_argv(@);
-our($debug, @cmd, @script);
-$debug = 0;
-push(@cmd,map { split } grep {defined} $ENV{VISUAL}) unless @cmd;
-push(@cmd,map { split } grep {defined} $ENV{EDITOR}) unless @cmd;
+our(@cmd, @script);
+push(@cmd,"/opt/bin/eedit");
+#push(@cmd,map { split } grep {defined} $ENV{SUDOED}) unless @cmd;
+#push(@cmd,map { split } grep {defined} $ENV{VISUEL}) unless @cmd;
+#push(@cmd,map { split } grep {defined} $ENV{EDITOR}) unless @cmd;
 
 die "no \@cmd" unless @cmd;
 
 help(2) unless @script = proc_argv(@ARGV);
-print dd(\@script);
+ddx(\@script);
+
 exec(@cmd, @script);
 die "exec failed";
 
@@ -40,16 +42,16 @@ sub get_path() {
   {
     my $stat=stat($_);
     if(!defined($stat)) {
-      warn("stat:$_:$!") if $debug;
+      warn("stat:$_:$!") if debug;
       next;
     };
     unless( -d $stat ) {
-      warn("$_ is not a dir") if $debug;
+      warn("$_ is not a dir") if debug;
       next;
     };
     my $unid = sprintf("%08x:%08x",$stat->dev,$stat->ino);
     if( defined($seen{$unid}) ) {
-      warn("$_ seen before") if $debug;
+      warn("$_ seen before") if debug;
       next;
     };
     $seen{$unid}=1;
@@ -84,10 +86,17 @@ sub find_scripts(){
   for( get_path() ) {
     my $fname="$_/$script";
     print STDERR "fname=$fname\n" if debug;
-    $fname=realpath($fname);
+    if(defined($_=realpath($fname))){
+      $fname=$_;
+    };
     print STDERR "fname=$fname\n" if debug;
-    next unless -f $fname;
-    $script{$fname}=1+(keys %script);
+    if(-e $fname) {
+      if(-f _) {
+        $script{$fname}=1+(keys %script);
+      } else {
+        print STDERR "warning: $fname is not a file";
+      };
+    };
   };
   return sort { $script{$a} <=> $script{$b} } keys %script;
 }

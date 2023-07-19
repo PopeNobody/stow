@@ -10,7 +10,6 @@ BEGIN {
 use autodie qw(:all);
 use Util;
 use Data::Dumper;
-use Getopt::WonderBra;
 
 sub help {
    
@@ -18,7 +17,6 @@ sub help {
 sub version {
   print "some other version";
 };
-
 
 
 open(STDIN,"</dev/null");

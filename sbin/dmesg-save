@@ -49,10 +49,10 @@ sub get_filename($) {
     $fn=shift @fn;
   }
   if(defined($fn)) {
-    print STDERR "old file";
+    print STDERR "old file: $fn";
   } else {
-    print STDERR "new file";
     $fn=sprintf("$dir/dmesg-%s.gz", map { split } qx(serdate));
+    print STDERR "new file: $fn";
   }
   return $fn;
 }
@@ -61,16 +61,21 @@ sub main(@) {
   my @dmesg = dmesg();
   my $new=0;
   for(map { "$_" } $dmesg[0]) {
-    $new=1 if s/^\[[0-9. ]*\] microcode//;
+    $new=1 if /^\[[0-9. ]*\] microcode/;
   };
   my $fn=get_filename($new);
   my @omesg;
   if($new) {
-    print "yep, new";
+    open(SHELL,"|/bin/bash 2>&1 >/dev/kmsg");
+    print SHELL "set -x\n";
+    print SHELL "exec 2>&1\n";
+    print SHELL "lsmod\n";
+    print SHELL "lshw\n";
+    print SHELL "lspci\n";
+    print SHELL "lsusb\n";
+    close(SHELL);
   } else {
     @omesg=grep { length } split("\n",join("\n",qx(test -e $fn && zcat $fn)));
-    printf "read %d lines\n", scalar(@omesg);
-    print STDERR "skipping read";
   };
   printf STDERR "writing %d new lines (and %d old onees) to %s\n", scalar(@dmesg), scalar(@omesg), $fn;
   open(STDOUT,"| gzip >$fn.new");
@@ -78,5 +83,6 @@ sub main(@) {
   close(STDOUT);
   rename "$fn.new", "$fn";
   system("dmesg -c > /dev/null 2>&1");
+  system("ln -sf $fn /var/log/dmesg/current.gz");
 }
 main(@ARGV);

@@ -1,0 +1,60 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
+};
+use autodie qw(:all);
+use Data::Dump;
+use Data::Dump qw(dd pp ddx ppx);
+
+use IO::Pipe;
+use IO::Select;
+
+$_=new IO::Pipe for my ( $op, $ep );
+
+print "parent: $$";
+for("/tmp/fd.out") {
+  unlink($_) if -e;
+};
+sub main() {
+  if(fork) {
+    $_="" for my ( $ob, $eb );
+    my $s=new IO::Select;
+    $s->add( [ $op->reader, \$ob, "o" ] );
+    $s->add( [ $ep->reader, \$eb, "e" ] );
+    ddx({ op=>$op, ep=>$ep, s=>$s });
+    while(@_=$s->can_read){
+      for(@_){
+        my ($fd,$buf,$tag)=@$_;
+        my $len = sysread($fd,$$buf,1,length($$buf));
+        print STDERR "$tag: $$buf";
+        if($len==0){
+          printf "$tag: $$buf" if length($$buf);
+          $s->remove($fd);
+          close($fd);
+        } elsif ( chomp $$buf ) {
+          print "$tag: $$buf";
+          $$buf="";
+        }
+      };
+    };
+  } else {
+    open(STDOUT,">&".fileno($op->writer));
+    close($op);
+    open(STDERR,">&".fileno($ep->writer));
+    close($ep);
+    @ARGV = ( "bash", "-c", "echo 1; echo 2>&2" ) unless @ARGV;
+    exec @ARGV;  
+  };
+}
+main();
+#   sleep(65535);
+#   exit(0);
+# };
