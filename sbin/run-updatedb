@@ -1,0 +1,9 @@
+#!/bin/bash
+
+
+set -e
+cd;
+sudo true
+exec >>/root/tmp/updatedb.out 2>&1 </dev/null
+echo "updating locate db" | sudo tee /dev/kmsg
+sudo bash -c 'setsid nohup updatedb &'

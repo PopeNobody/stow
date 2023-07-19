@@ -1,3 +1,4 @@
 #!/bin/bash
-exit 0
 
+echo "$@" | tee /dev/kmesg >&2
+exec "$@"

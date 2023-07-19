@@ -1,0 +1,41 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
+};
+use autodie qw(:all);
+use Data::Dump;
+use Data::Dump qw(dd pp ddx ppx);
+sub findlink($);
+findlink($_) for @ARGV;
+exit(0);
+sub debug {
+  return @_;
+};
+sub findlink($){
+  local(*_)=\$_[0];
+  debug "findlink(@_)\n";
+  die "full path required" unless m{^/};
+  die "link must eexist" unless -e;
+  s{/+$}{};
+  while( -l ) {
+    debug "$_ is link\n";
+    my ($dest)=readlink;
+    unless(substr($dest,0,1) eq '/'){
+      my ($dir,$name) = m{^(.*?)/+([^/]+)$};
+      $dest=join("/",$dir,$dest);
+    };
+    debug("  => $_\n");
+    $_=$dest;
+  };
+  debug "$_ is NOT link\n";
+  print;
+}
+

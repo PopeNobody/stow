@@ -1,3 +1,15 @@
 #!/bin/bash
 
+inout=
+for i; do
+  case "$i" in
+    (-in) inout="$i";;
+    (-out) inout="$i";;
+    (*) : ;;
+  esac
+done
+if test -z "$inout" ; then
+  echo "-in or -out is required" >&2
+  exit 1
+fi
 exec xclip -selection clipboard "$@"

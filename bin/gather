@@ -48,18 +48,18 @@ my @v;
 my @k;
 
 sub read_data() {
-  print STDERR "read_data";
+  #print STDERR "read_data";
   while(<>) {
     ($k,@v) =split;
-    ddx([ \%data ]);
+    #ddx([ \%data ]);
     next unless @v;
     push(@k,$k);
     push(@{$data{$k}}, @v);
   };
 }
 sub block_disp {
-  print STDERR "block_disp";
-  ddx(\@k);
+  #print STDERR "block_disp";
+  #ddx(\@k);
   my ($max) = 0;
   for $k (@k) {
     for( @{$data{$k}} ) {
@@ -89,8 +89,8 @@ sub block_disp {
   };
 }
 sub normal_disp {
-  print STDERR "normal_disp";
-  ddx(\@k);
+  #print STDERR "normal_disp";
+  #ddx(\@k);
   $,=" ";
   $\="\n";
   for $k (@k){
