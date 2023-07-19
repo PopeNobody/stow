@@ -5,7 +5,6 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-use autodie qw(:all);
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
@@ -14,6 +13,7 @@ BEGIN {
   $/="\n";
   use AutoLess;
 };
+use autodie qw(:all);
 use Data::Dumper;
 $ENV{LANG}="C";
 

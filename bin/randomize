@@ -10,7 +10,7 @@ BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
   $|++;
-  $\="\n"; $,=" "; $"=" ";
+  $\="\n"; $,="\t"; $"=" ";
 };
 use Data::Dump;
 use Getopt::WonderBra;
@@ -23,10 +23,13 @@ while(($_=shift)ne'--'){
     die "wtf?";
   };
 };
-my @text=<>;
-while(@text) {
-  last unless $lines<0 || $.>$lines;
-  print splice(@text,int(rand(@text)),1);
+my @text;
+chomp(@text=<>);
+$lines=@text if $lines<0;
+while(@text){
+  my ($idx)=int(rand(@text));
+  my ($txt)=splice(@text,$idx,1);
+  print "$txt";
 };
 sub help {
   print "randomize [-n #]";

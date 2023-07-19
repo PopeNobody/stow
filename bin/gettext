@@ -1,0 +1,6 @@
+#!/bin/bash
+
+set -- $(type -ap gettext)
+for i; do test $i -ef ${BASH_SOURCE} && echo $i; done
+exec echo "$@"
+
