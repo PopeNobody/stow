@@ -1,3 +1,5 @@
+#!/bin/bash
+
 tty_say () 
 { 
     for ((i=0; i<=2; i++))
