@@ -8,6 +8,7 @@ BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
+use Data::Dump;
 use Getopt::WonderBra;
 sub help
 {
@@ -23,19 +24,22 @@ my ($dup) = ( 0, 0 );
 my $block=0;
 $hand{-b}=sub {
   $block=1;
+  return @_;
 };
 $hand{-u}=sub {
   $dup=-1;
+  return @_;
 };
 $hand{-d}=sub {
   $dup=1;
+  return @_;
 };
 while(($_=shift)ne'--'){
   my $hand=$hand{$_};
   if( !defined($hand) ) {
     help(1);
   };
-  $hand->( @ARGV );
+  @ARGV = $hand->( @ARGV );
 };
 
 my %data;
@@ -43,13 +47,19 @@ my $k;
 my @v;
 my @k;
 
-while(<>) {
-	($k,@v) =split;
-  push(@k,$k);
-	push(@{$data{$k}}, @v);
-};
-
-if( $block ) {
+sub read_data() {
+  print STDERR "read_data";
+  while(<>) {
+    ($k,@v) =split;
+    ddx([ \%data ]);
+    next unless @v;
+    push(@k,$k);
+    push(@{$data{$k}}, @v);
+  };
+}
+sub block_disp {
+  print STDERR "block_disp";
+  ddx(\@k);
   my ($max) = 0;
   for $k (@k) {
     for( @{$data{$k}} ) {
@@ -77,7 +87,10 @@ if( $block ) {
     };
     print "\n";
   };
-} else {
+}
+sub normal_disp {
+  print STDERR "normal_disp";
+  ddx(\@k);
   $,=" ";
   $\="\n";
   for $k (@k){
@@ -92,4 +105,9 @@ if( $block ) {
     print $k, @v;
   }
 }
-
+read_data();
+if($block){
+  block_disp;
+} else {
+  normal_disp;
+};
