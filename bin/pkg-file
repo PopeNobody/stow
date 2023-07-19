@@ -3,13 +3,13 @@ $|++;
 
 use strict;
 use warnings;
-use autodie qw(:all);
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
+use autodie qw(:all);
 use Getopt::WonderBra;
 use File::Basename;
 use File::Copy;
