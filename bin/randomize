@@ -14,11 +14,11 @@ BEGIN {
 };
 use Data::Dump;
 use Getopt::WonderBra;
+my (%opts) = num=>-1;
 @ARGV=getopt("n:",@ARGV);
-my $lines=-1;
 while(($_=shift)ne'--'){
   if(/^-n/){
-    $lines=shift;
+    $opts{num}=shift;
   } else {
     die "wtf?";
   };

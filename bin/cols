@@ -1,43 +1,27 @@
-#!/usr/bin/perl
-# vim: ts=2 sw=2 ft=perl
-eval 'exec perl -x -wS $0 ${1+"$@"}'
-  if 0;
+#!/bin/perl
 
-use strict;
-use warnings;
-BEGIN {
-  use FindBin qw($Bin);
-  use lib "$Bin/../lib/perl";
-  $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
+my @rows;
+my $max=0;
+my @lens;
+my @keep;
+my @argv;
+
+for(@ARGV)
+{
+  if(/^\d+$/){
+    push(@keep,$_);
+  } else {
+    push(@argv,$_);
+  };
 };
-use Carp;
-$Carp::verbose=1;
-use autodie qw(:all);
-use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx);
+@ARGV=splice(@argv);
 
-my (@o);
+$\="\n";
+$,="    ";
 
-for my $i (0 .. @ARGV-1){
-  for($ARGV[$i]){
-    next unless /^[-\d,]+$/;
-    push(@o,split /,/);
-    $_=undef;
-  };
-}
-@ARGV = grep { defined } @ARGV;
-die "bad args: @ARGV\n" if grep { !-e }  @ARGV;
-if(@o){
-  while(<STDIN>){
-    next unless @_=split;
-    my (@t)=@_[@o];
-    @_=@t;
-    print @_;
-  };
-} else {
-  while(<STDIN>){
-    next unless /\S/;
-    print split;
-  }
-}
-exit(0);
+my ($max) = sort { $b <=> $a } @keep;
+while(<>)
+{
+  my @row=split;
+  print join(" ", map { $row[$_] } @keep ) if @row > $max;
+};
