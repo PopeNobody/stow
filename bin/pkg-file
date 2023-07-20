@@ -1,0 +1,107 @@
+#!/usr/bin/perl
+$|++;
+use autodie qw(:all);
+use strict;
+use warnings;
+use Data::Dumper;
+BEGIN {
+  sub qquote {
+    goto &Data::Dumper::qquote;
+  };
+};
+our($debug);
+
+sub help() {
+  print "usage: $0 [-zd] [-p pat | -f pat]\n";
+};
+sub version {
+  print "$0 version 0.1.0\n";
+};
+use Getopt::WonderBra;
+sub handle_arg($);
+sub mainloop();
+
+BEGIN {
+  print STDOUT "STDOUT\n";
+  print STDERR "STDERR\n";
+};
+BEGIN {
+  $\="\n"; $,=" "; $"=" ";
+  $Data::Dumper::Useqq=1;
+  $Data::Dumper::Deparse=1;
+  $Data::Dumper::Sortkeys=1;
+};
+use vars qw( %args );
+$_=undef for @args{ qw( pat type ) };
+$_=0     for @args{ qw( zipped debug dump ) };
+
+@ARGV=getopt( 'wpflzdD', @ARGV );
+handle_arg(shift(@ARGV)) while(@ARGV);
+die "no pats, and did not die!" unless defined($args{pat});
+$args{type} ||= "file";
+mainloop();
+exit(0);
+
+{
+  sub mainloop()
+  {
+    my $fn="/var/cache/apt/apt-file-search-slash";
+    if($args{zipped}) {
+      $fn = "zcat $fn.gz|";
+    } else {
+      $fn = "<$fn";
+    };
+    my $qr=$args{pat};
+    $qr=join('','^',$qr,'$') if $args{whole};
+    open(STDIN,"$fn");
+    for( grep { m{$qr} } <STDIN> ) {
+      print;
+    };
+    open(STDIN,"</dev/null");
+  };
+};
+sub set_type($) {
+  local *_=\$args{type};
+  die "only one type alowed" if defined;
+  $_=shift;
+};
+sub handle_arg($)
+{
+  print STDERR "handle_arg(@_,@ARGV)\n";
+  my $hands={
+    '-p' => sub{ set_type('package'); },
+    '-f' => sub{ set_type('file'); },
+    '-l' => sub{ set_type('line'); },
+    '-w' => sub{ $_=!$_ for $args{whole}; },
+    '-z' => sub{ $_=!$_ for $args{zipped}; },
+    '-d' => sub{ $_++ for $args{debug}; },
+    '-D' => sub{ $_=!$_ for $args{dump}; },
+    '--' => sub{
+      die "I need patterns!" unless @ARGV;
+      $args{pat}=shift @ARGV;
+      die "Too many args!" if @ARGV;
+    },
+  };
+  for(@_) {
+    my $hand=$hands->{$_};
+    die "I do not grok '$_'" unless defined $hand;
+    $hand->($_,@ARGV);
+  };
+};
+#    sub maybe_print
+#    {
+#      if( grep { $line =~ $_ } @lpats ) {
+#        1;
+#      } elsif( grep { $pkg =~ $_ } @ppats ) {
+#        $done{$pkg}=1;
+#      } elsif ( grep { $path =~ $_ } @fpats ) {
+#        1;
+#      } else {
+#        return 0;
+#      };
+#      print "$pkg $path";
+#      return 1;
+#    };
+#    my $stime=time;
+#    my $match=0;
+#    close(STDIN);
