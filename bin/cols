@@ -11,33 +11,81 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use Carp;
-$Carp::verbose=1;
+$Carp::verbose++ unless $Carp::verbose;
 use autodie qw(:all);
 use Data::Dump;
 use Data::Dump qw(dd pp ddx ppx);
 
-my (@o);
+our (@c,$c,$cs);
+our (@r,$r,$rs);
+our (@t,@w);
 
-for my $i (0 .. @ARGV-1){
-  for($ARGV[$i]){
-    next unless /^[-\d,]+$/;
-    push(@o,split /,/);
-    $_=undef;
+sub cross_tab(@){
+  my (@tab);
+
+};
+sub mk_table() {
+  local(@r);
+  $cs=0;
+  while(<>){
+    @_=split;
+    $cs=@_ if $cs<@_;
+    push(@r,[@_]);
   };
-}
-@ARGV = grep { defined } @ARGV;
-die "bad args: @ARGV\n" if grep { !-e }  @ARGV;
-if(@o){
-  while(<STDIN>){
-    next unless @_=split;
-    my (@t)=@_[@o];
-    @_=@t;
-    print @_;
+  $rs=@r;
+  for($c=0;$c<$cs;$c++){
+    for($r=0;$r<$rs;$r++){
+      $c[$c][$r]=$r[$r][$c];
+    }
   };
-} else {
-  while(<STDIN>){
-    next unless /\S/;
-    print split;
-  }
+};
+mk_table;
+exit(0) unless $rs && $cs;
+sub max_width(@) {
+  @_ = sort { $b <=> $a } map { length } @_;
+  return $_[0];
 }
-exit(0);
+
+
+@ARGV = 0 .. $#c  unless @ARGV;
+my (@s) = grep { /^\d+$/ || die "bad col: $_" } @ARGV;
+ddx({'@s'=>\@s});
+my (%s) = map { $_, undef } @s;
+ddx({'%s'=>\%s});
+for(keys %s)
+{
+  ddx({'%s'=>\%s});
+  local(*c)=$c[$_];
+  $s{$_}=max_width(@c);
+  $s{$_}=join("",'%',$s{$_},'s');
+};
+ddx({'%s'=>\%s});
+local(@c)=map { $c[$_] } @s;
+local(@w)=map { $s{$_} } @s;
+ddx({'@w'=>\@w});
+my ($f) = join(" | ", "", map({ $s{$_} } @s), "")."\n";
+ddx({'$f'=>\$f});
+for($r=0;$r<$rs;$r++){
+  printf $f, map { $_->[$r] } @c;
+};
+#my (@w);
+#for $c (0..$cs) {
+#  $w[$c]=max_width(@{$c[$c]});
+#};
+#
+#ddx({ '@c'=>\@c, '@w'=>\@w });
+#{
+#  my (@s,$s,$ss);
+#  if(@ARGV) {
+#    (@s) = grep { /^\d+$/ || die "bad col: $_ " } @ARGV;
+#  } else {
+#    @s = 0 .. $cs;
+#  };
+#  print "selected( @s )";
+#  $ss=@s;
+#  my $f = join("|", map { join("",'%',$_,'s') } map { $w[$s] } @s )."\n";
+#  
+#  for($r=0;$r<$rs;$r++){
+#    printf($f,map { $c[$_][$r] } @t);
+#  };
+#}

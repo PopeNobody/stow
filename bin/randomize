@@ -26,6 +26,7 @@ while(($_=shift)ne'--'){
 my @text;
 chomp(@text=<>);
 $lines=@text if $lines<0;
+print "$lines";
 while(@text){
   my ($idx)=int(rand(@text));
   my ($txt)=splice(@text,$idx,1);
