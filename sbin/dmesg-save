@@ -17,6 +17,8 @@ BEGIN {
 };
 use Data::Dump qw(ddx dd ppx pp);
 use Getopt::WonderBra;
+use Util::IO;
+
 sub version {
   print "version $VERSION";
 }
@@ -31,13 +33,9 @@ sub kmsg(@) {
   print $kmsg "$_" for @_;
   close($kmsg);
 }
-sub dmesg {
-  my ($dmesg);
-  open($dmesg,"dmesg |");
-  @_ = grep { chomp || 1 } <$dmesg>;
-  close($dmesg);
-  return @_;
-}
+sub dmesg(){
+  return suck("dmesg|");
+};
 sub get_filename($) {
   my $new=shift;
   my ($dir) = "/var/log/dmesg";
@@ -65,14 +63,9 @@ sub main(@) {
   };
   my $fn=get_filename($new);
   my @omesg;
+  my @tools = qw(  lsmod lshw lspci lsusb );
   if($new) {
     open(SHELL,"|/bin/bash 2>&1 >/dev/kmsg");
-    print SHELL "set -x\n";
-    print SHELL "exec 2>&1\n";
-    print SHELL "lsmod\n";
-    print SHELL "lshw\n";
-    print SHELL "lspci\n";
-    print SHELL "lsusb\n";
     close(SHELL);
   } else {
     @omesg=grep { length } split("\n",join("\n",qx(test -e $fn && zcat $fn)));
