@@ -1,6 +1,0 @@
-#!/bin/bash
-
-if [ -z "$FAKEEDIT_TEXT" ]; then
-  FAKEEDIT_TEXT="This fake comment produced in $1 by $(basename $0)";
-fi
-echo "$FAKEEDIT_TEXT" | tee "$1"
