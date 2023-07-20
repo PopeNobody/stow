@@ -1,8 +1,0 @@
-#!/bin/bash
-
-join() {
-  while read c && read d; do echo "$d $c"; done 
-}
-
-
-git log --date unix --all -- | egrep '^(commit|Date:)'
