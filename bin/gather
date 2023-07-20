@@ -2,13 +2,20 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
+<<<<<<< HEAD
 $ENV{LANG}="C";
+=======
+use autodie qw(:all);
+>>>>>>> church
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
+<<<<<<< HEAD
 use autodie qw(:all);
 use Data::Dump;
+=======
+>>>>>>> church
 use Getopt::WonderBra;
 sub help
 {
@@ -18,6 +25,7 @@ sub version
 {
   print "$0: version 0.2.0";
 };
+<<<<<<< HEAD
 @ARGV=getopt("bdu",@ARGV);
 our(%hand);
 my ($dup) = ( 0, 0 );
@@ -33,13 +41,27 @@ $hand{-u}=sub {
 $hand{-d}=sub {
   $dup=1;
   return @_;
+=======
+@ARGV=getopt("du",@ARGV);
+our(%hand);
+my ($dup) = ( 0, 0 );
+$hand{-u}=sub {
+  $dup=-1;
+};
+$hand{-d}=sub {
+  $dup=1;
+>>>>>>> church
 };
 while(($_=shift)ne'--'){
   my $hand=$hand{$_};
   if( !defined($hand) ) {
     help(1);
   };
+<<<<<<< HEAD
   @ARGV = $hand->( @ARGV );
+=======
+  $hand->( @ARGV );
+>>>>>>> church
 };
 
 my %data;
@@ -47,6 +69,7 @@ my $k;
 my @v;
 my @k;
 
+<<<<<<< HEAD
 sub read_data() {
   #print STDERR "read_data";
   while(<>) {
@@ -97,12 +120,25 @@ sub normal_disp {
     my ($a) = delete $data{$k};
     next unless defined $a;
     @v=@{$a};
+=======
+while(<>) {
+	($k,@v) =split;
+  next unless @v;
+	push(@{$data{$k}}, @v);
+};
+{
+  $,=" ";
+  $\="\n";
+  for $k (sort keys %data){
+    @v=@{$data{$k}};
+>>>>>>> church
     if( $dup == 1 && @v < 2 ) {
       next;
     } elsif ( $dup == -1 && @v >= 2 ) {
       next;
     };
     print $k, @v;
+<<<<<<< HEAD
   }
 }
 read_data();
@@ -110,4 +146,7 @@ if($block){
   block_disp;
 } else {
   normal_disp;
+=======
+  };
+>>>>>>> church
 };

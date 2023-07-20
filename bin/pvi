@@ -2,13 +2,22 @@
 
 use strict;
 use warnings;
+<<<<<<< HEAD
+=======
+use autodie qw(:all);
+>>>>>>> church
 our($Lib);
 BEGIN {
   use FindBin qw($Bin);
   use lib ($Lib="$Bin/../lib/perl");
 };
+<<<<<<< HEAD
 use autodie qw(:all);
 use Getopt::WonderBra;
+=======
+use Getopt::WonderBra;
+use Data::Dumper;
+>>>>>>> church
 use File::Basename;
 use File::Copy;
 use File::stat;
@@ -19,6 +28,19 @@ sub debug {
   return 0;
 };
 $|++;
+<<<<<<< HEAD
+=======
+
+my $debug=1;
+my ($defcmd, $cmd) = qw(vim);
+sub help {
+  print "usage: $0 [-c cmd] script";
+}
+sub version {
+  print "pvi version 0.5.0";
+};
+sub proc_argv(@);
+>>>>>>> church
 sub get_path();
 sub proc_argv(@);
 our(@cmd, @script);
@@ -27,12 +49,24 @@ push(@cmd,"/opt/bin/eedit");
 #push(@cmd,map { split } grep {defined} $ENV{VISUEL}) unless @cmd;
 #push(@cmd,map { split } grep {defined} $ENV{EDITOR}) unless @cmd;
 
+<<<<<<< HEAD
 die "no \@cmd" unless @cmd;
 
 help(2) unless @script = proc_argv(@ARGV);
 ddx(\@script);
 
 exec(@cmd, @script);
+=======
+if( @script > 1 ) {
+  my $i=0;
+  for(@script) {
+    printf("%8d) %s\n", ++$i, $_);
+  };
+  my $r=<STDIN>;
+  @script = $script[$r-1];
+};
+exec($cmd, @script);
+>>>>>>> church
 die "exec failed";
 
 ## subs

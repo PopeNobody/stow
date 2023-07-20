@@ -2,6 +2,7 @@
  
 use strict;
 use warnings;
+<<<<<<< HEAD
 use autodie qw(:all);
 BEGIN {
   use FindBin qw($Bin);
@@ -10,6 +11,8 @@ BEGIN {
   $\="\n"; $,=" "; $"=" ";
 };
 use Getopt::WonderBra;
+=======
+>>>>>>> church
 
 our($dry_run, $debug, $link, $replace);
 ($dry_run, $debug, $link, $replace) = qw( 1 0 1 1 );
@@ -35,13 +38,18 @@ sub fix_name($)
 {
 	for(shift)
   {
+<<<<<<< HEAD
     return $_ unless s/[^.a-zA-Z0-9%:+-]/_/g;
+=======
+    return $_ unless s/[^.a-zA-Z0-9-]/_/g;
+>>>>>>> church
     use Data::Dumper;
     s/__+/_/g;
     return $_;
 	};
   die "no arg for fix_name!";
 };
+<<<<<<< HEAD
 sub version {
   print "usage: $0 version 1.0.0";
 };
@@ -111,4 +119,56 @@ sub main
     print "\nuse -y to actually move files\n";
   };
 };
+=======
+sub handle_args()
+{
+  local (@_)=splice(@ARGV);
+  for(@_)
+  {  
+    if (/^-y$/){
+      $dry_run=0;
+    } elsif ( /^-d/ ) {
+      $debug=1;
+    } else {
+      push(@ARGV,$_);
+    };
+  };
+};
+sub main
+{
+  handle_args;
+  open(STDERR,">&STDOUT") if $dry_run;
+  $debug=1 if $dry_run;
+  my @dir;
+  push(@dir, @ARGV || $ENV{PWD} );
+  my @todo;
+  $\="\n";
+  while(@dir) {
+    my $dir=shift @dir;
+    my @dents=do{
+      opendir(my $dh, $dir) || die "open:$dir:$!";
+      local @_=readdir($dh) or die "readdir:$dir:$!";
+      closedir($dh) or die "closedir:$dh:$!";
+      @_ = grep { !m{^\.\.?$} } @_;
+      @_;
+    };
+    for(@dents) {
+      my $orig=$_;
+      my $dest=fix_name($_);
+      my $forig="$dir/$orig";
+      my $fdest="$dir/$dest";
+      if( -d "$forig" ) {
+        push(@dir,"$forig");
+      };
+      next if $orig eq $dest;
+      next if -l $forig && readlink($forig) eq $dest;
+      if( -e $dest ) {
+        warn "will not clobber $dest with $orig\n";
+        next;
+      };
+      xrename($forig,$fdest);
+    };
+  };
+};
+>>>>>>> church
 main;

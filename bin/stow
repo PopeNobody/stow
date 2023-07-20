@@ -1,4 +1,9 @@
 #!/usr/bin/perl
+#
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
 
 BEGIN {
   use FindBin qw($Bin);

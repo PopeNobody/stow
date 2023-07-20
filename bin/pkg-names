@@ -2,11 +2,16 @@
 
 use strict;
 use warnings;
+<<<<<<< HEAD
+=======
+use autodie qw(:all);
+>>>>>>> church
 BEGIN {
   $|++;
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
+<<<<<<< HEAD
 use autodie qw(:all);
 use Util;
 use Data::Dumper;
@@ -95,3 +100,72 @@ sub handle_args(\@)
     };
   };
 };
+=======
+use Util;
+use Data::Dumper;
+my $match;
+sub handle_args(\@)
+{
+  local(*_)=shift;
+  if(@_) {
+    my @re = map { qr/$_/ } @ARGV;
+    $match=sub($){ my $a=$_; for(@re) { return 1 if $a=~$_; } return 0;};
+  };
+};
+sub main()
+{
+  my %seen;
+  @ARGV="xbps-query -s . -R|";
+  while( <> )
+  {
+    if(defined($match)) {
+      next unless $match->($_);
+    };
+    s{^\s*\S+\s+}{};
+    if( @_=m{(\S*)(-(alpha|)[Bv0-9]\S+)} ) {
+      $seen{$_[0]}++;
+    } else {
+      print "failed: $_\n";
+    };
+  };
+  #  my @fds = map { my $fd; open($fd,"|bash"); $fd; } map { undef } 1 .. 8;
+  #my $fd=0;
+  print "$_\n" for sort keys %seen;
+  #push(@fds,shift(@fds));
+};
+@ARGV=handle_args(@ARGV);
+main;
+
+
+#    exit(0);
+#      print Dumper(\@_);
+#      exit(0);
+#      while(<STDIN>){
+#        print;
+#      };
+#      close(STDIN);
+#    };
+#    
+#    handle_args(@ARGV);
+#    if (@ARGV) {
+#    	my @re = map { qr/$_/ } @ARGV;
+#    	*match=sub($){ my $a=$_; for(@re) { return 1 if $a=~$_; } return 0;};
+#    } else {
+#    	*match=sub($){ return 1; };
+#    }
+#    sub getnames() {
+#    	return order grep { match($_) } ;
+#    }
+#    
+#    my @pkg;
+#    @pkg=getnames();
+#    
+#    
+#    
+#    @pkg=grep { match($_) } @pkg;
+#    @pkg=sort @pkg;
+#    
+#    print for @pkg;
+#    print sprintf("%d pkgs found\n",0+@pkg) if -t STDOUT;
+#    
+>>>>>>> church

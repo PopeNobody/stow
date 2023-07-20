@@ -32,8 +32,14 @@ sub eval_and_warn
   };
   print DD({ @_ });
 };
+<<<<<<< HEAD
 sub dump_env
 {
+=======
+1;
+__DATA__
+BEGIN {
+>>>>>>> church
   local(@ARGV) = qw( $0 \@ARGV \@INC \%INC \%ENV  );
   @ARGV= map { split } @ARGV;
   eval_and_warn(@ARGV);

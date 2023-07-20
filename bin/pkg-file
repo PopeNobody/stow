@@ -3,9 +3,36 @@ $|++;
 
 use strict;
 use warnings;
+<<<<<<< HEAD
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
+=======
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use Getopt::WonderBra;
+use Data::Dumper;
+use File::Basename;
+use File::Copy;
+our($debug);
+
+use vars qw( %args );
+sub help() {
+  print "usage: $0 [-zd] [-p qr | -f qr]\n";
+};
+sub version {
+  print "$0 version 0.1.0\n";
+};
+sub main(@);
+use Getopt::WonderBra;
+
+exit(main(@ARGV));
+die "wtf?";
+BEGIN {
+>>>>>>> church
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };

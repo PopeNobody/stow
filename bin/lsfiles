@@ -2,6 +2,7 @@
 # vim: sw=2 ts=2
 use strict;
 use warnings;
+<<<<<<< HEAD
 BEGIN {
   use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
@@ -11,6 +12,17 @@ use Data::Dump qw(ddx ppx dd pp);
 use Getopt::WonderBra;
 use File::Basename;
 use File::stat qw(:FIELDS);
+=======
+use autodie qw(:all);
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+};
+use Data::Dumper;
+use Getopt::WonderBra;
+use File::Basename;
+use File::Copy;
+>>>>>>> church
 use Carp qw(cluck);
 
 sub help() {
