@@ -1,6 +1,0 @@
-#!/bin/bash
-
-cd
-exec >> $HOME/tmp/update.log 2>&1
-serdate $0 
-exec task sync

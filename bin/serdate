@@ -1,8 +1,0 @@
-#!/bin/bash
-
-if (($#)); then
-  printf "$(date +%Y%m%d-%H%M%S)-%s\n" "$*"
-else
-  date +%Y%m%d-%H%M%S
-fi
-

@@ -1,8 +1,0 @@
-#!/usr/bin/perl
-
-die "usage: google <question>\n" unless @ARGV;
-
-my $q=join("+", @ARGV);
-
-system("xdg-open http://google.com/search?q=$q");
-
