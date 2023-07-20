@@ -26,5 +26,4 @@ my @cmd=qw(install);
 for(sort keys %opts){
   push(@cmd,$_,$opts{$_});
 };
-unshift(@cmd,qw(printf %s\\n));
-exec @cmd;
+exec "echo", @cmd;
