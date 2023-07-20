@@ -1,6 +1,10 @@
 doc/apt-file.all
 */names*
 <<<<<<< HEAD
+<<<<<<< HEAD
 *.delta
 =======
 >>>>>>> c384754 (x)
+=======
+*.delta
+>>>>>>> 4a93e44 (x)
