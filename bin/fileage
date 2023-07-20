@@ -1,0 +1,17 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use Data::Dumper;
+use File::stat;
+
+my $t=time;
+for(@ARGV)
+{
+  my $st=stat($_);
+  if(!defined($st)){
+    warn("stat:$_:$!");
+    next;
+  };
+  printf "%d secs %d days: %s\n", ($t-$st->mtime), ($t-$st->mtime)/86400, $_;
+};
