@@ -1,8 +1,0 @@
-#!/bin/bash
-
-if dialog --yesno 'reboot? ' 10 40 ; then
-  systemctl reboot
-fi
-
-exit 0
-

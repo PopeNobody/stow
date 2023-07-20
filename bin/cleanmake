@@ -1,9 +1,0 @@
-#!/bin/bash
-
-<<<<<<< HEAD
-env=( TERM="$TERM" HOME="$HOME" PATH="$PATH" CLEANMAKE=1 )
-exec /usr/bin/env -i "${env[@]}" make "$@"
-=======
-env=( TERM="$TERM" HOME="$HOME" PATH="$PATH" )
-exec /usr/bin/env -i "${env[@]}" /usr/bin/make "$@"
->>>>>>> church
