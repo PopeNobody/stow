@@ -1,0 +1,22 @@
+dc () 
+{ 
+    declare -f dc a c p d xxx | tee func.new && mv func.new func && source func;
+    d && a && c && p && s
+}
+a () 
+{ 
+    git add .
+}
+c () 
+{ 
+    git commit -amx
+}
+p () 
+{ 
+    git push;
+    git pull
+}
+d () 
+{ 
+    git diff work | patch -p1 -R
+}
