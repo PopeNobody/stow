@@ -3,17 +3,19 @@
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
+BEGIN {
+  use FindBin qw($Script $Bin);
+  use lib "$Bin/../lib/perl";
+  
+  exec "sudo", "$Bin/$Script", @ARGV
+    if $< or $>;
+}
 use strict;
 use warnings;
 use autodie qw(:all);
 our ($VERSION) = join("-",qw ( 1 0 0 ));
 BEGIN {
-  use FindBin qw($Script $Bin);
-  use lib "$Bin/../lib/perl";
-  $|++;
-  $\="\n";
-  exec "sudo", "$Bin/$Script", @ARGV
-    if $< or $>;
+  $|++; $\="\n";
 };
 use Data::Dump qw(ddx dd ppx pp);
 use Getopt::WonderBra;
