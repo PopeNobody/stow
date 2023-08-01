@@ -56,6 +56,7 @@ while(($_=shift)ne'--'){
 chdir("/usr/src/linux");
 my ( $diff ) = map { split } qx(git diff .config | wc -l );
 if($diff) {
+  print STDERR "committing .config";
   system("git commit -m \"buildkernel \$(serdate)\" .config");
 };
 system("make -j $procs bzImage modules");

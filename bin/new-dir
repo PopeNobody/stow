@@ -1,0 +1,29 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+BEGIN {
+  use FindBin qw($Bin $Script);
+  use lib "$Bin/../lib/perl";
+  $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
+};
+use autodie qw(:all);
+use Data::Dump;
+use Data::Dump qw(dd pp ddx ppx quote);
+use Getopt::WonderBra;
+
+our(%opts);
+our(%spec);
+$spec{o}=sub { $opts{o}=shift; }
+$spec{g}=sub { $opts{g}=shift; }
+$spec{m}=sub { $opts{m}=shift; }
+$spec{@}=sub { push(@{$opts{\@}}, shift);
+
+my @cmd=qw(install);
+for(sort keys %opts){
+  push(@cmd,$_,$opts{$_});
+};
+exec "echo", @cmd;

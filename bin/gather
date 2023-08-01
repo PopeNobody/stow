@@ -12,7 +12,6 @@ $|++; $\="\n"; $/="\n";
 use Data::Dump;
 use Data::Dump qw(dd pp ddx ppx quote);
 use Getopt::WonderBra;
-$ENV{LANG}="C";
 
 sub help
 {
