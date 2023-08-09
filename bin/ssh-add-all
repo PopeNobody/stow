@@ -14,20 +14,18 @@ use autodie qw(:all);
 use Data::Dump;
 use Env qw( $HOME );
 
-print "HOME=$HOME";
-chdir($HOME);
-chdir(".ssh");
-
 my @list;
 sub add($) {
   print STDERR "add(@_)";
   push(@list,shift);
 };
-for( grep { s{\.pub$}{} || 1 } glob("*.pub") ) {
-  add($_);
-};
-for( glob("*.pem") ) {
-  add($_);
-};
+{
+  open(my $file,"file ~/.ssh/* |");
+  while(<$file>){
+    chomp;
+    add($_) if s/: *OpenSSH private key *$//;
+  };
+  close($file);
+}
 print for @list;
-system("ssh-add @list");
+system("ssh-add", @list);
