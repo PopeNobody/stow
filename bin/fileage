@@ -8,14 +8,12 @@ use warnings;
 use FindBin qw($Bin $Script);
 use lib "$Bin/../lib/perl";
 use autodie qw(:all);
-$|++; $\="\n"; $,=" "; $"=" "; $/="\n";
-
 use Data::Dump;
 use Data::Dump qw(dd pp ddx ppx quote);
 use File::stat;
-use Getopt::WonderBra;
-
 $\="\n";
+
+
 my $t=time;
 for(@ARGV)
 {

@@ -40,16 +40,19 @@ sub read_src($){
 my ($src) = read_src("${Lib}/perl-top.pl");
 
 for(@ARGV){
-  die "file '$_' exists" if -e;
-  my $dst=$_;
-  local($\)="";
-  {
-    open(my $fh,">$dst.new",);
-    $fh->print($src);
-    close($fh);
+  if(-e) {
+    warn "file '$_' exists";
+  } else {
+    my $dst=$_;
+    local($\)="";
+    {
+      open(my $fh,">$dst.new",);
+      $fh->print($src);
+      close($fh);
+    }
+    system("chmod +x $dst.new");
+    rename("$dst.new", "$dst");
   }
-  system("chmod +x $dst.new");
-  rename("$dst.new", "$dst");
 };
 sub editor() {
   @_ = grep { defined } map { $ENV{$_} } qw(VISUAL EDITOR);

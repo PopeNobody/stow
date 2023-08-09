@@ -1,46 +1,71 @@
 #!/usr/bin/perl
-#! -*- perl -*- -p
+# vim: ts=2 sw=2 ft=perl
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
 use strict;
 use warnings;
 BEGIN {
-  use FindBin qw($Bin);
+  use FindBin qw($Bin $Script);
+  use autodie qw(:all);
   use lib "$Bin/../lib/perl";
-  $|++;
-  $\="\n"; $,=" "; $"=" ";
-  $/="\n";
-  use AutoLess;
+  use Getopt::WonderBra;
+  $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
 };
-use autodie qw(:all);
-use Data::Dumper;
+sub opts(@);
+sub help {
+  local($0) = map { m{/} ? m{.*/(.*)} : $_ } $0;
+  print "usage: $0 --help\n";
+  print "       $0 <files>";
+  print "       lists all installed packages\n";
+  print "       $0 -u <files>";
+  print "       lists all uninstalled (but not purged) packages\n";
+}
+sub version {
+  print "version: pkg-inst 0.1";
+}
 $ENV{LANG}="C";
+my $del=0;
+opts(@ARGV);
 
 open(STDIN,"</dev/null");
-open(STDIN,"dpkg -l|");
-open(STDIN,"awk '/^[a-z][a-z]/ {print \$2}'|");
-#open(STDIN,"sort -u|");
 sub filter;
 sub mkFilter(@);
-*filter=mkFilter(@ARGV);
+open(STDIN,"dpkg -l|");
+sub xwarn(@){
+  my ($pack,$file,$line) = caller;
+  @_ = split(/\n/m,join("",@_));
+  print "$file:$line:$_" for @_;
+};
 while(<STDIN>){
-  chomp;
-  my $arch;
-  ($_,$arch)=split /:/;
+  next unless s{^([a-z][a-z])\s*}{};
+  my $stat=$1;
+  if($stat eq "ii") {
+    next if $del;
+  } else {
+    next unless $del;
+  };
+  s{\s.*}{};
+  ($_,my $arch)=split /:/;
   next unless filter;
+  chomp;
   print;
 };
+sub opts(@) {
+  @_=getopt("u",@_);
+  while(($_=shift)ne'--'){
+    if($_ eq '-u') {
+      $del=1;
+    } else {
+      die "did not expect '$_'";
+    };
+  };
+  *filter=mkFilter(@_);
+}
 sub mkFilter(@) {
   @_ = grep { length } @_;
-  if(@_==0){
-    return sub { 
-      return 1;
-    }
-  } elsif ( @_==1 ) {
-    my $qr = qr{$_[0]};
-    return sub { m/$qr/ };
-  } else {
-    return mkFilter(join("|", @_));
-  }
+  return eval "sub { return 1; }" unless @_;
+  for(join("|",@_)){
+    return eval "sub { m{$_}; }";
+  };
 };
