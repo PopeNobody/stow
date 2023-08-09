@@ -18,7 +18,9 @@ BEGIN {
 use Data::Dump qw(ddx dd ppx pp);
 use Getopt::WonderBra;
 use Util::IO;
-
+use File::Path;
+mkpath("/var/log/dmesg");
+chdir("/var/log/dmesg");
 sub version {
   print "version $VERSION";
 }
@@ -27,55 +29,79 @@ sub help {
   print "       -a: append to existing output";
   print "";
 }
-sub kmsg(@) {
-  @_ = $_ unless @_;
-  open(my $kmsg,">>/dev/kmsg");
-  print $kmsg "$_" for @_;
-  close($kmsg);
-}
-sub dmesg(){
-  return suck("dmesg|");
+open(STDERR,">&STDOUT");
+sub serdate {
+
 };
 sub get_filename($) {
   my $new=shift;
-  my ($dir) = "/var/log/dmesg";
   my ($fn);
-  mkdir $dir unless -d "$dir";
 
   unless($new) {
-    my @fn=sort glob("$dir/dmesg-*.gz");
+    my @fn=sort glob("dmesg-*.gz");
     $fn=shift @fn;
   }
-  if(defined($fn)) {
-    print STDERR "old file: $fn";
-  } else {
-    $fn=sprintf("$dir/dmesg-%s.gz", map { split } qx(serdate));
-    print STDERR "new file: $fn";
+  unless(defined($fn)) {
+    $fn=sprintf("dmesg-%s.gz", map { split } qx(serdate));
   }
   return $fn;
 }
-sub main(@) {
-  kmsg("$0 running (@ARGV)");
-  my @dmesg = dmesg();
-  my $new=0;
-  for(map { "$_" } $dmesg[0]) {
-    $new=1 if /^\[[0-9. ]*\] microcode/;
-  };
-  my $fn=get_filename($new);
-  my @omesg;
-  my @tools = qw(  lsmod lshw lspci lsusb );
-  if($new) {
-    open(SHELL,"|/bin/bash 2>&1 >/dev/kmsg");
-    close(SHELL);
+my ($fn);
+{
+  print STDERR "1: dmesg1: checking head";
+  no autodie qw(close);
+  open(my $tmp_fh,"dmesg|");
+  exit(0) unless defined($_=<$tmp_fh>);
+  chomp;
+  print STDERR "2: dmesg1: line: $_";
+  if(m{microcode}){
+    print STDERR "3: dmesg1: microcode: new";
+    $fn=get_filename(1);
   } else {
-    @omesg=grep { length } split("\n",join("\n",qx(test -e $fn && zcat $fn)));
-  };
-  printf STDERR "writing %d new lines (and %d old onees) to %s\n", scalar(@dmesg), scalar(@omesg), $fn;
-  open(STDOUT,"| gzip >$fn.new");
-  print for ( @omesg, @dmesg );
-  close(STDOUT);
-  rename "$fn.new", "$fn";
-  system("dmesg -c > /dev/null 2>&1");
-  system("ln -sf $fn /var/log/dmesg/current.gz");
+    print STDERR "4: dmesg1: no microcode: old";
+    $fn=get_filename(0);
+  }
+  print STDERR "5: dmesg1: closed";
 }
-main(@ARGV);
+{
+  open(my $out_fh,"|gzip>$fn.new");
+  print STDERR "1: out_fh: opened output |gzip>$fn.new";
+  {
+    if(-e $fn) {
+      my $cnt=0;
+      open(my $old_fh,"zcat $fn|");
+      print STDERR "1: zcat: opened";
+      while(<$old_fh>){
+        chomp;
+        next unless length;
+        ++$cnt;
+        print STDERR "2: zcat: $_";
+        $out_fh->print($_);
+      };
+      print STDERR "3: zcat: closing";
+      close($old_fh);
+    };
+  }
+  {
+    open(my $new_fh,"dmesg -c|");
+    print STDERR "1: new_fh: opened";
+    my $cnt=0;
+    while(<$new_fh>){
+      chomp;
+      next unless length;
+      ++$cnt;
+      print STDERR "2: new_fh: $_";
+      $out_fh->print($_);
+    };
+    close($new_fh);
+    print STDERR "3: new_fh: closed";
+  }
+  close($out_fh);
+  print STDERR "2: out_fh: closed";
+}
+print STDERR "3: out_fh: linking to current.gz";
+for("current.gz"){
+  rename("$fn.new", $fn);
+  unlink $_;
+  symlink($fn,$_);
+};
