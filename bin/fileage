@@ -1,10 +1,18 @@
 #!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
 
 use strict;
 use warnings;
+use FindBin qw($Bin $Script);
+use lib "$Bin/../lib/perl";
+use autodie qw(:all);
 use Data::Dump;
+use Data::Dump qw(dd pp ddx ppx quote);
 use File::stat;
 $\="\n";
+
 
 my $t=time;
 for(@ARGV)
@@ -13,6 +21,19 @@ for(@ARGV)
   if(!defined($st)){
     warn("stat:$_:$!");
     next;
+  } else {
+    $_=[ $st->mtime, $_ ];
   };
-  printf "%d secs %d days: %s\n", ($t-$st->mtime), ($t-$st->mtime)/86400, $_;
+};
+sub dcmp {
+  our(@a,@b);
+  *a=$a;
+  *b=$b;
+  return $a[0] <=> $b[0] || $a[1] cmp $b[1];
+};
+for( sort { dcmp } @ARGV ) {
+  my $secs=int($t-$_->[0]);
+  my $days=int($secs/86400);
+  my $file=$_->[1];
+  printf "%10d secs %4d days: %s\n", $secs,$days,$file;
 };
