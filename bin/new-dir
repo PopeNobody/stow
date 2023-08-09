@@ -15,15 +15,30 @@ use Data::Dump;
 use Data::Dump qw(dd pp ddx ppx quote);
 use Getopt::WonderBra;
 
+sub version {
+  print "$Script version 0.9.0";
+};
+
+sub help {
+  print "usage: $Script -o{owner} -g{group} -m{mode} -- \@files";
+};
+
 our(%opts);
 our(%spec);
-$spec{o}=sub { $opts{o}=shift; }
-$spec{g}=sub { $opts{g}=shift; }
-$spec{m}=sub { $opts{m}=shift; }
-$spec{@}=sub { push(@{$opts{\@}}, shift);
+$spec{o}=sub { $opts{o}=shift; return @_; };
+$spec{g}=sub { $opts{g}=shift; return @_; };
+$spec{m}=sub { $opts{m}=shift; return @_; };
+@ARGV = getopt("o:g:m:",@ARGV);
+while(($_=shift)ne'--'){
+  die "expected dash" unless s{^-}{};
+  die "expected [ogm]" unless defined $spec{$_};
+  @ARGV=$spec{$_}->(@ARGV);
+}
 
 my @cmd=qw(install);
-for(sort keys %opts){
-  push(@cmd,$_,$opts{$_});
+push(@cmd,'-d');
+for(grep { defined($opts{$_}) } sort keys %opts){
+  push(@cmd,'-'.$_,$opts{$_});
 };
-exec "echo", @cmd;
+unshift(@cmd,"echo") unless -t 1;
+exec @cmd, @ARGV;
