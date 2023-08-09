@@ -10,13 +10,17 @@ $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
+unless(-t STDIN){
+  if(-t STDOUT){
+    open(STDIN,"<&STDOUT");
+  } else {
+    open(STDIN,"<&STDERR");
+  };
+};
+my $term = -t STDIN ? 1 : 0;
+
 open(STDOUT,"|tee /var/log/buildkernel.log");
 open(STDERR,">&STDOUT");
-my $term=0;
-for(0 .. 1 ){
-  $term=1 if -t $_;
-}
-print "term: $term";
 use autodie qw(:all);
 use Data::Dump;
 use Getopt::WonderBra;
@@ -61,10 +65,7 @@ if($diff) {
 };
 system("make -j $procs bzImage modules");
 system("make -j $procs modules_install install");
-print "term: $term";
 exit(0) unless $term;
-open(STDOUT,">&STDIN" ) unless -t STDOUT;
-open(STDIN ,">&STDOUT") unless -t STDIN ;
 if($boot) {
   print STDERR "running reboot";
   exec qw(reboot);
