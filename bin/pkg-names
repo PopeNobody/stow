@@ -2,25 +2,13 @@
 
 use strict;
 use warnings;
-BEGIN {
-  $|++;
-  use FindBin qw($Bin);
-  use lib "$Bin/../lib/perl";
-};
+$|++;
+use FindBin qw($Bin);
+use lib "$Bin/../lib/perl";
 use autodie qw(:all);
 use Util;
-use Data::Dumper;
-
-sub help {
-   
-}
-sub version {
-  print "some other version";
-};
-
 
 open(STDIN,"</dev/null");
-$Data::Dumper::Deparse=1;
 sub void_line($) {
   local ($_)=shift;
   s{^\s*\S+\s+}{};
