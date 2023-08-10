@@ -1,8 +1,5 @@
 #!/bin/bash
 # vim: sw=2 ts=2 et
-#set -- $(pagent-exists-exitgrep ssh-agent -u $UID)
-#ps "$@"
-set -x
 
 agent-exists() {
   ssh-add -l >/dev/null 2>&1
