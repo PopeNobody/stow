@@ -3,82 +3,119 @@
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
-use strict;
-use warnings;
 use FindBin qw($Bin $Script);
 use lib "$Bin/../lib/perl";
+use strict;
+use warnings;
 use autodie qw(:all);
-$|++; $\="\n"; $/="\n";
 use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx quote);
+use Util;
 use Getopt::WonderBra;
+$|++; $\="\n"; $/="\n";
 
-sub help
-{
-  print "$0: [-d|-u] <files>";
-};
-sub version
-{
-  print "$0: version 0.2.0";
-};
-@ARGV=getopt("bdu",@ARGV);
-our(%hand);
-my ($dup) = ( 0, 0 );
-my $block=0;
-$hand{-b}=sub {
-  $block=1;
-  return @_;
-};
-$hand{-u}=sub {
-  $dup=-1;
-  return @_;
-};
-$hand{-d}=sub {
-  $dup=1;
-  return @_;
-};
-while(($_=shift)ne'--'){
-  my $hand=$hand{$_};
-  if( !defined($hand) ) {
-    help(1);
-  };
-  @ARGV = $hand->( @ARGV );
-};
 
-my %data;
-my $k;
-my @v;
-my @k;
+our($dup,$block,$num,@xxx) = qw(0 0 0);
+our(%data,$key,@key,@val);
+our(%help);
 
-sub read_data() {
-  #print STDERR "read_data";
-  while(<>) {
-    ($k,@v) =split;
-    #ddx([ \%data ]);
-    next unless @v;
-    push(@k,$k);
-    push(@{$data{$k}}, @v);
+sub main();
+sub handle_opts(@);
+sub read_data(@);
+sub block_disp();
+sub normal_disp();
+
+main();
+
+
+sub main() {
+  local(@_)=splice(@ARGV);
+  @_=handle_opts(@_)
+  read_data(@_);
+  ddx( \( $key, @key, @val ) );
+  if($block){
+    block_disp;
+  } else {
+    normal_disp;
   };
 }
-sub block_disp {
-  #print STDERR "block_disp";
-  #ddx(\@k);
+sub read_data(@) {
+  #$DB::single=1;
+  warn "reading data from stdin -- a tty" if @_==0 && -t STDIN;
+  local(@ARGV)=splice(@_);
+  while(<>) {
+    ($key,@val) =split;
+    ddx(\( $_, $key, @val ));
+    next unless @val;
+    push(@key,$key);
+    push(@{$data{$key}}, @val);
+  };
+}
+BEGIN {
+  sub help
+  {
+    print "$0: [-d|-u] <files>";
+  };
+  sub version
+  {
+    print "$0: version 0.2.0";
+  };
+}
+{
+  my %hand;
+  BEGIN {
+    %data = (
+      num=>\$num,
+      block=>\$block,
+      dup=>\$dup,
+    );
+    %hand = (
+      n => \$num,
+      b => \$block,
+      u => sub { $dup--; return @_; },
+      d => \$dup, count=>\$dup,
+      x => \@xxx,
+    );
+  }
+  sub handle_opts(@) {
+    ddx({ after_getopt=>[\$,\@_] });
+    @_=getopt("nbdux:",@_);
+    ddx({ after_getopt=>[\$,\@_] });
+    while(($_=shift)ne'--'){
+      ddx( [ \$, \@, \@ARGV ] );
+      die "expected switch" unless s{^-}{};
+      my $hand=$hand{$_};
+      if(!defined($hand)){
+        help(1);
+      } elsif(ref($hand)eq'SCALAR'){
+        $$hand=($$hand||0)+1;
+      } elsif ( ref($hand) eq 'ARRAY' ) {
+        push(@{$hand},shift(@_));
+      } elsif ( ref($hand) eq 'CODE' ) {
+        @_ = $hand->( @_ );
+      } else {
+        die "expected hand to be a SCALAR, an Array, or a CODE ref";
+      };
+    };
+    return @_;
+  }
+};
+sub block_disp() {
   my ($max) = 0;
-  for $k (@k) {
-    for( @{$data{$k}} ) {
+  for $key (@key) {
+    for( @{$data{$key}} ) {
       $max=length if $max<length;
     };
   };
   $max+=2;
   print "max:\n";
   my $col = $ENV{COLUMNS} || 80;
-  for $k (@k){
-    print "\n$k";
+  for $key (@key){
+    print "\n$key";
     my $pos = $col;
-    my $a=delete $data{$k};
-    next unless defined $a;
-    @v=@{$a};
-    for(@v)
+    my $arr=delete $data{$key};
+    next unless defined $arr;
+    @val=@{$arr};
+    for(@val)
     {
       if ( $pos >= ($col-$max) ) {
         print "\n     ";
@@ -91,26 +128,18 @@ sub block_disp {
     print "\n";
   };
 }
-sub normal_disp {
-  #print STDERR "normal_disp";
-  #ddx(\@k);
+sub normal_disp() {
   $,=" ";
   $\="\n";
-  for $k (@k){
-    my ($a) = delete $data{$k};
-    next unless defined $a;
-    @v=@{$a};
-    if( $dup == 1 && @v < 2 ) {
+  for $key (@key){
+    my ($arr) = delete $data{$key};
+    next unless defined $arr;
+    @val=@{$arr};
+    if( $dup == 1 && @val < 2 ) {
       next;
-    } elsif ( $dup == -1 && @v >= 2 ) {
+    } elsif ( $dup == -1 && @val >= 2 ) {
       next;
     };
-    print $k, @v;
+    print $key, @val;
   }
 }
-read_data();
-if($block){
-  block_disp;
-} else {
-  normal_disp;
-};
