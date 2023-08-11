@@ -13,20 +13,29 @@
   use Data::Dump;
   require Exporter;
   our(@ISA)=qw(Exporter);
-  our(@EXPORT)=qw(suck spit);
-
   my @dd = qw(ddx ppx dd pp quote);
-
-  {
-    package main;
-    use Data::Dump @dd;
-  };
   use Data::Dump @dd;
+  our(@EXPORT)=( qw(suck spit min max), @dd);
 
   sub suck(@);
   sub spit($@);
+  sub max(@);
+  sub min(@);
 
-
+  sub max(@){
+    my $max=shift;
+    for(@_) {
+      $max=$_ if $max>$_;
+    };
+    return $max;
+  }
+  sub min(@){
+    my $min=shift;
+    for(@_) {
+      $min=$_ if $min>$_;
+    };
+    return $min;
+  }
   sub suck(@){
     print STDERR "wantarray: ", wantarray, "\n" if $DEBUG;
     return warn("useless use of suck in void context") unless defined wantarray;
