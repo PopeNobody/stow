@@ -29,9 +29,8 @@ main();
 
 sub main() {
   local(@_)=splice(@ARGV);
-  @_=handle_opts(@_)
+  @_=handle_opts(@_);
   read_data(@_);
-  ddx( \( $key, @key, @val ) );
   if($block){
     block_disp;
   } else {
@@ -44,7 +43,6 @@ sub read_data(@) {
   local(@ARGV)=splice(@_);
   while(<>) {
     ($key,@val) =split;
-    ddx(\( $_, $key, @val ));
     next unless @val;
     push(@key,$key);
     push(@{$data{$key}}, @val);
@@ -77,11 +75,8 @@ BEGIN {
     );
   }
   sub handle_opts(@) {
-    ddx({ after_getopt=>[\$,\@_] });
     @_=getopt("nbdux:",@_);
-    ddx({ after_getopt=>[\$,\@_] });
     while(($_=shift)ne'--'){
-      ddx( [ \$, \@, \@ARGV ] );
       die "expected switch" unless s{^-}{};
       my $hand=$hand{$_};
       if(!defined($hand)){
@@ -140,6 +135,7 @@ sub normal_disp() {
     } elsif ( $dup == -1 && @val >= 2 ) {
       next;
     };
+    unshift(@val,scalar(@val)) if $num;
     print $key, @val;
   }
 }
