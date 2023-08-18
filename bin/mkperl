@@ -5,16 +5,12 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-BEGIN {
-  use FindBin qw($Bin $Script);
-  use lib "$Bin/../lib/perl";
-  $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
-};
+use FindBin qw($Bin $Script);
+use lib "$Bin/../lib/perl";
 use autodie qw(:all);
-use Data::Dump;
 use Data::Dump qw(dd pp ddx ppx quote);
-use File::Copy qw(cp);
-use Data::Dump qw(pp dd ddx);
+
+$|++; $\="\n"; $,=" "; $"=" "; $/="\n";
 our($Lib,$Bin,$Script);
 BEGIN {
   eval q{use FindBin qw($Bin $Script)};
@@ -37,7 +33,7 @@ sub read_src($){
   $src=~s{^$ENV{HOME}/+}{~/};
   return join("", grep {  s{#src#}{$src} || 1 } <>);
 }
-my ($src) = read_src("${Lib}/perl-top.pl");
+my ($src) = join("",<DATA>);
 
 for(@ARGV){
   if(-e) {
@@ -48,6 +44,7 @@ for(@ARGV){
     {
       open(my $fh,">$dst.new",);
       $fh->print($src);
+      $fh->print("# Header installed by $Bin/$Script");
       close($fh);
     }
     system("chmod +x $dst.new");
@@ -67,3 +64,18 @@ sub editor() {
 unshift(@ARGV,editor());
 unshift(@ARGV,"echo")  unless (-t 1);
 exec(@ARGV);
+__DATA__
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use FindBin qw($Bin $Script);
+use lib "$Bin/../lib/perl";
+$|++; $\="\n"; $,=" "; $"=" "; $/="\n";
+use autodie qw(:all);
+use Data::Dump;
+
+
