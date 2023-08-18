@@ -35,8 +35,6 @@ my $gzip="|gzip -9";
 sub gzip_append($@){
   my ($fn)=shift;
   chomp(@_);
-  chomp(@_);
-  chomp(@_);
   $_=join("\n",@_);
   open(STDOUT,"$gzip>>$fn");
   print(STDOUT "$_");
@@ -48,10 +46,6 @@ sub get_filename()
   my $new=shift;
   unless(-e "current.gz"){
     my $realfile=join("","dmesg-",serdate(),".gz");
-    gzip_append($realfile,"this","is","a","test");
-    system("zcat $realfile");
-    gzip_append($realfile,"this","is","another");
-    system("zcat $realfile");
     symlink($realfile,"current.gz");
   };
   return "current.gz";
@@ -68,7 +62,6 @@ sub help {
 }
 {
   write_klog("fake","data");
-  print STDERR "1: dmesg1: checking head";
   open(my $dmesg,"dmesg|");
   exit(0) unless defined($_=<$dmesg>);
   my $fn=get_filename();
@@ -78,7 +71,7 @@ sub help {
   gzip_append($fn,@dmesg);
 
 
-  test_klog();
+  #  test_klog();
 
   my $lines=@dmesg;
   open($dmesg,"dmesg -c|");
