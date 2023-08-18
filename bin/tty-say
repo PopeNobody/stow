@@ -1,6 +1,6 @@
 #!/bin/bash
 
-tty_say () 
+tty-say () 
 { 
     for ((i=0; i<=2; i++))
     do
@@ -8,6 +8,6 @@ tty_say ()
     done;
     return 1
 }
-export -f tty_say
+export -f tty-say
 return 2>/dev/null
-tty_say "$@"
+tty-say "$@"

@@ -1,12 +1,6 @@
 #!/bin/bash
 # vim: sw=2 ts=2 et
 
-agent-exists() {
-  ssh-add -l >/dev/null 2>&1
-  (($?!=2))
-}
-
-agent-exists && exit 0
 for script in $HOME/.ssh/agent.bash; do
   test -e "$script" || break;
   source $script
