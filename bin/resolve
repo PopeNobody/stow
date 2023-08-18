@@ -1,0 +1,38 @@
+#!/bin/bash
+warn() {
+  echo >&2 "$*"
+  true
+}
+export -f warn
+resolve() {
+  if (($#==1)); then
+    temp="$1"
+    test -z "$temp" && return 0;
+    if ! test -e "$1" ; then
+      warn "resolve: $1 does not exist"
+      return 1;
+    fi
+    test "$temp" = "/" && echo "$temp" && return 0
+    while test "${temp:${#temp}-1:1}" == "/"; do
+      temp="${temp:0:-1}"
+    done
+
+    shift
+    while test -h "$temp"; do
+      dest=$(readlink "$temp")
+      if test "${dest:0:1}" != "/"; then
+        dir=$(dirname "$temp")
+        dest="$dir/$dest"
+      fi
+      temp="$dest"
+    done
+    dir=$(cd "$(dirname "$temp")" && pwd -P)
+    temp="$dir/$(basename "$temp")"
+    echo "$temp";
+  else
+    for i; do echo "$i: $(resolve "$i")"; done
+  fi
+}
+export -f resolve
+return 0 2>/dev/null
+resolve "$@"

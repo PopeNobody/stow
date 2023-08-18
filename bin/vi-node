@@ -12,7 +12,7 @@ $\="\n";
 
 my $debug = defined($ENV{VI_NODE_DEBUG});
 die if $debug;
-$ENV{NODE_OPTIONS}='--openssl-legacy-provider';
+#$ENV{NODE_OPTIONS}='--openssl-legacy-provider';
 
 sub main(@);
 main(@ARGV);

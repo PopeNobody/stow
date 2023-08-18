@@ -20,6 +20,7 @@ for(@ARGV)
   my $st=stat($_);
   if(!defined($st)){
     warn("stat:$_:$!");
+    $_=undef;
     next;
   } else {
     $_=[ $st->mtime, $_ ];
@@ -31,7 +32,7 @@ sub dcmp {
   *b=$b;
   return $a[0] <=> $b[0] || $a[1] cmp $b[1];
 };
-for( sort { dcmp } @ARGV ) {
+for( sort { dcmp } grep {defined } @ARGV ) {
   my $secs=int($t-$_->[0]);
   my $days=int($secs/86400);
   my $file=$_->[1];
