@@ -30,6 +30,9 @@ for(@ARGV){
     warn "cannot find directory '$dir'";
     next;
   }
+  if($tgz =~ s{^[.]}{}) {
+    warn "removed leading dot from archive name";
+  };
   if($pid=fork){
     ddx(\%pid);
     printf "pid=%10d tgz=%20s\n",$pid,$tgz;

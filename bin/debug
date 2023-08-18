@@ -1,4 +1,0 @@
-#!/bin/bash
-
-echo "$@" | tee /dev/kmesg >&2
-exec "$@"
