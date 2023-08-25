@@ -1,5 +1,0 @@
-#!/bin/bash
-
-while test $( getppid "$$" ) != "1"; do
-  sleep 30
-done

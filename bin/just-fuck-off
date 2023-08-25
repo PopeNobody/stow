@@ -12,6 +12,7 @@ sub catch {
   print "catch(@_)";
 };
 $SIG{$_} = \&catch for keys %SIG;
+$SIG{INT}=undef;
 while() {
   print "tired.  napping";
   sleep(86400);
