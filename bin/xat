@@ -18,7 +18,10 @@ if(!$< || !$>) {
   print STDERR "not running as root\n";
   exit(2);
 };
-
+for($ENV{XAUTHORITY}){
+  last if defined;
+  $_="$ENV{HOME}/.Xauthority";
+};
 open(STDOUT,"|at now");
 print "set -xv\n";
 print "echo running script\n";

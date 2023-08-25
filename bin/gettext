@@ -3,5 +3,6 @@
 #set -- $(type -ap gettext)
 #for i; do test $i -ef ${BASH_SOURCE} && echo $i; done
 #exec echo "$@"
-echo "$*" | tee -a /tmp/gettext.log
+#echo "$*" | tee -a /tmp/gettext.log
+echo "$*"
 exit 0
