@@ -1,0 +1,34 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+
+BEGIN {
+  use FindBin qw($Bin $Script);
+  use lib "$Bin/../lib/perl";
+  $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
+};
+use autodie qw(:all);
+use Data::Dump qw(ddx);
+sub lcmp() {
+  return (length($a)<=>length($b)) || ($a cmp $b);
+}
+sub lsort(@){
+  return sort lcmp @_;
+}
+my @lens;
+for(grep({ chomp; s{^\s*}{}; s{\s*$}{}; 1; } <STDIN>)){
+  push(@{$lens[length]},$_);
+};
+for( 0 .. @lens){
+  for(grep { defined } $lens[$_]){
+    for(sort @$_){
+      print;
+    };
+  };
+};
+
+
