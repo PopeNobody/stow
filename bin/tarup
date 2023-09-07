@@ -11,9 +11,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $/="n";
 };
 use autodie qw(:all);
-use Data::Dumper;
-use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx quote);
+use Nobody::PP;
 
 my (%pid,$pid,@pid);
 #$SIG{CHLD}=sub {
