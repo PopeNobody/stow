@@ -11,5 +11,5 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
 };
 use autodie qw(:all);
-use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx quote);
+use Nobody::PP;
+use Nobody::PP qw(dd pp ddx ppx quote);

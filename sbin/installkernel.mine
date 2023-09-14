@@ -1,6 +1,6 @@
-#!/usr/local/bin/vi_perl
+#!/opt/bin/vi-perl
 #! -*- perl -*- -p
-eval 'exec vi_perl -x -wS $0 ${1+"$@"}'
+eval 'exec vi-perl -x -wS $0 ${1+"$@"}'
   if 0;
 
 use strict;

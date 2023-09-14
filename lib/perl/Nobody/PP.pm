@@ -1,13 +1,13 @@
 package Nobody::PP;
 
 use strict;
-use vars qw(@EXPORT @EXPORT_OK $VERSION $DEBUG %EXPORT_TAGS);
-use subs qq(pp dd ppx ddx quote);
+use vars qw(@EXPORT @EXPORT_OK $VERSION $DEBUG %EXPORT_TAGS @subs);
+use subs qq(pp dd ppx ddx quote); 
 
 require Exporter;
 *import = \&Exporter::import;
-@EXPORT_OK = qw(dd ddx pp ppx quote);
-@EXPORT = ();
+@EXPORT_OK = qw(pp dd ppx ddx quote);
+@EXPORT = @subs;
 %EXPORT_TAGS = ( 
   all=>[ @EXPORT_OK ],
 );

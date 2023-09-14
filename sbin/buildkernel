@@ -22,7 +22,7 @@ my $term = -t STDIN ? 1 : 0;
 open(STDOUT,"|tee /usr/src/linux/buildkernel.log");
 open(STDERR,">&STDOUT");
 use autodie qw(:all);
-use Data::Dump;
+use Nobody::PP;
 use Getopt::WonderBra;
 
 if($< or $>){

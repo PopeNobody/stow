@@ -8,7 +8,7 @@
   use strict;
   use warnings;
   our($DEBUG)=0;
-  our (@fb,@dd);
+  use vars qw(@fb @dd);
   use autodie qw(:all);
   BEGIN {
     @fb = qw($Bin $Script);
@@ -17,7 +17,7 @@
   use FindBin @fb;
   use lib "$Bin/../lib/perl";
   use lib "$Bin/lib/perl";
-  use Data::Dump @dd;
+  use Nobody::PP;
   use Scalar::Util;
   our(@EXPORT)=(qw(mkdir_p suckdir suck spit min max), @fb, @dd);
   require Exporter;

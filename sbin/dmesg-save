@@ -18,7 +18,7 @@ our ($VERSION) = join("-",qw ( 1 0 0 ));
 BEGIN {
   $|++; $\="\n";
 };
-use Data::Dump qw(ddx dd ppx pp);
+use Nobody::PP qw(ddx dd ppx pp);
 use Getopt::WonderBra;
 use File::Path;
 use Util;
