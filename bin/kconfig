@@ -12,7 +12,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" ";
 };
 use autodie qw(:all);
-use Data::Dump;
+use Nobody::PP;
 
 for(@ARGV){
   $_="cat $_";

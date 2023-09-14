@@ -11,8 +11,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use autodie qw(:all);
-use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx);
+use Nobody::PP;
 sub findlink($);
 findlink($_) for @ARGV;
 exit(0);

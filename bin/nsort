@@ -12,7 +12,7 @@ BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
-use Data::Dump qw(pp dd ppx ddx);
+use Nobody::PP;
 
 our(@_);
 while(<>){

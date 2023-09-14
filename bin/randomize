@@ -12,7 +12,7 @@ BEGIN {
   $|++;
   $\="\n"; $,="\t"; $"=" ";
 };
-use Data::Dump;
+use Nobody::PP;
 use Getopt::WonderBra;
 @ARGV=getopt("n:",@ARGV);
 my $lines=-1;

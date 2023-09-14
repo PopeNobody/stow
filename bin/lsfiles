@@ -7,7 +7,7 @@ BEGIN {
   use lib "$Bin/../lib/perl";
 };
 use autodie qw(:all);
-use Data::Dump qw(ddx ppx dd pp);
+use Nobody::PP;
 use Getopt::WonderBra;
 use File::Basename;
 use File::stat qw(:FIELDS);

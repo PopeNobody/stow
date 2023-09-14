@@ -8,8 +8,7 @@ use warnings;
 use FindBin qw($Bin $Script);
 use lib "$Bin/../lib/perl";
 use autodie qw(:all);
-use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx quote);
+use Nobody::PP;
 use File::stat;
 $\="\n";
 

@@ -12,7 +12,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use autodie qw(:all);
-use Data::Dump qw(ddx);
+use Nobody::PP;
 sub lcmp() {
   return (length($a)<=>length($b)) || ($a cmp $b);
 }

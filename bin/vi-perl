@@ -5,7 +5,7 @@ use warnings;
 use autodie qw(:all);
 use autodie qw(fork);
 use File::stat;
-use Data::Dump qw( dd pp ddx ppx );
+use Nobody::PP;
 
 $|++;
 $\="\n";

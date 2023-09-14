@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use Data::Dump;
+use Nobody::PP;
 
 my %sums;
 while(<>) {

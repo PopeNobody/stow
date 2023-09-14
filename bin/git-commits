@@ -11,7 +11,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use autodie qw(:all);
-use Data::Dump;
+use Nobody::PP;
 my ($date)="";
 sub read_log() {
   local(@ARGV)="git log $date -- @ARGV|";

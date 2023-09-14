@@ -11,7 +11,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use autodie qw(:all);
-use Data::Dump;
+use Nobody::PP;
 
 $ENV{$_}="/opt/bin/editor" for grep { !defined $ENV{$_} } qw(EDITOR VISUAL);
 my($env)="sudoedit";

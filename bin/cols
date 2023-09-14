@@ -13,8 +13,7 @@ BEGIN {
 use Carp;
 $Carp::verbose++ unless $Carp::verbose;
 use autodie qw(:all);
-use Data::Dump;
-use Data::Dump qw(dd pp ddx ppx);
+use Nobody::PP;
 
 our (@c,$c,$cs);
 our (@r,$r,$rs);

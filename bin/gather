@@ -7,12 +7,13 @@ use FindBin qw($Bin $Script);
 use lib "$Bin/../lib/perl";
 use strict;
 use warnings;
-use autodie qw(:all);
-use Data::Dump;
+use autodie qw(:default);
+use Nobody::PP;
 use Util;
 use Getopt::WonderBra;
 $|++; $\="\n"; $/="\n";
 
+@ARGV=qw(-b list);
 
 our($dup,$block,$num,@xxx) = qw(0 0 0);
 our(%data,$key,@key,@val);
@@ -94,33 +95,43 @@ BEGIN {
     return @_;
   }
 };
-sub block_disp() {
-  my ($max) = 0;
-  for $key (@key) {
-    for( @{$data{$key}} ) {
-      $max=length if $max<length;
+sub to_tab($@){
+  my $rows=shift;
+  my @rows;
+  for( 0 .. $rows-1 ) {
+    push(@rows,[]);
+  }
+  @_ = map { @$_ } @_;
+  while(@_) {
+    for( 0 .. $rows-1 ) {
+      push(@{$rows[$_]}, shift);
+      last unless @_;
     };
   };
-  $max+=2;
-  print "max:\n";
-  my $col = $ENV{COLUMNS} || 80;
+  return @rows;
+};
+sub block_disp() {
+print "block_disp()";
+  my $col = $ENV{COLUMNS} || 80; 
   for $key (@key){
-    print "\n$key";
-    my $pos = $col;
-    my $arr=delete $data{$key};
+    my ($arr) = delete $data{$key};
     next unless defined $arr;
-    @val=@{$arr};
-    for(@val)
-    {
-      if ( $pos >= ($col-$max) ) {
-        print "\n     ";
-        ($pos) = 5;
+    print "key: $key";
+    @{$arr} = [ sort { length($b)<=>length($a) || $a cmp $b } @{$arr} ];
+    my $rows=1;
+    my @tab;
+    do { 
+      @tab = to_tab($rows++, @{$arr});
+    } while(length("@{$tab[0]}")>=$col);
+    my @len = map { length } @{$tab[0]};
+    @len = map { "%-".$_."s" } @len;
+    my $fmt = join(" ", @len)."\n";
+    for(@tab) {
+      while(@$_ < @len) {
+        push(@$_,"");
       };
-      $_=$_.(' 'x($max-length));
-      print $_;
-      $pos+=$max;
+      printf $fmt, @$_;
     };
-    print "\n";
   };
 }
 sub normal_disp() {

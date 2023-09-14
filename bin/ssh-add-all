@@ -11,7 +11,7 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use autodie qw(:all);
-use Data::Dump;
+use Nobody::PP;
 use Env qw( $HOME );
 
 my @list;
