@@ -13,8 +13,6 @@ use Util;
 use Getopt::WonderBra;
 $|++; $\="\n"; $/="\n";
 
-@ARGV=qw(-b list);
-
 our($dup,$block,$num,@xxx) = qw(0 0 0);
 our(%data,$key,@key,@val);
 our(%help);
