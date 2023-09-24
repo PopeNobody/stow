@@ -1,0 +1,5 @@
+#!/bin/bash
+
+exec 1> $HOME/.cache/gnome-keyring-daemon.bash.new
+exec 2> $HOME/.cache/gnome-keyring-daemon.log
+exec gnome-keyring-daemon -r
