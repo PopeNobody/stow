@@ -24,7 +24,6 @@ BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
-use Nobody::PPer;
 die "no filenames given" unless @ARGV;
 sub read_src($){
   my ($src)=shift;

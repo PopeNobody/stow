@@ -1,0 +1,4 @@
+#!/bin/bash
+
+ns=( --mount --uts --ipc --net --pid --fork --user  )
+exec unshare --map-root-user "${ns[@]}" chroot . "$@"
