@@ -24,22 +24,34 @@ use File::Path;
 use Util;
 use autodie qw(:all);
 use POSIX qw(strftime);
+use subs;
 sub write_klog(@);
 sub test_klog();
-sub serdate()
-{
-  my @time=gmtime;
-  return strftime("%Y%m%d-%H%M%S-gmt", @time);
-}
+sub gzip_append($@);
+sub get_filename();
+sub goto_dir();
+sub version;
+sub help;
+sub main();
+sub serdate();
 my $gzip="|gzip -9";
-sub gzip_append($@){
-  my ($fn)=shift;
+die "no args used" if @ARGV;
+main();
+
+sub write_klog(@) {
+  local(@_)=@_;
+  open(my $klog,">>/dev/kmsg");
   chomp(@_);
-  $_=join("\n",@_);
-  open(STDOUT,"$gzip>>$fn");
-  print(STDOUT "$_");
-  close(STDOUT);
-  open(STDOUT,">&STDERR");
+  $klog->print(join("\n",@_));
+  close($klog);
+};
+sub goto_dir() {
+  for("/var/log/dmesg"){
+    last if -d;
+    rename "$_", "$_.old" if -e;
+    mkpath("/var/log/dmesg");
+  }
+  chdir("/var/log/dmesg");
 }
 sub get_filename()
 {
@@ -50,18 +62,24 @@ sub get_filename()
   };
   return "current.gz";
 }
-mkpath("/var/log/dmesg");
-chdir("/var/log/dmesg");
-sub version {
-  print "version $VERSION";
-}
 sub help {
   print "usage: $0 [ -a ]";
   print "       -a: append to existing output";
   print "";
 }
-{
-  write_klog("fake","data");
+sub version {
+  print "version $VERSION";
+}
+sub gzip_append($@){
+  my ($fn)=shift;
+  chomp(@_);
+  $_=join("\n",@_);
+  open(STDOUT,"$gzip>>$fn");
+  print(STDOUT "$_");
+  close(STDOUT);
+  open(STDOUT,">&STDERR");
+}
+sub main(){
   open(my $dmesg,"dmesg|");
   exit(0) unless defined($_=<$dmesg>);
   my $fn=get_filename();
@@ -69,10 +87,6 @@ sub help {
   push(@dmesg, <$dmesg>);
   close($dmesg);
   gzip_append($fn,@dmesg);
-
-
-  #  test_klog();
-
   my $lines=@dmesg;
   open($dmesg,"dmesg -c|");
   @dmesg=<$dmesg>;
@@ -83,13 +97,8 @@ sub help {
     gzip_append($fn,@dmesg);
   }
 }
-sub write_klog(@) {
-  local(@_)=@_;
-  open(my $klog,">>/dev/kmsg");
-  chomp(@_);
-  $klog->print(join("\n",@_));
-  close($klog);
-};
-sub test_klog() {
-  write_klog(qw( this is a test ));
-};
+sub serdate()
+{
+  my @time=gmtime;
+  return strftime("%Y%m%d-%H%M%S-gmt", @time);
+}

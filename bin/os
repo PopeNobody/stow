@@ -2,10 +2,10 @@
 
 ID="";
 source /etc/os-release
-if test -n "$ID" ; then
-  set -- $ID
-  echo "$1"
-else
-  echo >&2 "ID not set in /etc/os-release";
-  exit 1
-fi
+test -z "$ID" && echo >&2 "ID not set in /etc/os-release" && exit 1
+case "$ID" in
+  (void) set void $ID;;
+  (ubuntu|devuan|debian) set debian $ID;;
+  (alpine) set alpine $ID;;
+esac
+echo "$@"
