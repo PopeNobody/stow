@@ -10,7 +10,7 @@ BEGIN {
   use lib "$Bin/../lib/perl";
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
-use autodie qw(:all);
+use autodie qw(:default);
 use Nobody::PP;
 use Env qw( $HOME );
 
@@ -28,4 +28,4 @@ sub add($) {
   close($file);
 }
 print for @list;
-system("ssh-add", @list);
+exec("ssh-add", @list);
