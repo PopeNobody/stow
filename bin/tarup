@@ -56,7 +56,6 @@ while(keys %pid){
     exec "pstree -ap $$";
   } else {
     my $tgz = delete $pid{$pid};
-    warn "tgz => ", Dumper($tgz);
     print "pid: $pid tgz: $tgz err: $err";
   };
 };
