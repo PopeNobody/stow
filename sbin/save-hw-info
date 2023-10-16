@@ -1,0 +1,16 @@
+#!/bin/bash
+
+
+(( $UID==0 )) || die "you aint' root"
+set -e
+date=save-hw-info-$(serdate)
+mkdir $date
+cd $date
+cp /boot/config-$(name -r) .
+lshw > lshw.log
+lspci > lspci.log
+lsusb > lsusb.log
+lspci -v > lspci-v.log
+lsmod > lsmod.log
+cd ..
+tarup $date
