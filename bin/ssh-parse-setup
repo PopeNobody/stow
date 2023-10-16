@@ -1,0 +1,7 @@
+#!/bin/bash
+
+echo "starting parse-control"
+test -e .ssh/parse.sock || ssh parse-control date
+ssh copblock.app -A -f bash -xv bin/parse-control-endpoint
+echo "in background now"
+
