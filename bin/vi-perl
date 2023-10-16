@@ -5,6 +5,8 @@ use warnings;
 use autodie qw(:all);
 use autodie qw(fork);
 use File::stat;
+use FindBin qw($Bin $Script); 
+use lib "$Bin/../lib/perl";
 use Nobody::PP;
 
 $|++;

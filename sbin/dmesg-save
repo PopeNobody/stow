@@ -4,11 +4,9 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
 
-use FindBin qw($Script $Bin);
 use lib "$Bin/../lib/perl";
-
 if($< or $>) {
- exec "sudo", readlink("/proc/self/exe"),"$Bin/$Script", @ARGV;
+ exec "sudo", readlink("/proc/self/exe"),"$0", @ARGV;
 }
 
 use strict;
@@ -18,84 +16,71 @@ our ($VERSION) = join("-",qw ( 1 0 0 ));
 BEGIN {
   $|++; $\="\n";
 };
-use Nobody::PP qw(ddx dd ppx pp);
-use Getopt::WonderBra;
-use File::Path;
-use Util;
 use autodie qw(:all);
 use POSIX qw(strftime);
 use subs;
-sub write_klog(@);
 sub test_klog();
 sub gzip_append($@);
 sub get_filename();
 sub goto_dir();
-sub version;
-sub help;
 sub main();
 sub serdate();
+
 my $gzip="|gzip -9";
 die "no args used" if @ARGV;
-main();
+exit(main());
+die "survived exit!";
 
-sub write_klog(@) {
-  local(@_)=@_;
-  open(my $klog,">>/dev/kmsg");
-  chomp(@_);
-  $klog->print(join("\n",@_));
-  close($klog);
-};
 sub goto_dir() {
   for("/var/log/dmesg"){
-    last if -d;
-    rename "$_", "$_.old" if -e;
-    mkpath("/var/log/dmesg");
+    if(-e and not -d) {
+      rename "$_", join("","dmesg-",serdate(),".gz");
+    }
+    system("install -oroot -gadm -d $_");
+    chdir($_);
   }
-  chdir("/var/log/dmesg");
 }
 sub get_filename()
 {
   my $new=shift;
   unless(-e "current.gz"){
+    if(-l "current.gz") {
+      unlink("current.gz");
+    };
     my $realfile=join("","dmesg-",serdate(),".gz");
     symlink($realfile,"current.gz");
+    gzip_append("current.gz","new file");
   };
   return "current.gz";
 }
-sub help {
-  print "usage: $0 [ -a ]";
-  print "       -a: append to existing output";
-  print "";
-}
-sub version {
-  print "version $VERSION";
-}
 sub gzip_append($@){
   my ($fn)=shift;
+  local(@_)=@_;
   chomp(@_);
   $_=join("\n",@_);
+  my $lines = split("\n",$_);
   open(STDOUT,"$gzip>>$fn");
   print(STDOUT "$_");
   close(STDOUT);
   open(STDOUT,">&STDERR");
+  return $lines;
 }
 sub main(){
-  open(my $dmesg,"dmesg|");
-  exit(0) unless defined($_=<$dmesg>);
+  goto_dir();
   my $fn=get_filename();
-  my @dmesg=$_;
-  push(@dmesg, <$dmesg>);
-  close($dmesg);
-  gzip_append($fn,@dmesg);
-  my $lines=@dmesg;
-  open($dmesg,"dmesg -c|");
-  @dmesg=<$dmesg>;
-  splice(@dmesg,0,$lines);
-  if(@dmesg){
-    unshift(@dmesg,"more lines appeared");
-    print STDERR "more lines appeared";
-    gzip_append($fn,@dmesg);
-  }
+  local (@ARGV) = "dmesg|";
+  $_=<ARGV>;
+  return 0 unless defined;
+  my $lines=gzip_append($fn,$_, <ARGV>);
+  @ARGV="dmesg -c|";
+  @_=<ARGV>;
+  splice(@_,0,$lines);
+  system("echo dmesg-save ran at @{[serdate]} > /dev/kmsg");
+  return 0 unless @_;
+  unshift(@_,"more lines appeared");
+  print STDERR "more lines appeared";
+  gzip_append($fn,@_);
+  return 0;
 }
 sub serdate()
 {

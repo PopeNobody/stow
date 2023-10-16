@@ -10,18 +10,18 @@ $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
 };
-unless(-t STDIN){
-  if(-t STDOUT){
-    open(STDIN,"<&STDOUT");
-  } else {
-    open(STDIN,"<&STDERR");
-  };
-};
 my $term = -t STDIN ? 1 : 0;
+print "term: $term";
+use POSIX qw(strftime);
+sub serdate()
+{
+  my @time=gmtime;
+  return strftime("%Y%m%d-%H%M%S-gmt", @time);
+}
 
 open(STDOUT,"|tee /usr/src/linux/buildkernel.log");
 open(STDERR,">&STDOUT");
-use autodie qw(:all);
+use autodie qw(:default);
 use Nobody::PP;
 use Getopt::WonderBra;
 
@@ -33,8 +33,12 @@ if($< or $>){
   print STDERR "We are already root";
 };
 
-my ($boot,$procs) = (0, map { split } qx(nproc));
-$procs = 1 unless defined $procs;
+my ($boot);
+my (@proc)=map { split } qx(nproc);
+if(@proc && $proc[0]>16){
+  $proc[0]=$proc[0]/2;
+};
+unshift(@proc,"-j") if @proc;
 
 sub help {
   print "usage: $0 [-j #]";
@@ -45,12 +49,14 @@ our($VERSION)=join("-",qw(1 0 0));
 sub version {
   print "$0: version $VERSION;";
 };
-@ARGV = getopt("bj:", @ARGV);
+@ARGV = getopt("nbj:", @ARGV);
 while(($_=shift)ne'--'){
   if(/^-j$/){
-    $procs=shift;
+    my $procs=shift;
     die "missing required int arg for -j" unless defined($procs);
-    print "procs=$procs";
+    @proc=("-j",$procs);
+  } elsif (/^-n$/) {
+    $boot=0;
   } elsif (/^-b$/) {
     $boot=1;
   } else {
@@ -58,18 +64,25 @@ while(($_=shift)ne'--'){
   };
 };
 chdir("/usr/src/linux");
-my ( $diff ) = map { split } qx(git diff .config | wc -l );
-if($diff) {
-  print STDERR "committing .config";
-  system("git commit -m \"buildkernel \$(serdate)\" .config");
-};
-system("make -j $procs bzImage modules");
-system("make -j $procs modules_install install");
-exit(0) unless $term;
-if($boot) {
-  print STDERR "running reboot";
-  exec qw(reboot);
-} else {
-  print STDERR "running reboot";
+sub vsystem(@){
+  STDERR->print(@_);
+  system(@_);
+  die "command failed" if $?;
+}
+vsystem(qw(make oldconfig));
+system(qw(git commit -a -m), sprintf("buildkernel %s", serdate()));
+vsystem(qw(make bzImage modules), @proc);
+vsystem(qw(make modules_install install), @proc);
+if(defined($boot)) {
+  if($boot) {
+    print STDERR "running reboot";
+    exec qw(reboot);
+  }
+} elsif ($term) {
+  print STDERR "running may-reboot";
+  open(STDERR,">&STDIN");
+  open(STDOUT,">&STDIN");
   exec qw(may-reboot);
+} else {
+  exit 0
 }

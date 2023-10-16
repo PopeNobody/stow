@@ -11,7 +11,6 @@ use Nobody::PP;
 use Getopt::WonderBra;
 use File::Basename;
 use File::stat qw(:FIELDS);
-use Carp qw(cluck);
 
 sub help() {
   print "$0 [ -n ] <files>\n";
@@ -22,10 +21,10 @@ sub version() {
 sub debug(@){
 }
 
-my $test;
+my $type=undef;
 my $neg=0;
-my $cluck=0;
 my $glob;
+my $words=1;
 
 debug("script: $Script\n");
 sub is_mount() {
@@ -36,57 +35,63 @@ sub is_mount() {
     return 1;
   }
 }
-for($Script) {
-  if(/^lsfiles$/){
-    $test="-f";
-  } elsif ( /^lsdirs$/ ) {
-    $test="-d";
-  } elsif ( /^lslinks$/ ) {
-    $test="-l";
-  } elsif ( /^lsexist$/ ) {
-    $test="-e";
-  } elsif ( /^lsmounts$/ ) {
-    $test="is_mount()";
-  } else {
-    print "name not recognized.  no default test";
-  }
-}
-debug("test: $test\n");
-@ARGV = getopt( 'fdnlecg', @ARGV );
+my (%opts) = (
+  f => { type=>'file', name=>'lsfiles', test=>'-f' },
+  d => { type=>'dir', name=>'lsdirs', test=>'-d' },
+  l => { type=>'link', name=>'lslinks', test=>'-l' },
+  c => { type=>'char', name=>'lscdevs', test=>'-c' },
+  b => { type=>'block', name=>'lsbdevs', test=>'-b' },
+  S => { type=>'socket', name=>'lssocks', test=>'-S' },
+  e => { type=>'any', name=>'lsany', test=>'-e' },
+  m => { type=>'mountpoint', name=>'lsmounts', test=>'is_mount' },
+  g => sub { $glob=!$glob; },
+  n => sub { $neg=!$neg; },
+  w => sub { $words=!$words; },
+);
+my $opts = join("",sort keys %opts);
+@ARGV = getopt( $opts, @ARGV );
 while ( ( $_ = shift ) ne '--' )
 {
-  if ( /^-[fdlem]$/ ) {
-    die "repeated specification of -[fdle]" if defined $test && $test ne $_;
-    $test="$_ \$_";
-  } elsif ( /^-g$/ ) {
-    $glob=1;
-  } elsif ( /^-c$/ ) {
-    $cluck=1;
-  } elsif ( /^-n$/ ) {
-    cluck "warning:  double-negative" if $neg;
-    $neg=!$neg;
+  die "expected leading dash" unless s{^-}{};
+  my $opt = $opts{$_};
+  if(!defined($opt)) {
+    die "I do not grok flag '$_'";
+  } elsif ( ref($opt) eq 'HASH' ) {
+    die "repeated type" if (defined $type) && ($type ne $opt);
+    $type=$opt;
   } else {
-    die "I do not grok -", $_;
-  };
+    $opt->();
+  }
 };
+unless(defined($type)){
+  for(keys %opts) {
+    my $opt=$opts{$_};
+    next unless ref($opt) eq 'HASH';
+    if($opt->{name} eq $Script) {
+      $type=$opt;
+      last;
+    }
+  };
+}
+die "no type found" unless defined($type) && defined($type->{test});
+my $test=$type->{test};
+debug("test: $test\n");
 $test="!($test)" if( $neg );
 if(!@ARGV) {
   if ( -t STDIN ) {
-    print STDERR "reading terminal for items: ";
+    print STDERR "enter items" if -t STDERR;
   } else {
-    print STDERR "reading items: ";
+    print STDERR "reading items: " if -t STDERR;
   }
-  @ARGV=map { split } grep { chomp || 1 } <STDIN>;
-  printf STDERR "%d items:\n", scalar(@ARGV);
+  chomp(@ARGV=<STDIN>);
+  if($words) {
+    @ARGV = map { split } @ARGV;
+  };
+  STDERR->printf("%d items:\n", scalar(@ARGV)) if -t STDERR;
 };
-@ARGV = grep { chomp || length } <STDIN> unless(@ARGV);
 if($glob){
   @ARGV = map { glob($_) } @ARGV;
 };
 for(@ARGV) {
-  if($cluck) {
-    cluck "$_\n" if eval $test;
-  } else {
-    print "$_\n" if eval $test;
-  };
+  print "$_\n" if eval $test;
 };

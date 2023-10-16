@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use autodie qw(:all);
+use Env qw($HOME);
+use Util;
+
+sub mkdirs($$);
+sub mkdirs($$){
+  my ($dir,$mode)=@_;
+  my ($par)=map { m{(.*)/} } $dir;
+  mkdirs($par,$mode) unless -d $par;
+  mkdir($dir,$mode);
+}
+$\="\n";
+my @data = <DATA>;
+chomp(@data);
+my @dirs = @data;
+for(@dirs) {
+  chomp;
+  s{#.*}{};
+  next unless length;
+  s{\$HOME}{$HOME};
+  s{^[A-Z_]+=}{};
+  s{^"(.*)"$}{$1};
+  if (!-d "$_"){
+    mkdirs($_,0700);
+  };
+  system("ls -ld $_ || true");
+};
+unshift(@data,"# This file is written by nobody's hacked version of");
+unshift(@data,"# xdg-user-dirs-update, at $Bin/$Script").
+spit("$HOME/.config/user-dirs.dirs",@data);
+__DATA__
+#
+# If you want to change or add directories, just edit the line you're
+# interested in. All local changes will be retained on the next run.
+# Format is XDG_xxx_DIR="$HOME/yyy", where yyy is a shell-escaped
+# homedir-relative path, or XDG_xxx_DIR="/yyy", where /yyy is an
+# absolute path. No other format is supported.
+# 
+XDG_DESKTOP_DIR="$HOME/xdg"
+XDG_DOWNLOAD_DIR="$HOME/xdg/xdg/arc"
+XDG_TEMPLATES_DIR="$HOME/xdg/xdg/tmp"
+XDG_PUBLICSHARE_DIR="$HOME/xdg/xdg/pub"
+XDG_DOCUMENTS_DIR="$HOME/xdg/xdg/doc"
+XDG_MUSIC_DIR="$HOME/xdg/xdg/mp3"
+XDG_PICTURES_DIR="$HOME/xdg/xdg/pic"
+XDG_VIDEOS_DIR="$HOME/xdg/xdg/vid"

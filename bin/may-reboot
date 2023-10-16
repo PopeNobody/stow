@@ -1,8 +1,11 @@
 #!/bin/bash
 
-if dialog --yesno 'reboot? ' 10 40 ; then
-  systemctl reboot
+if test -t 0 || test -t 1 || test -t 2; then
+  echo have a tty
+else
+  exit 0
 fi
-
-exit 0
+if dialog --yesno 'reboot? ' 10 40 ; then
+  exec reboot
+fi
 
