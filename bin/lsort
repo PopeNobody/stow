@@ -12,12 +12,9 @@ BEGIN {
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
 use autodie qw(:all);
-use Nobody::PP;
-sub lcmp() {
-  return (length($a)<=>length($b)) || ($a cmp $b);
-}
+use Data::Dump qw(ddx);
 sub lsort(@){
-  return sort lcmp @_;
+  return sort { (length($a)<=>length($b)) || ($a cmp $b) } @_;
 }
 my @lens;
 for(grep({ chomp; s{^\s*}{}; s{\s*$}{}; 1; } <STDIN>)){
@@ -30,5 +27,3 @@ for( 0 .. @lens){
     };
   };
 };
-
-

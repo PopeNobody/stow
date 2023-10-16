@@ -6,7 +6,7 @@ use subs qq(pp dd ppx ddx quote);
 
 require Exporter;
 *import = \&Exporter::import;
-@EXPORT_OK = qw(pp dd ppx ddx quote);
+@EXPORT_OK = qw(pp dd ppx ddx quote qquote);
 @EXPORT = @subs;
 %EXPORT_TAGS = ( 
   all=>[ @EXPORT_OK ],
@@ -551,6 +551,8 @@ sub quote {
 
   return qq("$_");
 }
+sub qquote;
+*qquote=*quote;
 
 1;
 
