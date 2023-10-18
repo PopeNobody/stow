@@ -1,0 +1,40 @@
+#!/bin/bash
+not() {
+  if "$@"; then
+	  return 1;
+  else
+	  return 0;
+  fi
+}
+mv-kernels () 
+{
+  ( 
+  shopt -s nullglob
+  cd /boot
+  for c in config-*;
+  do
+    v=${c#config-};
+    i=initrd.img-$v;
+    k=vmlinuz-$v;
+    s=System.map-$v;
+    m="/lib/modules/$v";
+    mkdir -p $v-new;
+    not test -e "$i" || mv "$i" $v-new/initrd.img
+    not test -e "$c" || mv "$c" $v-new/config;
+    not test -e "$k" || mv "$k" $v-new/vmlinuz;
+    not test -e "$s" || mv "$s" $v-new/System.map;
+    if test -d "$m" ; then
+      set "$m" /boot/$v-new/modules /boot/$v/modules;
+      mv "$1" "$2"
+      ln -sf "$3" "$1"
+      ln -sf "$3" /boot/$1
+    fi
+    test -e "$v" && mv "$v" "$v-$(serdate)"
+    mv "$v-new" $v
+  set +x
+  done;
+  return 0
+)
+}
+return 0 2>/dev/null
+mv-kernels

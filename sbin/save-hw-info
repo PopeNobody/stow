@@ -6,7 +6,18 @@ set -e
 date=save-hw-info-$(serdate)
 mkdir $date
 cd $date
-cp /boot/config-$(name -r) .
+set -- /proc/config.gz /boot/config-$(uname -r)
+while (($#)); do
+  test -e $1 && break
+  shift
+done
+warn() { echo >&2 "$*"; }
+die() { res="$1"; shift; warn "$@"; exit "$1"; }
+set /proc/config.gz /boot/config-$(uname -r)
+while ! test -e "$1" ; do shift; done
+test -z "$1" && die "no config file"
+set -x
+zcat "$1" > config
 lshw > lshw.log
 lspci > lspci.log
 lsusb > lsusb.log

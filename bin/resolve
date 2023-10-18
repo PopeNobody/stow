@@ -18,6 +18,7 @@ resolve() {
     done
 
     shift
+    set -x
     while test -h "$temp"; do
       dest=$(readlink "$temp")
       if test "${dest:0:1}" != "/"; then
