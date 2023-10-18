@@ -5,25 +5,38 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-
-BEGIN {
-  use FindBin qw($Bin $Script);
-  use lib "$Bin/../lib/perl";
-  $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
-};
+$|++;
+use FindBin qw($Bin $Script);
+use lib "$Bin/../lib/perl";
 use autodie qw(:all);
-use Data::Dump qw(ddx);
+my $rev=0;
+for(my $i=0;$i<@ARGV;$i++){
+  for($ARGV[$i]){
+    if(/^--$/){
+      delete $ARGV[$i];
+      last;
+    } elsif ( /^-r/ ) {
+      $rev=1-$rev;
+    }
+  }
+}
 sub lsort(@){
   return sort { (length($a)<=>length($b)) || ($a cmp $b) } @_;
 }
-my @lens;
-for(grep({ chomp; s{^\s*}{}; s{\s*$}{}; 1; } <STDIN>)){
-  push(@{$lens[length]},$_);
-};
-for( 0 .. @lens){
-  for(grep { defined } $lens[$_]){
-    for(sort @$_){
-      print;
-    };
+my @by_len;
+while(<>){
+  chomp;
+  push(@{$by_len[length]},$_);
+}
+$\=$,="\n";
+sub may_rev(@) {
+  if($rev) {
+    return reverse(@_);
+  } else {
+    return @_;
   };
+}
+
+for( may_rev grep { defined } @by_len) {
+  print may_rev sort grep { defined } @$_;
 };
