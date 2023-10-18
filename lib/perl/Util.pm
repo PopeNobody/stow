@@ -1,9 +1,8 @@
 #!/usr/bin/perl
 # vim: ts=2 sw=2 ft=perl
 {
-  $DB::single=1;
   package Util;
-
+  $/="\n";
   use strict;
   use warnings;
   our($DEBUG)=0;
@@ -17,7 +16,6 @@
   use lib "$Bin/../lib/perl";
   use lib "$Bin/lib/perl";
   use Nobody::PP @dd;
-  use Scalar::Util;
   our(@EXPORT)=(qw(mkdir_p suckdir suck spit min max sum avg), @fb, @dd);
   require Exporter;
   our(@ISA)=qw(Exporter);
@@ -63,17 +61,12 @@
   sub suckdir(@){
     return grep { !m{/[.][.]?$} } map { glob("$_/* $_/.*") } @_;
   }
-  sub suck(@);
   sub suck(@){
     print STDERR "wantarray: ", wantarray, "\n" if $DEBUG;
     return warn("useless use of suck in void context") unless defined wantarray;
-
-    if(wantarray) {
-      local(@ARGV,@_)=("/dev/null", @_);
-      return <ARGV>;
-    } else {
-      return join("",suck(@_));
-    };
+    return () unless @_;
+    local(@ARGV)=@_;
+    return <ARGV>;
   };
   sub spit($@){
     local($\,$/);
