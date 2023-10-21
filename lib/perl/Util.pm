@@ -2,7 +2,7 @@
 # vim: ts=2 sw=2 ft=perl
 {
   package Util;
-  $/="\n";
+  $\="\n";
   use strict;
   use warnings;
   our($DEBUG)=0;
@@ -22,9 +22,7 @@
 
   sub sum(@){
     my $sum=0;     
-    for(@_){
-      $sum+=$_;
-    };
+    $sum+=$_ for(@_);
     return $sum;
   }
   sub avg(@){
