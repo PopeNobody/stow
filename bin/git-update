@@ -1,0 +1,13 @@
+#!/bin/bash
+
+log=$HOME/tmp/git-update.log
+set -e
+trap "echo fail; cat $log" ERR
+git-update() {
+  cd $HOME/stow/home
+  git pull
+  cd ..
+  /opt/bin/stow home
+}
+git-update </dev/null >>$log  2>&1
+rm -f $log
