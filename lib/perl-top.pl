@@ -5,11 +5,7 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-BEGIN {
-  use FindBin qw($Bin $Script);
-  use lib "$Bin/../lib/perl";
-  $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
-};
-use autodie qw(:all);
-use Nobody::PP;
-use Nobody::PP qw(dd pp ddx ppx quote);
+use Util;
+
+use Env qw($HOME, @PATH);
+$ENV{LANG}="C";
