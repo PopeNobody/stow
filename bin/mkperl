@@ -2,10 +2,13 @@
 # vim: ts=2 sw=2 ft=perl
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
-
+  require qw(Util);
+BEGIN {
+  $DB::single=1;
+}
 use strict;
 use warnings;
-use Util;
+use Util qw( $Bin $Script );
 use Env qw($HOME @PATH);
 $ENV{LANG}="C";
 
@@ -18,7 +21,6 @@ sub read_src($){
   return join("", grep {  s{#src#}{$src} || 1 } <>);
 }
 my ($src) = join("",<DATA>);
-
 for(@ARGV){
   if(-e) {
     warn "file '$_' exists";

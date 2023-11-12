@@ -10,52 +10,75 @@ BEGIN {
   use lib "$Bin/../lib/perl";
   $|++; $\="\n"; $,=" "; $"=" "; $/="n";
 };
+my $remove=0;
 use autodie qw(:all);
 use Nobody::PP qw(ddx);
-
+use Getopt::WonderBra;
+sub help {
+  print "no help!";
+}
+our(@VERSION) = qw( 1 0 0 );
+sub version {
+  $"=".";
+  print "version( @VERSION )";
+}
 my (%pid,$pid,@pid);
-#$SIG{CHLD}=sub {
-#  $pid=wait;
-#  push(@pid,[$pid,$?]);
-#};
-for(@ARGV){
+sub tarup($) {
+  die "got --" if grep { m/^--$/ } @_;
   my ($dir,$tgz) = map { s{/+$}{}; ( $_, "$_.tgz" ) } $_;
   unless(m{[^.]}){
     warn "nothing but dots!";
-    next;
+    return;
   };
   unless(-d) {
     warn "cannot find directory '$dir'";
-    next;
+    return;
   }
   if($tgz =~ s{^[.]}{}) {
-    warn "removed leading dot from archive name";
+    warn "removed leading dot from archive name"
   };
-  if($pid=fork){
-    ddx(\%pid);
-    printf "pid=%10d tgz=%20s\n",$pid,$tgz;
-    $pid{$pid}=$tgz;
-  } else {
-    open(STDOUT,">&STDERR");
-    my @cmd=qw(tar -cz --remove-files -f);
-    push(@cmd,$tgz,$dir);
-    #    open(STDERR,">>stderr.log");
-    #open(STDOUT,">&STDERR");
-    print "", ("-" x 30);
-    no autodie;
-    exec @cmd;
-    die "exec:@cmd:$!";
+  open(STDOUT,">&STDERR");
+  my $cmd="tar";
+  my @arg=qw( -cvz );
+  if($remove) {
+    push(@arg,"--remove-files");
   }
-};
-while(keys %pid){
-  no autodie;
-  my ($pid,$err) = ( wait, $? );
-  if($pid==-1){
-    warn "wait returned 1";
-    next if fork;
-    exec "pstree -ap $$";
-  } else {
-    my $tgz = delete $pid{$pid};
-    print "pid: $pid tgz: $tgz err: $err";
+  push(@arg,"-f", $tgz,$dir);
+  exec($cmd, @arg);
+}
+sub main() {
+  local (@_,$_)=getopt("rR", @ARGV);
+  $_="*";
+  while(($_=shift(@_))ne '--')
+  {
+    if(/r/) {
+      $remove=1;
+    } elsif(/R/) {
+      $remove=0;
+    } else {
+      die "($_)?";
+    };
+  };
+  use vars qw($obj %pid $pid $res);
+  for(@_) {
+    print STDERR "gonna fork for $_";
+    if($pid=fork) {
+      $pid{$pid}=$_;
+    } else {
+      print STDERR "$$:$pid: tar $_";
+      print "& (( $_ () @_ ))";
+      tarup($_);
+      exit(0);
+    };
+  };
+  while(keys %pid) {
+    print STDERR "pids: @pid";
+    $pid=wait;
+    $res=$?;
+    $obj=delete $pid{$pid};
+    next unless defined $obj;
+    print "tarup for $obj exited", ($res ? " with $res" : "");    
+    print STDERR;
   };
 };
+main();
