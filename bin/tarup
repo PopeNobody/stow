@@ -10,7 +10,7 @@ BEGIN {
   use lib "$Bin/../lib/perl";
   $|++; $\="\n"; $,=" "; $"=" "; $/="n";
 };
-my $remove=0;
+my $remove=1;
 use autodie qw(:all);
 use Nobody::PP qw(ddx);
 use Getopt::WonderBra;
@@ -47,14 +47,12 @@ sub tarup($) {
   exec($cmd, @arg);
 }
 sub main() {
-  local (@_,$_)=getopt("rR", @ARGV);
+  local (@_,$_)=getopt("r", @ARGV);
   $_="*";
   while(($_=shift(@_))ne '--')
   {
-    if(/r/) {
-      $remove=1;
-    } elsif(/R/) {
-      $remove=0;
+    if(/^-r$/) {
+      $remove=!$remove;
     } else {
       die "($_)?";
     };
