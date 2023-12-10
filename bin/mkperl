@@ -2,7 +2,7 @@
 # vim: ts=2 sw=2 ft=perl
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
-  require qw(Util);
+
 BEGIN {
   $DB::single=1;
 }
