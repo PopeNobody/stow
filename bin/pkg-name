@@ -7,84 +7,69 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib/perl";
 use autodie qw(:all);
 use Util;
-
-open(STDIN,"</dev/null");
-sub void_line($) {
-  local ($_)=shift;
-  s{^\s*\S+\s+}{};
-  if( @_=m{(\S*)(-(alpha|)[Bv0-9]\S+)} ) {
-    return shift;
-  } else {
-    print "failed: $_\n";
-  };
-};
-sub void_source() {
-    open(STDIN,"xbps-query -s . -R|");
-};
-sub debian_source() {
-    open(STDIN,"apt-cache pkgnames|");
-};
-sub alpine_source() {
-  chomp;
-  $_;
-};
-sub debian_line($) {
-  chomp;
-  $_;
-};
+sub main();
+main;
+exit(0);
 sub get_os_type() {
   local (@_);
   @_ = map { split } qx(os);
   return shift;
 };
-sub match($);
-sub line($);
-sub handle_args(\@);
-
-my $os_type=get_os_type();
-if( $os_type eq "void" ) {
-  *line=\&void_line;
-  void_source();
-} elsif ( $os_type eq "debian" ) {
-  *line=\&debian_line;
-  debian_source();
-} elsif ( $os_type eq "linuxmint" ) {
-  *line=\&debian_line;
-  debian_source();
-} elsif ( $os_type eq "ubuntu" ) {
-  *line=\&debian_line;
-  debian_source();
-} else {
-    die "os_type neither debian nor void\n";
-};
-sub main()
-{
-  my %seen;
-  while( <STDIN> )
-  {
-    chomp;
-    next unless match($_);
-    $seen{line($_)}++;
+BEGIN {
+  my $type = get_os_type();
+  my %cmd = (
+    void=> "xbps-query -s . -R",
+    alpine=>"apk list",
+    debian=>"apt-cache pkgnames",
+    ubuntu=>"apt-cache pkgnames",
+    linuxmint=>"apt-cache pkgnames",
+  );
+  my $cmd=$cmd{$type};
+  sub fork_source($) {
+    my $pid = open(STDIN,"-|");
+    return if $pid;
+    exec "$cmd";
+    die "exec:$cmd:$!";
   };
-  print "$_" for sort keys %seen;
-};
-@ARGV=handle_args(@ARGV);
-main();
-sub handle_args(\@)
-{
-  local(*_)=shift;
-  if(@_) {
-    my @re = map { qr/$_/ } @ARGV;
-    *match=sub ($){
-      my $a=$_;
-      for(@re) {
-        return 1 if $a=~$_;
-      }
-      return 0;
-    };
+}
+sub fork_split($) {
+  return if open(STDIN,"-|");
+  if($_[0] eq 'void') {
+    while(<STDIN>){
+      s{^\s*\S+\s+}{};
+      next unless @_=m{(\S*)(-(alpha|)[Bv0-9]\S+)};
+      print shift;
+    }
   } else {
-    *match=sub ($){
-      1;
-    };
+    while(<STDIN>){
+      chomp;
+      print for split;
+    }
+  }
+  close(STDIN);
+  close(STDOUT);
+  exit(0);
+};
+sub fork_filter(@) {
+  my $pid = open(STDIN,"-|");
+  return if $pid;
+  my $re = join("|",@_);
+  $re=qr($re);
+  while(<STDIN>){
+    chomp;
+    print if /$re/;
   };
+  exit(0);
+};
+sub main() {
+  fork_source(get_os_type());
+  @_ = @ARGV;
+  fork_filter(@_) if(@_);
+  my %seen;
+  while(<STDIN>){
+    chomp;
+    $seen{$_}++ for split;
+  }
+  print for sort keys %seen;
+  exit(0);
 };
