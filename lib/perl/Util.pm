@@ -1,30 +1,40 @@
 #!/usr/bin/perl
 # vim: ts=2 sw=2 ft=perl
-package main;
-use FindBin qw( $Dir $Script );
 package Util;
-use Nobody::PP qw( pp dd ppx ddx );;
-sub import {
-  $DB::single=1;
-  #warn( pp( [caller], [@_] ) );
-  require Exporter;
-  $DB::single = 1;
-  use Exporter qw( import );
-  goto &Exporter::import;
+our ( @EXPORT, @EXPORT_OK, @ISA );
+use vars qw(@fb @dd);
+BEGIN {
+  @pp=qw( pp dd ppx ddx quote qquote );
 };
-push(@EXPORT_OK,qw( $Dir $Script ) );
-package Util;
+use Nobody::PP @pp;
+use FindBin;
+use FindBin @FindBin::EXPORT_OK;
 $\="\n";
+BEGIN {
+  push(@EXPORT_OK,@FindBin::EXPORT_OK);
+  push(@EXPORT_OK,@Nobody::PP::EXPORT_OK);
+  push(@EXPORT_OK,
+    qw( sum avg max min mkdir_p basename suckdir suck spit )
+  );
+}
 use strict;
 use warnings;
-use vars qw(@fb @dd);
 use autodie;
 use Env qw( $HOME $PWD @PATH );
-use FindBin qw( $Bin $Script);
-use lib "$Bin/../lib/perl";
-use lib "$Bin/lib/perl";
+use FindBin @fb=qw( $Bin $Script);
+use lib "/opt/lib/perl";
 use lib "$HOME/lib/perl";
-use Nobody::PP qw( ddx ppx dd pp );
+BEGIN {
+  @EXPORT=@EXPORT_OK;
+  @ISA=qw(Exporter);
+  require Exporter;
+  sub import;
+  *import=\&Exporter::import; 
+  # sub import {
+  #   $DB::single=1;
+  #   goto &Exporter::import;
+  # };
+}
 sub sum(@){
   my $sum=0;     
   $sum+=$_ for(@_);
@@ -36,22 +46,18 @@ sub avg(@){
 };
 sub max(@){
   my $max=shift;
-  for(@_) {
+  for(grep { defined } @_) {
     $max=$_ if $max>$_;
   };
   return $max;
 }
 sub min(@){
   my $min=shift;
-  for(@_) {
+  for(grep { defined } @_) {
     $min=$_ if $min>$_;
   };
   return $min;
 }
-sub mkdir_p($){
-  require File::Path;
-  goto &File::Path::mkpath;
-};
 sub basename {
   return unless @_;
   return map { $_, basename($_) } @_ unless @_ == 1;
