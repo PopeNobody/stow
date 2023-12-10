@@ -1,0 +1,13 @@
+#!/bin/bash
+
+if ! test -e .git/config; then
+  echo "no git here"
+  exit 0
+fi
+if ! grep url.*https*://github .git/config; then
+  echo "no https url"
+  exit 0
+fi
+echo "gonna take that shit out"
+sed -i.bak '/url/ { s+https://github.com/+git@github.com:+ }' \
+  .git/config
