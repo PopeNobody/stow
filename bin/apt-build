@@ -22,6 +22,7 @@
 # 02111-1307, USA.
 #
 
+
 #
 # The comments in the script have been made verbose on purpose, to help new
 # developers get the grip on apt-build and Perl in general.
@@ -32,6 +33,8 @@ use warnings;
 use AppConfig qw/:expand :argcount/;
 use Fatal qw/chdir open/;                           # see Fatal
 use Env qw/@PATH $APT_BUILD_WRAPPER/;               # perldoc Env 
+use Env qw/$EMAIL/;
+$EMAIL||='spam-me@copblock.app';
 use AptPkg::Config qw/$_config/;                    # see libapt-pkg-perl
 use AptPkg::System qw/$_system/;                    #
 use AptPkg::Version;
