@@ -1,0 +1,23 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use FindBin qw($Bin $Script);
+use Env qw($HOME);
+use lib "$HOME/lib/perl", "$Bin/../lib/perl";
+$|++; $\="\n"; $,=" "; $"=" "; $/="\n";
+use autodie qw(:all);
+use Nobody::PP qw(ddx);
+no autodie qw(readlink);
+
+for(@ARGV) {
+  my $l=readlink;
+  if(defined($l)) {
+    print $_, $l;
+  } else {
+    print STDERR "$_: $!";
+  }
+}

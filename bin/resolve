@@ -5,7 +5,7 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-use Util;
+use Nobody::Util;
 use POSIX qw(getcwd);
 use Env qw($HOME @PATH $PWD);
 use vars qw(%opt);

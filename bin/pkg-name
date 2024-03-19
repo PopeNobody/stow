@@ -6,7 +6,7 @@ $|++;
 use FindBin qw($Bin);
 use lib "$Bin/../lib/perl";
 use autodie qw(:all);
-use Util;
+use Nobody::Util;
 sub main(@);
 use Getopt::WonderBra;
 our($type,$re,$pre_re);
