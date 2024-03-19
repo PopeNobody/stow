@@ -33,9 +33,6 @@ die "survived exit!";
 
 sub goto_dir() {
   for("/var/log/dmesg.d"){
-    if(-e and not -d) {
-      die "$_ is not a dir";
-    }
     system("install -oroot -gadm -d $_");
     chdir($_);
   }

@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 # vim: ts=2 sw=2 ft=perl
-echo "\$0=$0"
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 

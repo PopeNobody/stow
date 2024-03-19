@@ -1,5 +1,10 @@
 #!/bin/bash
 
+runfind() {
+  set -- \( -name .git -o -name node_modules -prune \) , 
+  set -- "$@" -type f -not -name '.*' -name '*.*' 
+  find "$@"
+}
 findext () 
 { 
   if [ "$*" == "-r" ]; then
@@ -9,8 +14,7 @@ findext ()
       sort;
 
   else
-
-    find -type f -not -name '.*' -name '*.*' |
+      runfind |
       sed 's,.*\.,,' |
       sort |
       uniq -c |

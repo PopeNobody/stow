@@ -7,8 +7,10 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib/perl";
 use autodie qw(:all);
 use Util;
-sub main();
-main;
+sub main(@);
+use Getopt::WonderBra;
+our($type,$re,$pre_re);
+main(@ARGV);
 exit(0);
 sub get_os_type() {
   local (@_);
@@ -50,21 +52,45 @@ sub fork_split($) {
   close(STDOUT);
   exit(0);
 };
-sub fork_filter(@) {
+sub fork_filter() {
   my $pid = open(STDIN,"-|");
   return if $pid;
-  my $re = join("|",@_);
-  $re=qr($re);
   while(<STDIN>){
     chomp;
-    print if /$re/;
+    if(defined($pre_re)) {
+      next unless m{$pre_re};
+    };
+    print if !defined($re) or m{$re};
   };
   exit(0);
 };
-sub main() {
+our(@VERSION) = qw( 0 5 0 );
+sub version {
+  local($,)=".";
+  print "pkg_name(@VERSION)";
+}
+sub help {
+  $\=undef;
+  print for <DATA>;
+}
+sub main(@) {
+  @_=getopt("wr:d",@_);
+  @_=do_opts(@_);
+#      ddx( { re=>$re, re=>$type, pre_re=>$pre_re, _=>\@_ } );
+  unless(defined $type) {
+    $type = @_>1 ? "words" : "regex";
+  }
+  if($type eq "words") {
+    $re=join("|",map qq{\Q$_\E}, @_);
+  } elsif ( $type eq "regex" ) {
+    die ">1 regex" if @_>1;
+    $re = shift;
+  }  else {
+    die "no type"
+  };
+#      ddx( { re=>$re, re=>$type, pre_re=>$pre_re, _=>\@_ } );
   fork_source(get_os_type());
-  @_ = @ARGV;
-  fork_filter(@_) if(@_);
+  fork_filter() if( defined($re || $pre_re ));
   my %seen;
   while(<STDIN>){
     chomp;
@@ -73,3 +99,32 @@ sub main() {
   print for sort keys %seen;
   exit(0);
 };
+sub do_opts(@) {
+  unless(defined wantarray) {
+    warn "useless use of do_opts in void context"
+  }
+
+  while(($_=shift)ne'--') {
+    if(/^-d/) {
+      die ">1 -d" if defined $pre_re;
+      $pre_re=qr{-dev$};
+    } elsif ( /^-r/ ) {
+      die "-w or -r repeated regex" if defined($type);
+      $type="regex";
+      push(@_,shift);
+    } elsif ( m{^-w} ) { 
+      die "-w or -r repeated regex" if defined($type);
+      $type="words";
+    }
+  }
+  return @_;
+}
+__DATA__
+pkg-name:  [-d] { [ -w word ... ] | [ -r regex ] }
+
+list package names that contain a substring or regex
+  -w:  remaining args are words, match any of them
+  -d:  development packackes only
+       implemented only for apt based systems.
+       return only those names that end in -dev
+  -r:  remaining arg is a (perl) regex.

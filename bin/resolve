@@ -1,39 +1,116 @@
-#!/bin/bash
-warn() {
-  echo >&2 "$*"
-  true
-}
-export -f warn
-resolve() {
-  if (($#==1)); then
-    temp="$1"
-    test -z "$temp" && return 0;
-    if ! test -e "$1" ; then
-      warn "resolve: $1 does not exist"
-      return 1;
-    fi
-    test "$temp" = "/" && echo "$temp" && return 0
-    while test "${temp:${#temp}-1:1}" == "/"; do
-      temp="${temp:0:-1}"
-    done
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
 
-    shift
-    set -x
-    while test -h "$temp"; do
-      dest=$(readlink "$temp")
-      if test "${dest:0:1}" != "/"; then
-        dir=$(dirname "$temp")
-        dest="$dir/$dest"
-      fi
-      temp="$dest"
-    done
-    dir=$(cd "$(dirname "$temp")" && pwd -P)
-    temp="$dir/$(basename "$temp")"
-    echo "$temp";
-  else
-    for i; do echo "$i: $(resolve "$i")"; done
-  fi
+use strict;
+use warnings;
+use Util;
+use POSIX qw(getcwd);
+use Env qw($HOME @PATH $PWD);
+use vars qw(%opt);
+use Getopt::WonderBra;
+$ENV{LANG}="C";
+sub resolve($);
+sub opts(@);
+sub verbose(@){};
+sub verbose_1(@){ warn("@_\n"); };
+sub verbose_n(@){ warn("@_"); };
+if($opt{verbose}){
+  no warnings 'redefine';
+  *verbose=($opt{verbose}>1 ? \&verbose_1 : \&verbose_n );
+};
+die "$@" if "$@";
+if(@ARGV>1) {
+  while(@ARGV) {
+    if(my $pid=fork) {
+      waitpid($pid,0);
+      die "failed" if $?;
+    } else {
+      resolve(shift);
+    };
+  };
+} else {
+  resolve(shift);
+};
+sub dir($) {
+  for(map { "$_" } shift) {
+    s{/+[^/]+/*$}{};
+    return $_;
+  };
 }
-export -f resolve
-return 0 2>/dev/null
-resolve "$@"
+our($t, $d);
+sub resolve($) {
+  local $_ = $_[0];
+  #  if($opt{cmd}) {
+  #    if( !m{^[./]} ) {
+  #      verbose("searching path for: $_");
+  #      ($_,@_) = map { split } qx(which $_);
+  #      verbose("found $_");
+  #    };
+  #  }
+  while(1) {
+    warn "$_ is not a link or existing object" unless -l || -e;
+    verbose("resolving", $_);
+    unless(m{^/}){
+      verbose("  relative to",$PWD);
+    };
+    if( ($d,$t)=m{(.*)/(.*)} ) {
+      verbose("  split: $d, $t");
+      $_=$t;
+      verbose("  change to $d");
+      chdir($d);
+      print $ENV{PWD};
+      verbose("  now in $PWD");
+    };
+    last unless -l $_;
+    $d=dir($_);
+    $_=readlink($_);
+  };
+  print $_;
+}
+BEGIN {
+  %opt = (
+    cmd=>0
+  );
+  sub help {
+    print "usage: $0 <-c> <-v>";
+    print "       -c: search on path";
+    print "       -v: verbose";
+  }
+  our(@VERSION) = qw( 0 1 0 );
+  sub version {
+    $"=".";
+    print "$0 version @VERSION";
+  }
+  use Getopt::WonderBra;
+  my %arg = (
+    'c' => \$opt{cmd},
+    'v' => \$opt{verbose}
+  );
+  sub argstr() {
+    my %abbr;
+    return join("",grep { s{^-(.)$}{$1} || m{^.$} } keys %abbr);
+  };
+  @ARGV=getopt("cv",@ARGV);
+  while(@ARGV) {
+    local $_ = shift(@ARGV);
+    last if $_ eq '--';
+    
+    if(m{^--}) {
+      if(exists $arg{$_}) {
+        ${$arg{$_}}++;
+        next;
+      }
+      warn "no arg: $_";
+    } elsif ( m{^-(.)$} ) {
+      if(exists $arg{$1}) {
+        ${$arg{$1}}++;
+        next;
+      }
+      warn "no arg: $_";
+    }
+    # the floor is lava
+    die "unexpected arg: $_";
+  };
+};
