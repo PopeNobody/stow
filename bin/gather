@@ -9,7 +9,7 @@ use strict;
 use warnings;
 use autodie qw(:default);
 use Nobody::PP;
-use Util;
+use Nobody::Util;
 use Getopt::WonderBra;
 $|++; $\="\n"; $/="\n";
 
