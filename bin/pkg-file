@@ -79,7 +79,6 @@ sub loop() {
   die "no qr in:\n", pp(\%data) unless defined $qr;
   my $pre = get_pre($data{type});
   open(STDIN,"<$data{fn}");
-  #ddx({pre=>$pre, qr=>$qr});
   while(<STDIN>){
     chomp;
     @_ = m{$pre};

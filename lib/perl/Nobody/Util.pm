@@ -1,9 +1,6 @@
 #!/usr/bin/perl
 # vim: ts=2 sw=2 ft=perl
 #
-# This is a Lazy Bastard package that you probably don't want to use.
-# Nobody made it because Nobody is as lazy as he is.  It's full of
-# ugly hacks, but saves him time.
 package Nobody::Util;
 our ( @EXPORT, @EXPORT_OK, @ISA );
 use vars qw(@dd);
@@ -21,12 +18,14 @@ BEGIN {
     qw( sum avg max min mkdir_p basename suckdir suck spit maybeRef )
   );
   push(@EXPORT_OK,
-    qw( pasteLines )
+    qw( pasteLines serdate )
   );
 }
 use strict;
 use warnings;
+use feature qw(say);
 use autodie;
+use POSIX qw(strftime mktime );
 use Env qw( $HOME $PWD @PATH );
 use lib "/opt/lib/perl";
 use lib "$HOME/lib/perl";
@@ -38,6 +37,19 @@ BEGIN {
     goto &Exporter::import;
   };
 }
+sub mkdir_p($;$);
+sub mkdir_p($;$) {
+  no autodie qw(mkdir);
+  my ($dir,$mode)=@_;
+  $mode=0755 unless defined($mode);
+  return 1 if -d $dir;
+  return 1 if mkdir($dir,$mode);
+  die "mkdir:$dir:$!" unless $!{ENOENT};
+  my (@dir) = split(m{/+},$dir);
+  pop(@dir);
+  mkdir_p(join("/",@dir),$mode);
+  mkdir($dir,$mode); 
+};
 sub sum(@){
   my $sum=0;     
   $sum+=$_ for(@_);
@@ -109,4 +121,68 @@ sub spit($@){
 sub maybeRef($) {
   return ref || $_ for shift;
 };
+
+my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+my @x=qw(sec min hour mday mon year wday yday isdst);
+sub serdate(;$)
+{
+  my $time=@_ ? $_[0] : time;
+  ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
+  @_=($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
+  #  for(0 .. @_) {
+  #  say $_, $_[$_], $x[$_];
+  #};
+  ddx(\@_);
+  return strftime("%Y%m%d-%H%M%S-gmt", @_);
+}
+our(%caller);
+sub deparse {
+  eval "use B::Deparse";
+  die "$@" if "$@";
+  my $deparse = B::Deparse->new("-p", "-sC");
+  return join(' ', 'sub{', $deparse->coderef2text(\&func), '}');
+};
+#unless(caller){
+#  use Carp;
+#  sub test_date(;$) {
+#    $,=" ";
+#    $DB::single=1;
+#    $DB::single=1;
+#    my $time=time;
+#    say $time;
+#    my (@gm);
+#    my $ser=serdate($time);
+#    say $ser;
+#    $_=$ser;
+#    #    ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = 
+#    ($year,$mon,$mday,$hour,$min,$sec)=map{int($_)}
+#    (m{^(\d\d\d\d)(\d\d)(\d\d)-(\d\d)(\d\d)(\d\d)-gmt});
+#    @_=( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst );
+#    $year-=1900;
+#    $mday++;
+#    for(0 .. @_) {
+#      my $idx="$_";
+#      my $val=($_[$_]//-1);
+#      my $tag=$x[$_];
+#      #ddx([ $idx, $val, $tag ]);
+#      #say $_, ($_[$_]//-1), ($x[$_]);
+#    };
+#    #ddx(\@_);
+#  };
+#  test_date;
+#  exit(0);
+#};
+1;
+=head1 NAME
+
+Nobody::Util - Pretty printing of data structures
+
+=head1 SYNOPSIS
+
+This is a Lazy Bastard package that you probably don't want to use.
+Nobody made it because Nobody is as lazy as he is.  It's full of
+ugly hacks, but saves him time.
+
+=cut
+
 1;

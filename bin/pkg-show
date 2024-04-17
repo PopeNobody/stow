@@ -1,0 +1,108 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+BEGIN { package DB; $CreateTTY=4; };
+use strict;
+use warnings;
+use Time::HiRes qw(time);
+use Nobody::Util;
+use Fcntl;
+use Fcntl qw(O_NONBLOCK);
+use Env qw($HOME @PATH);
+use Getopt::WonderBra;
+our(@VERSION) = qw( 0 1 0 );
+sub pkg_name(@);
+sub opts(@);
+use feature qw(say);
+sub version {
+  print "$0: @VERSION\n";
+};
+
+@ARGV = qw(-n) unless @ARGV;
+exit(main(opts(getopt("n",@ARGV))));
+sub group($@);
+my $use_pkg_name=0;
+our(%opts);
+sub opts(@){
+  local(@_,$_)=@_;
+  while(($_=shift)ne'--'){
+    if( $_ eq '-n' ) {
+      $use_pkg_name=1;
+    } else {
+      die "unexpected: ($_)";
+    }
+  };
+  return @_;
+};
+our(@pid,$pid,@args);
+sub help {
+  print grep { chomp; 1 } <DATA>;
+};
+sub start_pipeline(\@) {
+  local(*args)=$_[0];
+  push(@pid,open(STDIN,"</dev/null"));
+  if($use_pkg_name) {
+    push(@pid,open(STDIN,"-|","pkg-name", @args));
+  } else {
+    
+    push(@pid,open(STDIN,"-|","printf", '%s\n', @args));
+  }
+};
+sub wait_for_all() {
+  close(STDIN);
+  close(STDOUT);
+  while(@pid) {
+    use POSIX ":sys_wait_h";
+
+    my $kid;
+    do {
+      ddx(\@pid);
+      if(($kid = waitpid(-1, WNOHANG))<0) {
+        last;
+      };
+      warn "$kid returned $?";
+      @pid = grep { $_ - $kid } @pid;
+    } while $kid != -1;
+  };
+}
+sub main {
+  my ($pkg,$txt,@msg) = splice(@_);
+  my $ns=chr(0x1f);
+  start_pipeline(@args);
+  push(@pid,open(STDIN,"-|",qw(xargs apt-cache show)));
+  push(@pid,open(STDIN,"-|",qw{ egrep ^(Package:|Description(-en|):|) }));
+  push(@pid,open(STDOUT,"|-",'tr', $ns, ' '));
+  push(@pid,open(STDOUT,"|-",qw(column -t)));
+
+  my %cnt;
+  while(<STDIN>){
+    if(s{^Package:\s*}{}){
+      ($pkg)=split;
+      $_="$pkg";
+      while(s{-[^-]+$}{}){
+        $cnt{$_}++;
+      };
+    } else {
+      s{^Description(-en|):\s+}{};
+      s{ }{$ns}g;
+      print "$pkg: $_";
+    };
+  };
+  wait_for_all();
+  return 0;
+}
+
+sub group($@){
+  my $title=shift;
+  @_=sort { $a->[0] cmp $b->[0] } @_;
+  print join(".",@$_) for @_;
+};
+__DATA__
+usage: $0 [-n] <pkg-name>
+       <pkg-name> = the name of a package
+
+      -n: use pkg-name to expand the pkgname
+
+      use -n . to show all packages
+      };

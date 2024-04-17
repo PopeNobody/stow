@@ -61,5 +61,15 @@ use warnings;
 use Nobody::Util;
 use Env qw($HOME @PATH);
 our(@VERSION) = qw( 0 1 0 );
+$ENV{LANG}="C";
 
 
+BEGIN {
+  sub help {
+    print "usage: $0 <-m> <dir> <file...>";
+  };
+  sub version {
+    $"=".";
+    print "$0 version @VERSION";
+  };
+}
