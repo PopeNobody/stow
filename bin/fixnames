@@ -35,8 +35,7 @@ sub fix_name($)
 {
 	for(shift)
   {
-    return $_ unless s/[^.a-zA-Z0-9%:+-]/_/g;
-    use Data::Dumper;
+    return $_ unless s/[^.a-zA-Z0-9%:@+-]/_/g;
     s/__+/_/g;
     return $_;
 	};

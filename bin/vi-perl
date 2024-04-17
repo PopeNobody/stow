@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 
 use strict;
+use feature qw(say);
 use warnings;
 use autodie qw(:all);
 use autodie qw(fork);
@@ -10,9 +11,9 @@ use lib "$Bin/../lib/perl";
 use Nobody::PP;
 
 $|++;
-$\="\n";
 
 sub main();
+#print __FILE__, ":", __LINE__, ": starting\n";
 die "usage: $0 [args and script and args ...] ...\n..." unless(@ARGV);
 main();
 
@@ -61,7 +62,6 @@ sub main()
 
 };
 
-my ($out,$err);
 sub run_perl($$) {
   for(sort keys %SIG){
     $SIG{$_}='IGNORE';
@@ -76,20 +76,24 @@ sub run_perl($$) {
 };
 sub run_filt($$)
 {
-  my ($out,$err) = splice(@_);
-  open(STDIN,"</dev/null");
-  use IO::Select;
-  my $sel = new IO::Select;
   my $out_buf="";
   my $err_buf="";
-  $sel->add( [ $out->reader(), \$out_buf, 0 ] );
-  $sel->add( [ $err->reader(), \$err_buf, 1 ] );
+  my $sel;
+  {
+    my ($out,$err) = splice(@_);
+    open(STDIN,"</dev/null");
+    use IO::Select;
+    $sel = new IO::Select;
+    $sel->add( [ $out->reader(), \$out_buf, 0 ] );
+    $sel->add( [ $err->reader(), \$err_buf, 1 ] );
+  }
+  my $last=0;
   while($sel->handles){
     my @can=$sel->can_read;
     for(@can)
     {
-      my ($pipe,$ref,$stream);
-      ( $pipe, $ref, $stream ) = @$_;
+      my ($pipe,$ref,$err);
+      ( $pipe, $ref, $err ) = @$_;
       local (*_)=$ref;
       my $res=sysread($pipe,$_,1,length);
       if(!defined($res)) {
@@ -97,16 +101,22 @@ sub run_filt($$)
       } elsif ( !$res ) {
         $sel->remove($pipe);
         close($pipe) or die "close:$!";
-        $_="$_\n" if length($$ref);
+        $last=1 if length($$ref);
       };
-      next unless chomp;
-      if($stream && s{ at (\S+) line (\d+)\.*}{})
-      {
+      my $nl=chomp($_)?"\n":"";
+      next unless ($last || length($nl));
+      if(!$err) {
+        print STDOUT "$_$nl";
+      } elsif(s{ at (\S+) line (\d+)\.}{}) {
         my ($file,$line) = ($1,$2);
         s{^\t(.*)called\s*$}{called from $1};
-        print STDERR "$file:$line: msg $_";
+        print STDERR "$file:$line: $_$nl";
+      } elsif(s{ at (\S+) line (\d+)\.*}{}) {
+        my ($file,$line) = ($1,$2);
+        s{^\t(.*)called\s*$}{called from $1};
+        print STDERR "$file:$line: $_$nl";
       } else {
-        print STDOUT "$_";
+        print STDERR "$_$nl";
       };
       $_="";
     };

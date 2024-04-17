@@ -22,18 +22,23 @@ sub md5file($){
 }
 sub dents($) {
 	my $dir=shift;
-	opendir(my $dh, $dir) or die "opendir:$dir:$!";
+	opendir(my $dh, $dir||".") or die "opendir:$dir:$!";
 	grep { !$skip{$_} } readdir($dh);
 }
 sub fixdir($) {
-	local $_="$_[0]/";
-	s{//+}{/};
-	return $_;
+  for($_[0]) {
+    if(length) {
+      local $_="$_/";
+      s{//+}{/};
+      return $_;
+    } else {
+      return $_;
+    }
+  };
 }
 sub md5dir($) {
 	my $dir = fixdir(shift);
 	my @dents = dents($dir);
-	die "need non-zero length dir!" unless length($dir);
 	my %res;
 	local $_;
 	for(@dents) {
@@ -78,4 +83,4 @@ if(@ARGV == 1 && grep { $_ eq "-c" } @ARGV ) {
 } elsif (@ARGV) {
 	die "usage: $0 [-c]";
 };
-md5dir(".");
+print md5dir("");

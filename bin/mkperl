@@ -8,7 +8,7 @@ BEGIN {
 }
 use strict;
 use warnings;
-use Util qw( $Bin $Script );
+use Nobody::Util qw( $Bin $Script );
 use Env qw($HOME @PATH);
 $ENV{LANG}="C";
 
@@ -58,6 +58,8 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 
 use strict;
 use warnings;
-use Util;
+use Nobody::Util;
 use Env qw($HOME @PATH);
-$ENV{LANG}="C";
+our(@VERSION) = qw( 0 1 0 );
+
+

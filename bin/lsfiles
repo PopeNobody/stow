@@ -28,7 +28,7 @@ my $words=1;
 
 debug("script: $Script\n");
 sub is_mount() {
-  system("mountpoint $_ >/dev/null 2>&1");
+  system("mountpoint -q $_ >/dev/null 2>&1");
   if($?) {
     return 0;
   } else {

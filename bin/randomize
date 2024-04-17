@@ -14,6 +14,7 @@ BEGIN {
 };
 use Nobody::PP;
 use Getopt::WonderBra;
+use List::Util;
 @ARGV=getopt("n:",@ARGV);
 my $lines=-1;
 while(($_=shift)ne'--'){
@@ -23,14 +24,16 @@ while(($_=shift)ne'--'){
     die "wtf?";
   };
 };
-my @text;
-chomp(@text=<>);
-$lines=@text if $lines<0;
-while(@text){
-  my ($idx)=int(rand(@text));
-  my ($txt)=splice(@text,$idx,1);
-  print "$txt";
-};
+chomp(my @text=<>);
+@text=List::Util::shuffle(@text);
+@text=splice(@text,0,$lines) if $lines;
+print for @text;
+exit(0);
+#    while(@text){
+#      my ($idx)=int(rand(@text));
+#      my ($txt)=splice(@text,$idx,1);
+#      print "$txt";
+#    };
 sub help {
   print "randomize [-n #]";
   print "  print a random line from a file";
