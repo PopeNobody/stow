@@ -1,4 +1,0 @@
-#!/bin/bash
-
-test -z "$LESS" && export LESS="SR"
-exec /usr/bin/less "$@";
