@@ -21,53 +21,50 @@ if($opt{verbose}){
   *verbose=($opt{verbose}>1 ? \&verbose_1 : \&verbose_n );
 };
 die "$@" if "$@";
-if(@ARGV>1) {
-  while(@ARGV) {
-    if(my $pid=fork) {
-      waitpid($pid,0);
-      die "failed" if $?;
-    } else {
-      resolve(shift);
-    };
-  };
-} else {
-  resolve(shift);
-};
+resolve($_) for @ARGV;
 sub dir($) {
-  for(map { "$_" } shift) {
-    s{/+[^/]+/*$}{};
-    return $_;
-  };
+  local ($_)="$_";
+  s{/+[^/]+/*$}{};
+  return $_;
 }
 our($t, $d);
 sub resolve($) {
-  local $_ = $_[0];
-  #  if($opt{cmd}) {
-  #    if( !m{^[./]} ) {
-  #      verbose("searching path for: $_");
-  #      ($_,@_) = map { split } qx(which $_);
-  #      verbose("found $_");
-  #    };
-  #  }
+  local ( $t, $d ) = ( shift, $PWD );
+  s{//+}{/}g for ($t,$d);
+  {
+    local $_="$t";
+    say STDERR "R: $_";
+    if($opt{cmd}) {
+      ($_,@_) = map { split } qx(which $_);
+      if($t ne $_) {
+        say STDERR "C: $_";
+        $t=$_;
+      };
+    }
+    unless(-l || -e) {
+      stat;
+      die "$!";
+    }
+  }
   while(1) {
-    warn "$_ is not a link or existing object" unless -l || -e;
-    verbose("resolving", $_);
-    unless(m{^/}){
-      verbose("  relative to",$PWD);
+    if($t !~ m{^/}){
+      $_=join('/',$d,$t);
+      say STDERR "D: $d $t => $_";
+      $t=$_;
     };
-    if( ($d,$t)=m{(.*)/(.*)} ) {
-      verbose("  split: $d, $t");
-      $_=$t;
-      verbose("  change to $d");
-      chdir($d);
-      print $ENV{PWD};
-      verbose("  now in $PWD");
-    };
-    last unless -l $_;
-    $d=dir($_);
-    $_=readlink($_);
+    undef($d);
+    last unless -l $t;
+    $d=dir($t);
+    $_=readlink($t);
+    say STDERR "L: $t => $_";
+    $t=$_;
   };
-  print $_;
+  if(m{/}){
+    ($d,$t) = m{(.*)/(.*)};
+    ($_) = map { split } qx( cd $d && pwd );
+    $_="$d/$t";
+  };
+  say STDOUT "$_";
 }
 BEGIN {
   %opt = (
