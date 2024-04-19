@@ -18,7 +18,7 @@ BEGIN {
     qw( sum avg max min mkdir_p basename suckdir suck spit maybeRef )
   );
   push(@EXPORT_OK,
-    qw( pasteLines serdate )
+    qw( pasteLines serdate class mkref show_fds )
   );
 }
 use strict;
@@ -37,6 +37,17 @@ BEGIN {
     goto &Exporter::import;
   };
 }
+sub show_fds() {
+  my %links=map { $_, undef } glob("/proc/self/fd/*");
+  for(keys %links) {
+    if(-l) {
+      $links{$_}=eval { readlink("$_") };
+    } else {
+      delete $links{$_}
+    };
+  };
+  ddx(\%links);
+};
 sub mkdir_p($;$);
 sub mkdir_p($;$) {
   no autodie qw(mkdir);
@@ -97,10 +108,19 @@ sub suckdir(@){
 sub suck(@){
   die("useless use of suck in void context") unless defined wantarray;
   local(@ARGV)=@_;
-  local(@_);
-  chomp(@_=<ARGV>);
-  return join("\n",@_,"") unless wantarray;
-  return @_;
+  local($/,$_,@_);
+  $_=<ARGV>;
+  if(wantarray) {
+    return split(/\n/);
+  } else {
+    return $_;
+  };
+};
+{
+  package Null;
+};
+sub class($){
+  return ref||$_||'Null' for @_;
 };
 sub pasteLines(@) {
   for(join("",@_)){
