@@ -3,22 +3,24 @@
 #
 package Nobody::Util;
 our ( @EXPORT, @EXPORT_OK, @ISA );
-use vars qw(@dd);
+use vars qw(@carp @pp);
 BEGIN {
   @pp=qw( pp dd ppx ddx quote qquote );
+  @carp=qw( croak confess carp cluck longmess shortmess );
 };
+use Carp @carp;
 use Nobody::PP @pp;
 use FindBin;
 use FindBin @FindBin::EXPORT_OK;
-$\="\n";
 BEGIN {
   push(@EXPORT_OK,@FindBin::EXPORT_OK);
   push(@EXPORT_OK,@Nobody::PP::EXPORT_OK);
   push(@EXPORT_OK,
-    qw( sum avg max min mkdir_p basename suckdir suck spit maybeRef )
+    qw( sum avg max min mkdir_p basename suckdir suck spit )
   );
   push(@EXPORT_OK,
-    qw( pasteLines serdate class mkref show_fds )
+    qw( pasteLines serdate class mkref show_fds deparse maybeRef ),
+    qw( file_id WNOHANG )
   );
 }
 use strict;
@@ -29,6 +31,7 @@ use POSIX qw(strftime mktime );
 use Env qw( $HOME $PWD @PATH );
 use lib "/opt/lib/perl";
 use lib "$HOME/lib/perl";
+use POSIX ":sys_wait_h";
 BEGIN {
   @EXPORT=@EXPORT_OK;
   @ISA=qw(Exporter);
@@ -37,6 +40,7 @@ BEGIN {
     goto &Exporter::import;
   };
 }
+
 sub show_fds() {
   my %links=map { $_, undef } glob("/proc/self/fd/*");
   for(keys %links) {
@@ -95,16 +99,29 @@ sub basename {
 }
 sub suckdir(@);
 sub suckdir(@){
-  return map { suckdir($_) } @_ unless @_ == 1;
-  for(shift) {
-    die "undefined dirname" unless defined;
-    if(length) {
-      return grep { !m{/[.][.]?$} } glob("$_/* $_/.*");
-    } else {
-      return grep { s{^\./}{} } suckdir(".");
-    };
-  }
+  return map { scalar(suckdir($_)) } @_ unless @_ == 1;
+  local($_)=shift;
+  die "undefined dirname" unless defined;
+  for($_) {
+    s{/+}{/}g;
+    s{/+$}{};
+  };
+  if(length) {
+    return grep { !m{/[.][.]?$} } glob("$_/* $_/.*");
+  } else {
+    return grep { s{^\./}{} } suckdir(".");
+  };
 }
+use File::stat qw(:FIELDS);
+
+sub file_id {
+  local ($_)=shift;
+  die "!defined" unless defined;
+  stat($_);
+  my $file_id=sprintf("%016x:%016x",$st_dev,$st_ino);
+  say( "$_ => $file_id" );
+  return $file_id;
+};
 sub suck(@){
   die("useless use of suck in void context") unless defined wantarray;
   local(@ARGV)=@_;
@@ -139,7 +156,8 @@ sub spit($@){
   close($fh);
 };
 sub maybeRef($) {
-  return ref || $_ for shift;
+  carp "use class, not maybeRef";
+  goto \&class;
 };
 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
