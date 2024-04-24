@@ -1,1 +1,46 @@
-cols.zzz
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+use strict;
+use warnings;
+use FindBin qw($Bin);
+use lib "$Bin/../lib/perl";
+use Carp;
+use Nobody::Util;
+use autodie qw(:all);
+sub main(@);
+use Time::HiRes( qw( time sleep ) );
+#$Carp::verbose++ unless $Carp::verbose;
+if(0) {
+  @ARGV=qw( 1 1 1 1 );
+  open(STDIN,"bash -c '
+    echo a b c d; 
+    echo a
+    echo
+    echo aaaaaaaaaa bbbbbbbbbbb cccccccccc ddddd
+  '|");
+};
+exit(main(@ARGV));
+die "NONE SHALL PASS!";
+sub col_widths(@) {
+  my ($mc,@l) = max(0,map { -1+@$_ } @_);
+  for my $c(0 .. $mc) {
+    my @c = map { ($_->[$c]//="") } @_;
+    push(@l,max(0,map{length}@c));
+  };
+  return @l;
+};
+sub main(@) {
+  my @r = map { [ split ] } <STDIN>;
+  close(STDIN);
+  if(my @s = grep { /^\d+$/ } @_){
+    for my $r(@r) {
+      @{$r} = map { $r->[$_] } @s;
+    };
+  };
+  my @l = col_widths(@r);
+  my $fmt = join(' ', map { "%-${_}s" } @l)."\n";
+  printf $fmt, @$_ for @r;
+  exit(0);
+};

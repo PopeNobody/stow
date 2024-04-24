@@ -5,22 +5,28 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 BEGIN { package DB; $CreateTTY=4; };
 use strict;
 use warnings;
+use autodie;
 use Time::HiRes qw(time);
 use Nobody::Util;
 use Fcntl;
 use Fcntl qw(O_NONBLOCK);
 use Env qw($HOME @PATH);
-use Getopt::WonderBra;
+BEGIN {
+  sub help {
+    print grep { chomp; 1 } <DATA>;
+  };
+  use Getopt::WonderBra;
+}
 our(@VERSION) = qw( 0 1 0 );
 sub pkg_name(@);
 sub opts(@);
 use feature qw(say);
-sub version {
-  print "$0: @VERSION\n";
-};
+sub main(@);
 
-@ARGV = qw(-n) unless @ARGV;
+#@ARGV = qw(-n) unless @ARGV;
 exit(main(opts(getopt("n",@ARGV))));
+die "NONE SHALL PASS";
+
 sub group($@);
 my $use_pkg_name=0;
 our(%opts);
@@ -35,61 +41,66 @@ sub opts(@){
   };
   return @_;
 };
-our(@pid,$pid,@args);
-sub help {
-  print grep { chomp; 1 } <DATA>;
+my $ns;
+BEGIN {
+  $ns=chr(0x1f);
 };
-sub start_pipeline(\@) {
-  local(*args)=$_[0];
-  push(@pid,open(STDIN,"</dev/null"));
+sub catch_child(\%) {
+  our(%cmd);
+  local(*cmd)=shift;
+  $SIG{CHLD}=sub {
+    my $pid=waitpid(-1,0);
+  };  
+};
+sub main(@){
+  our(@cmd);
+  open(STDIN,"<","/dev/null");
   if($use_pkg_name) {
-    push(@pid,open(STDIN,"-|","pkg-name", @args));
-  } else {
-    
-    push(@pid,open(STDIN,"-|","printf", '%s\n', @args));
-  }
-};
-sub wait_for_all() {
-  close(STDIN);
-  close(STDOUT);
-  while(@pid) {
-    use POSIX ":sys_wait_h";
-
-    my $kid;
-    do {
-      ddx(\@pid);
-      if(($kid = waitpid(-1, WNOHANG))<0) {
-        last;
-      };
-      warn "$kid returned $?";
-      @pid = grep { $_ - $kid } @pid;
-    } while $kid != -1;
+    open(STDIN,"-|", "time", "pkg-name", splice(@_));
+    push(@_, map { split } <STDIN>);
+    ddx("items: ", scalar(@_));
+    close(STDIN);
+  } 
+  ddx(@_);
+  for(my $i=0; $i<@_; $i++) {
+    warn "i=$i\n";
+    unshift(@_,[splice @_, $i, 100]);
   };
-}
-sub main {
-  my ($pkg,$txt,@msg) = splice(@_);
-  my $ns=chr(0x1f);
-  start_pipeline(@args);
-  push(@pid,open(STDIN,"-|",qw(xargs apt-cache show)));
-  push(@pid,open(STDIN,"-|",qw{ egrep ^(Package:|Description(-en|):|) }));
-  push(@pid,open(STDOUT,"|-",'tr', $ns, ' '));
-  push(@pid,open(STDOUT,"|-",qw(column -t)));
+  ddx(@_);
+  exit(0);
 
-  my %cnt;
-  while(<STDIN>){
-    if(s{^Package:\s*}{}){
-      ($pkg)=split;
-      $_="$pkg";
-      while(s{-[^-]+$}{}){
-        $cnt{$_}++;
-      };
-    } else {
-      s{^Description(-en|):\s+}{};
-      s{ }{$ns}g;
-      print "$pkg: $_";
+  push(@cmd,[qw(xargs apt-cache show)]);
+  my %cmd;
+  catch_child(%cmd);
+  {
+    my $pid;
+    for my $cmd(@cmd) {
+      $pid=open(STDIN,'-|',@$cmd);
+      $cmd{$pid}=$cmd;
     };
   };
-  wait_for_all();
+  our (%pkgs);
+  my $max=0;
+  $_=<STDIN>;
+  while(defined($_)){
+    if(m{^Package: (.*\S)}){
+      my %pkg = ( Package=> $1 );
+      $pkgs{$1}=\%pkg;
+      my $len=length($1);
+      $max=$len if $max<$len;
+      while(<STDIN>){
+        last if m{^Package:};
+        if (m{^Description-?e?n?: (.*)}) {
+          $pkg{Description}=$1;
+        };
+      };
+    }
+  };
+  my $fmt=join("",'%-',$max,'s %s',"\n");
+  for(sort keys %pkgs) {
+    my %pkg = %{$pkgs{$_}};
+    printf($fmt,$pkg{Package}, $pkg{Description});
+  };
   return 0;
 }
 

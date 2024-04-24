@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-use strict;
+use common::sense;
 use warnings;
 $|++;
 use FindBin qw($Bin);
@@ -8,7 +8,6 @@ use lib "$Bin/../lib/perl";
 use autodie qw(:all);
 use Nobody::Util;
 sub main(@);
-use Getopt::WonderBra;
 our($type,$re,$pre_re);
 main(@ARGV);
 exit(0);
@@ -40,12 +39,12 @@ sub fork_split($) {
     while(<STDIN>){
       s{^\s*\S+\s+}{};
       next unless @_=m{(\S*)(-(alpha|)[Bv0-9]\S+)};
-      print shift;
+      say shift;
     }
   } else {
     while(<STDIN>){
       chomp;
-      print for split;
+      say for split;
     }
   }
   close(STDIN);
@@ -60,22 +59,12 @@ sub fork_filter() {
     if(defined($pre_re)) {
       next unless m{$pre_re};
     };
-    print if !defined($re) or m{$re};
+    say if !defined($re) or m{$re};
   };
   exit(0);
 };
 our(@VERSION) = qw( 0 5 0 );
-sub version {
-  local($,)=".";
-  print "pkg_name(@VERSION)";
-}
-sub help {
-  $\=undef;
-  print for <DATA>;
-}
 sub main(@) {
-  @_=getopt("wr:d",@_);
-  @_=do_opts(@_);
 #      ddx( { re=>$re, re=>$type, pre_re=>$pre_re, _=>\@_ } );
   unless(defined $type) {
     $type = @_>1 ? "words" : "regex";
@@ -96,7 +85,7 @@ sub main(@) {
     chomp;
     $seen{$_}++ for split;
   }
-  print for sort keys %seen;
+  say for sort keys %seen;
   exit(0);
 };
 sub do_opts(@) {
@@ -119,6 +108,19 @@ sub do_opts(@) {
   }
   return @_;
 }
+BEGIN {
+sub version {
+  local($,)=".";
+  say "pkg_name(@VERSION)";
+}
+sub help {
+  $\=undef;
+  say for <DATA>;
+}
+use Getopt::WonderBra;
+@ARGV=getopt("wr:d",@ARGV);
+@ARGV=do_opts(@ARGV);
+};
 __DATA__
 pkg-name:  [-d] { [ -w word ... ] | [ -r regex ] }
 
