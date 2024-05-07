@@ -4,13 +4,9 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 use strict;
 use warnings;
-use FindBin qw($Bin);
-use lib "$Bin/../lib/perl";
-use Carp;
 use Nobody::Util;
-use autodie qw(:all);
+use autodie;
 sub main(@);
-use Time::HiRes( qw( time sleep ) );
 #$Carp::verbose++ unless $Carp::verbose;
 if(0) {
   @ARGV=qw( 1 1 1 1 );
@@ -31,16 +27,30 @@ sub col_widths(@) {
   };
   return @l;
 };
+
+
 sub main(@) {
-  my @r = map { [ split ] } <STDIN>;
-  close(STDIN);
-  if(my @s = grep { /^\d+$/ } @_){
-    for my $r(@r) {
-      @{$r} = map { $r->[$_] } @s;
-    };
-  };
-  my @l = col_widths(@r);
-  my $fmt = join(' ', map { "%-${_}s" } @l)."\n";
-  printf $fmt, @$_ for @r;
-  exit(0);
+  my (@l,@c);
+  local($_);
+  my @sel=grep { m{^-?(\d+)$} } @ARGV;
+  my ($last, $want)=0;
+  my ($r,$c);
+  for($r=0;1;$r++) {
+    $_=<STDIN>;
+    last unless defined;
+    my @r=split;
+    for($c=0;$c<@r;$c++) {
+      $c[$c][$r]=$r[$c];
+    }
+    ddx(
+      { 
+        '@c'=>scalar(@c), 
+        '$c'=>$c,
+        '@r'=>[ 
+          map { scalar(@$_) }  @c 
+        ],
+        '$r'=>$r,
+      }
+    );
+  }
 };
