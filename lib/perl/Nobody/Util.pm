@@ -12,6 +12,8 @@ use Carp @carp;
 use Nobody::PP @pp;
 use FindBin;
 use FindBin @FindBin::EXPORT_OK;
+use Scalar::Util;
+
 BEGIN {
   push(@EXPORT_OK,@FindBin::EXPORT_OK);
   push(@EXPORT_OK,@Nobody::PP::EXPORT_OK);
@@ -56,14 +58,28 @@ sub mkdir_p($;$);
 sub mkdir_p($;$) {
   no autodie qw(mkdir);
   my ($dir,$mode)=@_;
-  $mode=0755 unless defined($mode);
   return 1 if -d $dir;
+  $mode=0755 unless defined($mode);
   return 1 if mkdir($dir,$mode);
   die "mkdir:$dir:$!" unless $!{ENOENT};
   my (@dir) = split(m{/+},$dir);
   pop(@dir);
   mkdir_p(join("/",@dir),$mode);
   mkdir($dir,$mode); 
+};
+sub getfds();
+BEGIN {
+  sub getfds() {
+    opendir(my $dir,"/proc/self/fd");
+    my $no = fileno($dir);
+    while(readdir($dir)){
+      print;
+    };
+    closedir($dir);
+  };
+  sub getcwd() {
+    return readlink("/proc/self/cwd");
+  };
 };
 sub sum(@){
   my $sum=0;     
