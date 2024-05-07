@@ -21,6 +21,13 @@ use IO::Pipe;
 sub run_perl($$);
 sub run_filt($$);
 
+for(@ARGV){
+  last if m{^-e};
+  next if m{^-};
+  if(s{^sudo:}{}){
+    last;
+  };
+}
 sub main()
 {
 
@@ -63,7 +70,7 @@ sub main()
 };
 
 sub run_perl($$) {
-  for(sort keys %SIG){
+  for(keys %SIG){
     $SIG{$_}='IGNORE';
   };
   my ($out,$err) = splice(@_);

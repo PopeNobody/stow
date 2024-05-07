@@ -6,8 +6,7 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 BEGIN {
   $DB::single=1;
 }
-use strict;
-use warnings;
+use common::sense;
 use Nobody::Util qw( $Bin $Script );
 use Env qw($HOME @PATH);
 $ENV{LANG}="C";
@@ -55,10 +54,9 @@ __DATA__
 # vim: ts=2 sw=2 ft=perl
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
-
+$|++;
 use common::sense;
 use Nobody::Util;
 our(@VERSION) = qw( 0 1 0 );
-$ENV{LANG}="C";
 
 

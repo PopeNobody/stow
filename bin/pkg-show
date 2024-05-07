@@ -12,12 +12,16 @@ use Fcntl;
 use Fcntl qw(O_NONBLOCK);
 use Env qw($HOME @PATH);
 BEGIN {
+  our(@VERSION) = qw( 0 1 0 );
+  sub version {
+    print join(".",@VERSION);
+  }
   sub help {
     print grep { chomp; 1 } <DATA>;
   };
   use Getopt::WonderBra;
 }
-our(@VERSION) = qw( 0 1 0 );
+  our(%cmd,@cmd);
 sub pkg_name(@);
 sub opts(@);
 use feature qw(say);
@@ -41,69 +45,61 @@ sub opts(@){
   };
   return @_;
 };
-my $ns;
-BEGIN {
-  $ns=chr(0x1f);
-};
-sub catch_child(\%) {
-  our(%cmd);
-  local(*cmd)=shift;
-  $SIG{CHLD}=sub {
-    my $pid=waitpid(-1,0);
-  };  
-};
-sub main(@){
-  our(@cmd);
-  open(STDIN,"<","/dev/null");
-  if($use_pkg_name) {
-    open(STDIN,"-|", "time", "pkg-name", splice(@_));
-    push(@_, map { split } <STDIN>);
-    ddx("items: ", scalar(@_));
-    close(STDIN);
-  } 
-  ddx(@_);
-  for(my $i=0; $i<@_; $i++) {
-    warn "i=$i\n";
-    unshift(@_,[splice @_, $i, 100]);
+my %pid;
+sub reap {
+  my $pid=waitpid(-1,0);
+  print "freaped $$\n";
+  my $res=$?;
+  $cmd{$pid}{res}=$res;
+  delete $pid{$pid};
+};  
+sub show_proc($) {
+  my $pid=shift;
+  warn("$$:$pid\n");
+  for(0 .. 2) {
+    my $name="/proc/$pid/fd/$_";
+    warn("$name => ", readlink($name),"\n");
   };
-  ddx(@_);
-  exit(0);
-
-  push(@cmd,[qw(xargs apt-cache show)]);
-  my %cmd;
-  catch_child(%cmd);
+};
+sub run_pipe(@){
+  open(STDIN,"</dev/null");
+  our (@cmd)= @_;
+  my $pid=0;
+  show_proc($$);
+  for my $cmd(@cmd) {
+    $pid=open(STDIN,'-|');
+    if(!$pid) {
+      warn("$$ $pid: @$cmd\n");
+      exec(@$cmd);
+      die "exec @cmd";
+    };
+    show_proc($pid);
+    $cmd{$pid}{pid}=$pid;
+    $cmd{$pid}{cmd}="@$cmd";
+    $pid{$pid}=$pid;
+  };
+  my $pkg;
+  while(<STDIN>)
   {
-    my $pid;
-    for my $cmd(@cmd) {
-      $pid=open(STDIN,'-|',@$cmd);
-      $cmd{$pid}=$cmd;
+    if(s{^Package: *}{}) {
+      $pkg="$_";
+    } else {
+      s[^[^:]+:][   ];
+      print "$pkg:$_\n";
     };
   };
-  our (%pkgs);
-  my $max=0;
-  $_=<STDIN>;
-  while(defined($_)){
-    if(m{^Package: (.*\S)}){
-      my %pkg = ( Package=> $1 );
-      $pkgs{$1}=\%pkg;
-      my $len=length($1);
-      $max=$len if $max<$len;
-      while(<STDIN>){
-        last if m{^Package:};
-        if (m{^Description-?e?n?: (.*)}) {
-          $pkg{Description}=$1;
-        };
-      };
-    }
-  };
-  my $fmt=join("",'%-',$max,'s %s',"\n");
-  for(sort keys %pkgs) {
-    my %pkg = %{$pkgs{$_}};
-    printf($fmt,$pkg{Package}, $pkg{Description});
-  };
-  return 0;
+  close(STDIN);
 }
-
+sub main(@){
+  my (@args) = splice(@_);
+  @args=qw( . ) unless @args;
+  push(@cmd,["pkg-name", @args]);
+  push(@cmd,[ qw( xargs apt-cache show ) ]);
+  push(@cmd,[ qw( egrep ^(Package:|Desc) ) ] );
+  push(@cmd,[ qw( egrep -v md5: ) ] );
+  run_pipe(@cmd);
+  return 0;
+};
 sub group($@){
   my $title=shift;
   @_=sort { $a->[0] cmp $b->[0] } @_;

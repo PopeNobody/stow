@@ -1,29 +1,14 @@
 #!/usr/bin/perl
 # vim: sw=2 ts=2
 
-use warnings;
-use strict;
+use common::sense;
 use Nobody::PP;
-use autodie qw(:all);
+use autodie;
 
+our(%opts);
+$opts{dryrun}={ flag=>'n', count=>0, };
+$opts{debug}={ flag=>'d', count=>0, };
 our(@filter);
-sub help()
-{
-  print "
-usage:  except [-d] \
-	[ args to exclude ] \
-  [ -- command and mandatory args ]
-	[ -- filtered args ] \
-	[ -- unfiltered args ] \
-	[ -- filtered args ]
-
-execute command, filtering args.
-";
-};
-sub version()
-{
-  print "$0 version 0.1.0";
-};
 our(%exc,@grp,@cmd,$data);
 
 $data={
@@ -44,3 +29,45 @@ while(@ARGV) {
 };
 @cmd = map { @$_ } @cmd;
 system(@cmd);
+# Handle Args.
+BEGIN {
+  our(@VERSION) = qw(0 1 0);
+  sub help {
+    print for <DATA>;
+  };
+  sub version {
+  }
+  use Getopt::WonderBra;
+  our(%opt);
+  my (@flag,@name);
+  for my ($k,$v) (each %opts) {
+    ddx({ k=>$k, v=>$v });
+  };
+  for(keys %opts){
+    local(*opt)=$opts{$_};
+    my ($name,$flag);
+    $name=$opt{name};
+    $flag=$opt{flag};
+    if(defined $name) {
+      $opts{$name}||=\%opt;
+    };
+    if(defined $flag) {
+      push(@flag,$flag);
+      $opts{$flag}||=\%opt;
+    };
+  };
+  my $optstr=join("",@flag);
+  @ARGV=getopt($optstr,@ARGV);
+  while(($_=shift)ne'--'){
+  };
+    
+};
+__DATA__
+usage:  except [-d] \
+[ args to exclude ] \
+[ -- command and mandatory args ]
+[ -- filtered args ] \
+[ -- unfiltered args ] \
+[ -- filtered args ]
+
+execute command, filtering args.

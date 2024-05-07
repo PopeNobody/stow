@@ -6,11 +6,10 @@ use FindBin qw($Bin);
 use lib "$Bin/../lib/perl";
 use autodie qw(:all);
 use Nobody::Util;
-
 open(STDIN,"</dev/null");
 package Pkg::debian;
 sub debian_source() {
-    open(STDIN,"apt-cache pkgnames|");
+  open(STDIN,"-|", qw(apt-cache pkgnames));
 };
 sub alpine_source() {
   chomp;
@@ -51,7 +50,8 @@ sub main()
     next unless match($_);
     $seen{line($_)}++;
   };
-  say "$_" for sort keys %seen;
+  close(STDIN);
+  print join("\n",sort keys %seen);
 };
 @ARGV=handle_args(@ARGV);
 main();
