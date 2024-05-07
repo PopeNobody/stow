@@ -36,7 +36,6 @@ sub version {
 my (%pid,$pid,@pid);
 sub tarup($) {
   my ($dir,$tgz) = map { s{/+$}{}; ( $_, "$_.tgz" ) } $_;
-  ddx([ dir=>$dir, tgz=>$tgz ]);
   local $_=$dir;
   unless($dir =~ m{[^.]}){
     warn "nothing but dots!";
@@ -69,7 +68,6 @@ sub main() {
     '-c' => sub { $opt{crypt}=1; return @_; },
     '-C' => sub { $opt{crypt}=0; return @_; },
   );
-  ddx(\@_);
   while(($_=shift(@_))ne '--')
   {
     die "in progress";
@@ -77,7 +75,6 @@ sub main() {
     die "unknown option: ($_)" unless defined $hand;
     @_ = $hand->(@_);    
   };
-  ddx(\@_);
   use vars qw($obj %pid $pid $res);
   help unless(@_);
   die "help failed to exit" unless @_;

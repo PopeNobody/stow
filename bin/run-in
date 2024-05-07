@@ -1,0 +1,16 @@
+#!/bin/bash
+
+die() { echo >&2 "$*" ; exit 1; }
+
+if test ! -d "$1" ; then
+  die "Usage:  ${BASH_SOURCE}" "<cmd>"
+fi 
+set -ex
+dir="$1"; shift
+exe="$1"; shift
+set -x
+if [[ $exe == */* ]] && [[ $exe != /* ]]; then
+  exe="$PWD/$exe"
+fi
+cd "$dir"
+"$exe" "$@"

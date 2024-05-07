@@ -1,0 +1,120 @@
+#!/usr/bin/perl
+
+use strict;
+use feature qw(say);
+use warnings;
+use autodie qw(:all);
+use autodie qw(fork);
+use File::stat;
+use FindBin qw($Bin $Script); 
+use lib "$Bin/../lib/perl";
+use Nobody::PP;
+
+$|++;
+
+sub main();
+#print __FILE__, ":", __LINE__, ": starting\n";
+die "usage: $0 [args and script and args ...] ...\n..." unless(@ARGV);
+main();
+
+use IO::Pipe;
+sub run_child($$);
+sub run_filt($$);
+
+sub main()
+{
+
+  my ($pipe1,$pipe2);
+  $pipe1=new IO::Pipe;
+  $pipe2=new IO::Pipe;
+  my ($child_pid, $filt_pid);
+  my ($child_res, $filt_res);
+  my ($child_sig, $filt_sig);
+  if(($child_pid=fork)==0) {
+    exit(run_child($pipe1,$pipe2));
+  } elsif(($filt_pid=fork)==0) {
+    exit(run_filt($pipe1,$pipe2));
+  } else {
+    my $pid;
+    close($pipe1->writer);
+    close($pipe2->writer);
+    while(($pid=wait)!=-1)
+    {
+      if( $pid == $child_pid ) {
+        $child_res=$?/256;
+        $child_sig=$?%256;
+        warn "child done, res=$child_res, sig=$child_sig\n" if ($child_res||$child_sig);
+      } elsif( $pid == $filt_pid ) {
+        $filt_res=$?/256;
+        $filt_sig=$?%256;
+        warn "filter done, res=$filt_res, sig=$filt_sig\n" if ($filt_res||$filt_sig);
+      } else {
+        die "unknown pid: $pid (\$?=$?)\n";
+      };
+    };
+    if($child_sig||$filt_sig){
+      exit(255);
+    } else {
+      exit($child_res|$filt_res);
+    };
+  };
+  die "wtf?";
+
+};
+
+sub run_child($$) {
+  for(sort keys %SIG){
+    $SIG{$_}='IGNORE';
+  };
+  my ($out,$err) = splice(@_);
+  open(STDOUT,">&".fileno($out->writer)) or die;
+  close($out);
+  open(STDERR,">&".fileno($err->writer)) or die;
+  close($err);
+  exec "bash", @ARGV;
+  die "failed!";
+};
+sub run_filt($$)
+{
+  my $out_buf="";
+  my $err_buf="";
+  my $sel;
+  {
+    my ($out,$err) = splice(@_);
+    open(STDIN,"</dev/null");
+    use IO::Select;
+    $sel = new IO::Select;
+    $sel->add( [ $out->reader(), \$out_buf, 0 ] );
+    $sel->add( [ $err->reader(), \$err_buf, 1 ] );
+  }
+  my $last=0;
+  while($sel->handles){
+    my @can=$sel->can_read;
+    for(@can)
+    {
+      my ($pipe,$ref,$err);
+      ( $pipe, $ref, $err ) = @$_;
+      local (*_)=$ref;
+      my $res=sysread($pipe,$_,1,length);
+      if(!defined($res)) {
+        die "sysread:$!";
+      } elsif ( !$res ) {
+        $sel->remove($pipe);
+        close($pipe) or die "close:$!";
+        $last=1 if length($$ref);
+      };
+      my $nl=chomp($_)?"\n":"";
+      next unless ($last || length($nl));
+      if(!$err) {
+        print STDOUT "O:$_$nl";
+        $_="";
+        next;
+      } else {
+        print STDERR "E:$_$nl";
+        $_="";
+        next;
+      };
+    };
+  };
+  exit(0);
+};

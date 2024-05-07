@@ -1,7 +1,0 @@
-#!/bin/bash
-
-outfile="$1.out"
-
-exec > >( tee "$outfile" ) 2>&1
-
-exec "$@"

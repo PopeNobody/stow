@@ -167,11 +167,7 @@ sub serdate(;$)
   my $time=@_ ? $_[0] : time;
   ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = gmtime($time);
   @_=($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst);
-  #  for(0 .. @_) {
-  #  say $_, $_[$_], $x[$_];
-  #};
-  ddx(\@_);
-  return strftime("%Y%m%d-%H%M%S-gmt", @_);
+  return strftime("%Y%m%d-%H%M%S", @_);
 }
 our(%caller);
 sub deparse {
