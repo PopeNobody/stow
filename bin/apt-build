@@ -67,7 +67,10 @@ my $cmd = shift or help(); # if no command specified, help is called and we exit
 $cmd =~ s/-/_/g;           # replace all "-" in command name with "_"
 @_ = @ARGV;                # For the "&$cmd" call, few lines below
 
--d $conf->build_dir or die "--build-dir must be a valid directory!\n";
+if(!  -d $conf->build_dir ) {
+  mkdir( $conf->build_dir, 0750 )
+    or die "--build-dir must be a valid directory!\n";
+};
 chdir $conf->build_dir;    # use Fatal qw/chdir/ above takes care for this
 
 # Initialize libapt now after basic checks were okay
@@ -345,7 +348,10 @@ sub build_repository
 {
   print STDERR "-----> Building repository <-----";
 
-  chdir $conf->repository_dir;
+  for($conf->repository_dir) {
+    mkdir($_,0750) unless -d;
+    chdir($_);
+  };
   my $arch = $_config->get("APT::Architecture");
 
   system "mkdir dists" unless -e "dists";
