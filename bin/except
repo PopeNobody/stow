@@ -2,33 +2,51 @@
 # vim: sw=2 ts=2
 
 use common::sense;
-use Nobody::PP;
+use Nobody::Util;
 use autodie;
 
 our(%opts);
-$opts{dryrun}={ flag=>'n', count=>0, };
-$opts{debug}={ flag=>'d', count=>0, };
+BEGIN {
+  $opts{dryrun}={ flag=>'n', count=>0, };
+  $opts{debug}={ flag=>'d', count=>0, };
+}
 our(@filter);
 our(%exc,@grp,@cmd,$data);
-
 $data={
       exc=>\%exc,
       cmd=>\@cmd,
       argv=>\@ARGV,
     };
 ## first we grab the exclude args.
-while(@ARGV && ($_=shift)ne'--') {
+while(@ARGV) {
+  $_=shift(@ARGV);
+  last if $_ eq '--';
+  warn "adding ",pp($_)," to excludes" if $opts{debug}{count};
   $exc{$_}=1;
 };
+my $exc=0;
 while(@ARGV) {
-  push(@cmd,[]);
-  while(@ARGV && ($_=shift)ne'--')
-  {
-    push(@{$cmd[@cmd-1]},$_) unless (@cmd % 2) && $exc{$_};
+  $exc=1-$exc;
+  while(@ARGV) {
+    for(shift) { 
+      if($_ eq '--') {
+        warn "toggle skip: was $exc" if $opts{debug}{count};
+        $exc=1-$exc;
+        warn "toggle skip: is $exc" if $opts{debug}{count};
+      } else {
+        next if($exc && $exc{$_});
+        warn "adding $_ to cmd" if $opts{debug}{count};
+        push(@cmd,$_);
+      };
+    };
   };
+}
+
+if($opts{dryrun}{count}){
+  ddx(@cmd);
+} else {
+  system(@cmd);
 };
-@cmd = map { @$_ } @cmd;
-system(@cmd);
 # Handle Args.
 BEGIN {
   our(@VERSION) = qw(0 1 0);
@@ -39,28 +57,25 @@ BEGIN {
   }
   use Getopt::WonderBra;
   our(%opt);
-  my (@flag,@name);
-  for my ($k,$v) (each %opts) {
-    ddx({ k=>$k, v=>$v });
-  };
-  for(keys %opts){
-    local(*opt)=$opts{$_};
-    my ($name,$flag);
-    $name=$opt{name};
-    $flag=$opt{flag};
-    if(defined $name) {
-      $opts{$name}||=\%opt;
+  sub parse(@) {
+    my @proc;
+    while(@_ && ($_=shift)ne'--'){
+      push(@proc,$_);
+    }    
+    @proc=getopt("dn",@proc);
+    @_=( @proc, '--', @_ );
+    while(($_=shift)ne'--'){
+      if($_ eq '-n') {
+        $opts{dryrun}{count}++;
+      } elsif($_ eq '-d') {
+        $opts{debug}{count}++;
+      } else {
+        die "unexpected: -d";
+      };
     };
-    if(defined $flag) {
-      push(@flag,$flag);
-      $opts{$flag}||=\%opt;
-    };
+    return @_;
   };
-  my $optstr=join("",@flag);
-  @ARGV=getopt($optstr,@ARGV);
-  while(($_=shift)ne'--'){
-  };
-    
+  @ARGV=parse(@ARGV);
 };
 __DATA__
 usage:  except [-d] \

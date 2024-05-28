@@ -25,7 +25,8 @@ sub help {
   print "  dir.tgz.  if dir starts with a period, the period will be";
   print "  removed from the name of the tar file";
   print;
-  print "   -r - toggle removal of files.";
+  print "   -r - remove files. [default]";
+  print "   -R - don't remove files.";
   print "   -c - encrypt the tar result.";
 }
 our(@VERSION) = qw( 1 0 0 );
@@ -48,17 +49,22 @@ sub tarup($) {
   if($tgz =~ s{^[.]}{} && !$opt{quiet}) {
     warn "removed leading dot from archive name"
   };
+  if( -e $tgz ) {
+    die "not clobbering existing '$tgz'";
+  };
   open(STDOUT,">&STDERR");
-  my $cmd="tar";
-  my @arg=qw( -cvz );
+  my @cmd=qw(tar -cvz );
   if($opt{remove}) {
-    push(@arg,"--remove-files");
+    warn "removing files" unless $opt{quiet};
+    push(@cmd,"--remove-files");
   }
-  push(@arg,"-f", $tgz,$dir);
-  exec($cmd, @arg);
+  push(@cmd,"-f", $tgz,$dir);
+  ddx( \@cmd );
+  exec($cmd[0], @cmd);
+  die "exec: $!";
 }
 sub main() {
-  local (@_,$_)=getopt("qrc", @ARGV);
+  local (@_,$_)=getopt("qQrRcC", @ARGV);
   $_="*";
   my (%hand) = ( 
     '-r' => sub { $opt{remove}=1; return @_; },
@@ -70,11 +76,11 @@ sub main() {
   );
   while(($_=shift(@_))ne '--')
   {
-    die "in progress";
     my $hand = $hand{$_};
     die "unknown option: ($_)" unless defined $hand;
     @_ = $hand->(@_);    
   };
+  die "crypt not implmented" if $opt{crypt};
   use vars qw($obj %pid $pid $res);
   help unless(@_);
   die "help failed to exit" unless @_;
@@ -98,7 +104,7 @@ sub main() {
     $res=$?;
     $obj=delete $pid{$pid};
     next unless defined $obj;
-    print "tarup for $obj exited", ($res ? " with $res" : "");    
+    print "tarup for ",pp($obj)," exited", ($res ? " with $res" : "");    
     print STDERR;
   };
 };

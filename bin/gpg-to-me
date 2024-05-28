@@ -1,0 +1,32 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use Nobody::Util;
+use Env qw($HOME @PATH);
+our(@VERSION) = qw( 0 1 0 );
+local($\,$/);
+sub usage() {
+  die join("",<DATA>);
+};
+if(@ARGV==1) {
+  for(shift) {
+    die "file exists" if -e 
+    open(STDOUT,">",$_);
+  };
+};
+usage unless @ARGV==0;
+open(STDOUT,"|-", qw( gpg -sear nobody -u slut ));
+while(<STDIN>){
+  print;
+};
+close(STDIN);
+close(STDOUT);
+
+__DATA__
+usage: $0 <catch pipe>
+   or
+usage: $0 <outfile.asc>

@@ -6,8 +6,9 @@ use strict;
 use warnings;
 use Nobody::Util;
 use autodie;
+use Carp;
 sub main(@);
-#$Carp::verbose++ unless $Carp::verbose;
+$Carp::verbose++ unless $Carp::verbose;
 if(0) {
   @ARGV=qw( 1 1 1 1 );
   open(STDIN,"bash -c '
@@ -15,9 +16,11 @@ if(0) {
     echo a
     echo
     echo aaaaaaaaaa bbbbbbbbbbb cccccccccc ddddd
+    echo aaaaaaaaaa bbbbbbbbbbb cccccccccc ddddd
   '|");
 };
-exit(main(@ARGV));
+@_=main(@ARGV);
+exit(0);
 die "NONE SHALL PASS!";
 sub col_widths(@) {
   my ($mc,@l) = max(0,map { -1+@$_ } @_);
@@ -39,18 +42,26 @@ sub main(@) {
     $_=<STDIN>;
     last unless defined;
     my @r=split;
-    for($c=0;$c<@r;$c++) {
-      $c[$c][$r]=$r[$c];
+    next unless @r;
+    while(@r > @c) {
+      my @t = map { "" } 0 .. $r;
+      push(@c,\@t);
+      push(@l,0);
+    };
+    for($c=0;$c<@c;$c++) {
+      $_=$c[$c][$r]=($r[$c] // "");
+      if(defined and length>$l[$c]){
+        $l[$c]=length;
+      };
     }
-    ddx(
-      { 
-        '@c'=>scalar(@c), 
-        '$c'=>$c,
-        '@r'=>[ 
-          map { scalar(@$_) }  @c 
-        ],
-        '$r'=>$r,
-      }
-    );
   }
+  for($c=0;$c<@c;$c++) {
+    my $fmt = join('','%-',$l[$c],'s');
+    for(@{$c[$c]}) {
+      $_=sprintf($fmt,$_);
+    };
+  };
+  for(my $r=0;$r<@{$c[0]};$r++) {
+    print join(" ", map { $c[$_][$r]//"" } 0 .. @c), "\n";
+  };
 };

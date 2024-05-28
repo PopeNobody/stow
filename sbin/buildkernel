@@ -35,9 +35,6 @@ if($< or $>){
 
 my ($boot);
 my (@proc)=map { split } qx(nproc);
-if(@proc && $proc[0]>16){
-  $proc[0]=$proc[0]/2;
-};
 unshift(@proc,"-j") if @proc;
 
 sub help {
@@ -72,7 +69,7 @@ sub vsystem(@){
 vsystem(qw(make oldconfig));
 system(qw(git commit -a -m), sprintf("buildkernel %s", serdate()));
 vsystem(qw(make bzImage modules), @proc);
-vsystem(qw(make modules_install install), @proc);
+vsystem(qw(make modules_install install INSTALL_MOD_PATH=$PWD/D), @proc);
 if(defined($boot)) {
   if($boot) {
     print STDERR "running reboot";

@@ -1,0 +1,94 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+for(qw( IN OUT ERR )) {
+  eval "select(STD$_); \$|++";
+  die "$@" if "$@"
+};
+BEGIN { 
+  open(STDERR,">&STDOUT");
+};
+use autodie;
+use common::sense;
+use Nobody::Util;
+use POSIX;
+use Env qw($HOME @PATH);
+use Fcntl qw( S_ISBLK S_ISCHR S_ISDIR S_ISFIFO S_ISREG S_ISSOCK );
+our(%opts,%opt);
+%opts = (
+  skipgit=>1
+);
+our(%type);
+tie %type, 'DefHash', "default";
+my @refs = ( [], {}, \( my $x="" ) );
+sub store_type(%) {
+  my $type= { @_ };
+  my $flag=$type->{flag};
+  $type{$flag}=$type;
+};
+store_type(  flag=>'b',  name=>'block',   value=>  \&S_ISBLK   );
+store_type(  flag=>'c',  name=>'char',    value=>  \&S_ISCHR   );
+store_type(  flag=>'d',  name=>'dir',     value=>  \&S_ISDIR   );
+store_type(  flag=>'p',  name=>'fifo',    value=>  \&S_ISFIFO  );
+store_type(  flag=>'f',  name=>'file',    value=>  \&S_ISREG   );
+store_type(  flag=>'s',  name=>'socker',  value=>  \&S_ISSOCK  );
+
+sub pfind($);
+@ARGV="" unless @ARGV;
+sub args {
+  my @dirs;
+  while(($_=shift)!~m{^-}){
+    push(@dirs,@_);
+  };
+  my %hand;
+  $hand{type}=sub(@) {
+    my $type=shift
+  };
+  while(($_=shift)=~s{^-}{}){
+    my $hand = $hand{$_};
+    die "bad option: $_" unless defined $hand;
+    @_=$hand->(@_);
+  };
+  return @dirs;
+};
+my @dirs = args(@ARGV);
+pfind($_) for @ARGV;
+exit(0);
+
+sub pfind($) {
+  @_ = suckdir(shift);
+  while(@_){
+    local($_)=shift;
+    next if $opts{skipgit} and m{^CVS|\.git$};
+    next if m{/\.\.?$};
+    if(-e){
+      my $type="";
+      my $stat=stat(length($_)?$_:".");
+      warn "stat:$_:$!" unless defined $stat;
+    } else {
+      warn("$_ does not exist");
+    }
+  };
+};
+BEGIN {
+  package DefHash;
+  use subs qw( ddx );
+  *ddx=\&main::ddx;
+};
+BEGIN {
+  package TiedRef;
+  use subs qw( ddx );
+  *ddx=\&main::ddx;
+};
+BEGIN {
+  package DefHash;
+  use Nobody::Util;
+  require Tie::Hash;
+  our(@ISA)=qw(Tie::ExtraHash);
+  sub TIEHASH {
+    my $class=class(shift);
+    my $self=$class->SUPER::TIEHASH(@_);
+    $self;
+  };
+}

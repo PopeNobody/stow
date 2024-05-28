@@ -1,0 +1,91 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use Nobody::Util;
+use Env qw($HOME @PATH);
+use Getopt::WonderBra;
+use vars qw/ $opts /;
+open(STDERR,">&STDOUT");
+#open(STDERR,">>$HOME/tmp/gitx.err");
+$ENV{LANG}="C";
+open(STDIN,"</dev/null");
+sub main(@) {
+  local (*ARGV)=\@_;
+  while(($_=shift)ne'--') {
+    die "unexpected option: $_";
+  }
+  die "no command given" unless @ARGV;
+  my ($cmd,@args) = @ARGV;
+  if($cmd eq 'revs') {
+    open(STDIN,"git log --all|");
+    while(<STDIN>){
+      chomp;
+      print if s{^commit }{};
+    }
+    close(STDIN) or exit($?);
+  } elsif ( $cmd eq 'all-files' ) {
+    die "tmpdir already exists" if -d "tmpdir";
+    open(STDIN,"$Dir/$Script revs|");
+    my %files;
+    my $tars="000";
+    my @revs = grep { chomp || 1 } <STDIN>;
+    print "found ", 0+@revs, " revs";
+    die "gitx revs failed" unless close(STDIN);
+    my $last = shift @revs;
+    my %seen;
+    while(@revs) {
+      $_=shift @revs;
+      my ($com)="$_";
+      open(STDIN,"git diff $last $_ -- |");
+      $last=$_;
+      while(<STDIN>) {
+        if(s{^diff\s+--git\s+}{}) {
+          chomp;
+          s{\s+.*}{};
+          s{^./}{} or die "something wrong in line $_";
+          $seen{$_}++;
+        }
+      }
+      close(STDIN) or die "git diff $last $_ -- failed";
+    };
+    my @seen;
+    for( keys %seen ) {
+      my $cnt=$seen{$_};
+      $seen[$cnt]||=[];
+      push(@{$seen[$cnt]}, $_);
+    }
+    my (@idx);
+    @idx = grep({ $seen[$_] } (0 .. @seen));
+    $,="\t";
+    for my $idx ( @idx ) { 
+      print $idx, $_ for @{$seen[$idx]};
+    }
+  } elsif ( $cmd eq "cmd" ) {
+    open(STDIN,"git branch -qS|");
+    while(<STDIN>){
+      chomp;
+      print;
+    };
+  } else {
+    die "unknown command: $cmd";
+  }
+  exit(0);
+}
+main(getopt($opts, @ARGV));
+BEGIN {
+  use vars qw/@help @version/;
+  sub help {
+    print for @help;
+  };
+  sub version {
+    print @version;
+  };
+  @ARGV = getopt("", @ARGV);
+  while(($_=shift)ne'--'){
+    die "no args expected";
+  };
+}

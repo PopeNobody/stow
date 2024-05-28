@@ -54,12 +54,12 @@ sub reap {
   delete $pid{$pid};
 };  
 sub show_proc($) {
-  my $pid=shift;
-  warn("$$:$pid\n");
-  for(0 .. 2) {
-    my $name="/proc/$pid/fd/$_";
-    warn("$name => ", readlink($name),"\n");
-  };
+#  my $pid=shift;
+#  warn("$$:$pid\n");
+#  for(0 .. 2) {
+#    my $name="/proc/$pid/fd/$_";
+#    warn("$name => ", readlink($name),"\n");
+#  };
 };
 sub run_pipe(@){
   open(STDIN,"</dev/null");
