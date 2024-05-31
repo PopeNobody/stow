@@ -1,0 +1,9 @@
+#!/usr/bin/perl
+
+our(@stat);
+for(@ARGV) {
+  @stat=stat($_);
+  my $dev=shift @stat;
+  my $ino=shift @stat;
+  printf "%016x:%016x %s\n", $dev, $ino, $_;
+};

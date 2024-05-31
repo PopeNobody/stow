@@ -53,14 +53,13 @@ sub tarup($) {
     die "not clobbering existing '$tgz'";
   };
   open(STDOUT,">&STDERR");
-  my @cmd=qw(tar -cvz );
+  my @cmd=qw(tar -c );
   if($opt{remove}) {
     warn "removing files" unless $opt{quiet};
     push(@cmd,"--remove-files");
   }
   push(@cmd,"-f", $tgz,$dir);
-  ddx( \@cmd );
-  exec($cmd[0], @cmd);
+  exec("echo", "echo", @cmd);
   die "exec: $!";
 }
 sub main() {

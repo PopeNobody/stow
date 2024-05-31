@@ -83,8 +83,7 @@ sub run_pipe(@){
   {
     if(s{^Package: *}{}) {
       $pkg="$_";
-    } else {
-      s[^[^:]+:][   ];
+    } elsif(s{^Description.en: *}{   }) {
       print "$pkg:$_\n";
     };
   };
