@@ -4,6 +4,7 @@
 package Nobody::Util;
 our ( @EXPORT, @EXPORT_OK, @ISA );
 use vars qw(@carp @pp);
+use lib "/opt/lib/perl";
 BEGIN {
   @pp=qw( pp dd ppx ddx quote qquote );
   @carp=qw( croak confess carp cluck longmess shortmess );
