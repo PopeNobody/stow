@@ -1,0 +1,95 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+$|++;
+use common::sense;
+use Nobody::Util;
+# FIXME:  we need some "String::ShellQuote" up in here!
+# use String::ShellQUote;
+our(@VERSION) = qw( 0 1 0 );
+my $pkg = $ENV{PWD};
+for($pkg) {
+  s{.*/}{};
+};
+my $outfile="config.$pkg.bash";
+for( "configure" ) {
+  last if -f and -x;
+  die "run me form the directory where your configure script lives"
+};
+
+my $red=qx(tput setaf 1);
+my $norm=qx(tput setaf 15);
+print qq(${red}I'm gonna run some stuff in your name, but I guess if you were
+the sort of person that worried about that sort of thing, you'd
+have read me before you ran me and you'd nkow that.
+
+$norm
+);
+die "already got $outfile" if -e "$outfile" or -l "$outfile";
+
+our(@line,%line,$line);
+@line = qx( bash ./configure --help ) or die "we need bash or that script is broken";;
+our($idx,@idx);
+for $idx ( 0 .. $#line ) {
+  local($_)=($line[$idx]);
+  next unless m{^\s+--};
+
+  *line={ 
+    line=>"$_",
+    idx=>$idx,
+  };
+
+  ( $line{ beg } )= map { length } m{^(\s+--\S+\s+)(\s+)};
+
+  $line{end}=length($line{line})-$line{beg};
+  $line{key}=substr($line{line},0,$line{beg});
+  ($line{key}) = map { split } $line{key};
+  @line{ qw( key val ) } = split /=/, $line{key};
+  ddx(\$line{key});
+  for($line{key}) {
+    s{\[$}{};
+  };
+  if($line{key} ne '--help') {
+    ddx(\$line{key});
+    $line[$idx]=\%line;
+    push(@idx,$idx);
+  };
+};
+my $beglen= max( map { $_->{beg} } grep { ref } @line );
+open(OUT,'>',$outfile);
+select(OUT);
+my $did_it=0;
+while(<DATA>){
+  if(s/INSERT_CODE_HERE//){
+    $did_it=1;
+    for(@line) {
+      if(ref) {
+        #    print  "#   ", $_->{line};
+        printf "#add  %-${beglen}s#%s", $_->{key}, substr($_->{line},$_->{beg});
+        #    print pp( $_ ),"\n";
+      } else {
+        print "#  ", $_;
+      }
+    };
+  };
+  print;
+};
+die "missed intertion point" unless $did_it;
+if(-t 0 && -t 1 ) {
+exec qw(vi), $outfile;
+} else {
+  warn "not a tty, no editor for you.\n"
+};
+close(OUT);
+__DATA__
+#!/bin/bash
+
+cfg=()
+add() { 
+  (( $# == 2 )) && set "$1=$2"
+
+  cfg+=("$@");
+}
+INSERT_CODE_HERE
+./configure "${cfg[@]}";

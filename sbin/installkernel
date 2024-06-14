@@ -1,0 +1,53 @@
+#!/bin/bash
+# 
+# Copyright (C) 1995 - 1998, Ian A. Murdock <imurdock@debian.org>
+# Copyright (C) 1998, 1999, Guy Maor
+# Copyright (C) 2002, Matthew Wilcox
+# Copyright (C) 2002, 2004, 2005, 2007, 2009  Clint Adams
+# Copyright (C) 2009  Manoj Srivasta
+#
+# Install the kernel on a Debian Linux system.
+#
+# This script is called from /usr/src/linux/arch/i386/boot/install.sh.
+# If you install it as /sbin/installkernel, you can do a "make install"
+# from a generic kernel source tree, and the image will be installed to
+# the proper place for Debian GNU/Linux.
+
+set -e
+
+# Parse the command line options.  Of course, powerpc has to be all
+# different, and passes in a fifth argument, just because it is
+# "special". We ignore the fifth argument, and do not flag is as an
+# error, which it would be for any arch apart from powerpc
+
+if [ $# -eq 4 ] ; then
+  ver="$1"
+  img="$2"
+  map="$3"
+  dir="$4"
+  dir="$KERNEL_DIR"
+  if test -z "$KERNEL_DIR" ; then
+    echo "KERNEL_DIR NOT SET";
+    set;
+    echo
+    echo
+    exit 1
+  fi >&2
+else
+  echo >&2 "need 4 args"
+  printf >&2 "got: %s\n" "$@"
+  exit 1
+fi
+cd "$(dirname "$img")"
+while test ! -d Documentation || test ! -e ".config" ; do
+  test -d ".config"  && echo >&2 "WAY OFF COURSE" && exit 2
+  cd ..
+done
+mkdir -p $KERNEL_DIR
+cp ".config" "$KERNEL_DIR/config";
+cp "$map" "$KERNEL_DIR";
+cp "$img" "$KERNEL_DIR";
+echo "img: $KERNEL_DIR/$(basename $Img)"
+echo "map: $KERNEL_DIR/$(basename $map)"
+echo "cfg: $KERNEL_DIR/config";
+exit 0
