@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie qw(:all);
 use Env qw($HOME);
-use Nobody::Util;
+use Util;
 
 sub mkdirs($$);
 sub mkdirs($$){

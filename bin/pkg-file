@@ -3,7 +3,7 @@ $|++;
 
 use strict;
 use warnings;
-use FindBin qw($Bin);
+use Nobody::Util;
 use lib "$Bin/../lib/perl";
 $|++;
 $\="\n"; $,=" "; $"=" ";
@@ -17,26 +17,6 @@ use vars qw( %data );
 $data{fn}="/var/cache/apt/apt-file-search-slash";
 
 sub cat(@);
-sub help {
-  print "error: @_" if @_;
-  print "$0 ( -u | -p | -f | -l | -d | -D ) [ packages ]";
-  my $text=qq{
-  usage:
-
-  -u update cache file, using apt-file.  no other args
-  -p match our regex against the pkg side
-  -f match our regex agaisnt the file side
-  -l match our regex against the line side
-  -d use the pwd, anchored on the left, as your pattern
-  -D do the same, but don't anchor the pattern.
-  -r add the following token to the regex list
-  };
-  for(split /\n/, $text){
-    s{^\s*}{};
-    print "    $_";
-  };
-  exit(1) if @_;
-};
 sub set_type() {
   die "type already specified, got '$_'" if defined($data{type});
   $data{type}=$_;
@@ -93,22 +73,42 @@ sub loop() {
   return 0;
 };
 our(%opt);
-sub opt($$$){
+sub opt($$){
   my (%tmp);
   $tmp{type}=shift;
   $tmp{dir}=shift;
-  $tmp{update}=shift;
   $tmp{start}=0;
   return \%tmp;  
 };
+sub help {
+  print "error: @_" if @_;
+  print "$0 ( -u | -p | -f | -l | -d | -D ) [ packages ]";
+  my $text=qq{
+  usage:
+
+  -u update cache file, using apt-file.  no other args
+  -p match our regex against the pkg side
+  -f match our regex agaisnt the file side
+  -l match our regex against the line side
+  -d use the pwd, anchored on the left, as your pattern
+  -D do the same, but don't anchor the pattern.
+  -r add the following token to the regex list
+  };
+  for(split /\n/, $text){
+    s{^\s*}{};
+    print "    $_";
+  };
+  exit(1) if @_;
+};
 BEGIN {
-  $opt{-d}=opt( 'file', 1, 0);
+  $opt{-d}=opt( 'file', 1 );
   $opt{-d}{start}=1;
-  $opt{-D}=opt( 'file', 1, 0);
-  $opt{-f}=opt( 'file', 0, 0);
-  $opt{-l}=opt( 'line', 0, 0);
-  $opt{-p}=opt( 'pack', 0, 0);
-  $opt{-u}=opt( undef, 0, 1 );
+  $opt{-D}=opt( 'file', 1 );
+  $opt{-f}=opt( 'file', 0 );
+  $opt{-l}=opt( 'line', 0 );
+  $opt{-p}=opt( 'pack', 0 );
+  $opt{-u}='update';
+  ddx(\%opt);
 }
 sub debug {
 };
@@ -118,7 +118,6 @@ sub main()
   local(*_)=\@ARGV;
   help("no args provided") unless @_;
   my $sel;
-  #my $ddx=[ \$_, \$sel, \%data, \%opt, \@_ ];
   my $update = 0;
 
   $data{orig}=[@_];
@@ -129,10 +128,14 @@ sub main()
     {
       die "more than opt flag!" if defined $sel;
       $sel=$opt{$_};
+      last if $sel eq 'update';
+      if(m{^-d$}){
+        push(@_,getpwd());
+      };
     }
   }
   $sel = $opt{-l} unless $sel;
-  if($sel->{update}){
+  if($sel eq 'update'){
     print STDERR "running update";
     update();
   } else {
@@ -150,7 +153,9 @@ sub main()
     return loop();
   }
 };
-
+sub getpwd() {
+  return readlink("/proc/self/cwd");
+};
 sub update() {
   open(STDOUT,">$data{fn}.new");
   open(STDIN,"apt-file search /|");

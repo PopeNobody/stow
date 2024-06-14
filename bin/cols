@@ -36,23 +36,29 @@ sub main(@) {
   my (@l,@c);
   local($_);
   my @sel=grep { m{^-?(\d+)$} } @ARGV;
+  die "extra args" if @ARGV>@sel;
   my ($last, $want)=0;
   my ($r,$c);
   for($r=0;1;$r++) {
     $_=<STDIN>;
     last unless defined;
     my @r=split;
-    next unless @r;
-    while(@r > @c) {
-      my @t = map { "" } 0 .. $r;
-      push(@c,\@t);
-      push(@l,0);
-    };
-    for($c=0;$c<@c;$c++) {
-      $_=$c[$c][$r]=($r[$c] // "");
-      if(defined and length>$l[$c]){
-        $l[$c]=length;
+    @r=grep { defined } @r[@sel] if @sel;
+    if(@r) {
+      ddx(\@r);
+      while(@r > @c) {
+        my @t = map { "" } 0 .. $r;
+        push(@c,\@t);
+        push(@l,0);
       };
+      for($c=0;$c<@c;$c++) {
+        $_=$c[$c][$r]=($r[$c] // "");
+        if(defined and length>$l[$c]){
+          $l[$c]=length;
+        };
+      }
+    } else {
+      --$r;
     }
   }
   for($c=0;$c<@c;$c++) {
