@@ -5,6 +5,7 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 $|++;
 use common::sense;
 use Nobody::Util;
+
 # FIXME:  we need some "String::ShellQuote" up in here!
 # use String::ShellQUote;
 our(@VERSION) = qw( 0 1 0 );
@@ -18,15 +19,43 @@ for( "configure" ) {
   die "run me form the directory where your configure script lives"
 };
 
-my $red=qx(tput setaf 1);
-my $norm=qx(tput setaf 15);
-print qq(${red}I'm gonna run some stuff in your name, but I guess if you were
-the sort of person that worried about that sort of thing, you'd
-have read me before you ran me and you'd nkow that.
+my ($red, $norm, $colors);
+($colors) = map { split } qx( tput colors );
+if($colors) {
+  $norm=$colors;
+  for my $p ([ \$red, 1 ], [ \$norm, $colors ]) {
+    my ($ref,$val) = @$p;
+    local(*_)=$ref;
+    $_=qx(tput setaf $val);
+    chomp;
+    $_=qx(tput setf $val) unless length;
+    chomp;
+  };
+  for( 1 .. 20 ) {
+    print "$_: ";
+    for( 1 .. 5 ) {
+      print "(${red}) red (${norm}) norm ";
+    };
+  };
+};
+die "${red}already got $outfile${norm}" if -e "$outfile" or -l "$outfile";
 
-$norm
-);
-die "already got $outfile" if -e "$outfile" or -l "$outfile";
+if( -t 0 or -t 1 or -t 2 ) {
+  open(STDIN,"<&1") if (!-t 0 and -t 1);
+  open(STDIN,"<&2") if (!-t 0 and -t 2);
+  print qq(${red}I'm gonna run some stuff in your name, but I guess if you were
+  the sort of person that worried about that sort of thing, you'd
+  have read me before you ran me and you'd nkow that.${norm}
+  norm${red}red${norm}norm
+
+  $norm
+  );
+  print STDERR "press <enter> or <ctrl-c> to abort: ";
+  STDERR->flush();
+  scalar(<STDIN>);
+  close(STDIN);
+  open(STDIN,"</dev/null");
+}
 
 our(@line,%line,$line);
 @line = qx( bash ./configure --help ) or die "we need bash or that script is broken";;
@@ -46,12 +75,12 @@ for $idx ( 0 .. $#line ) {
   $line{key}=substr($line{line},0,$line{beg});
   ($line{key}) = map { split } $line{key};
   @line{ qw( key val ) } = split /=/, $line{key};
-  ddx(\$line{key});
+  #ddx(\$line{key});
   for($line{key}) {
     s{\[$}{};
   };
   if($line{key} ne '--help') {
-    ddx(\$line{key});
+    #ddx(\$line{key});
     $line[$idx]=\%line;
     push(@idx,$idx);
   };

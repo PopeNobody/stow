@@ -1,6 +1,9 @@
 #!/bin/bash
 # vim: sw=2 ts=2 et
 
+agent-exists() {
+  ssh-add -l > /dev/null
+};
 for script in $HOME/.ssh/agent.bash; do
   test -e "$script" || break;
   source $script

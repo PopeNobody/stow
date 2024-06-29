@@ -4,7 +4,7 @@ use common::sense;
 $|++;
 use FindBin qw($Bin);
 use lib "$Bin/../lib/perl";
-use autodie qw(:all);
+use autodie ;
 use Nobody::Util;
 open(STDIN,"</dev/null");
 package Pkg::debian;

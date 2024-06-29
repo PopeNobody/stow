@@ -5,9 +5,10 @@ package Nobody::Util;
 our ( @EXPORT, @EXPORT_OK, @ISA );
 use vars qw(@carp @pp);
 use lib "/opt/lib/perl";
+use Carp;
 BEGIN {
   @pp=qw( pp dd ppx ddx quote qquote );
-  @carp=qw( croak confess carp cluck longmess shortmess );
+  @carp=(sub{package Carp; return @EXPORT,@EXPORT_OK,@EXPORT_FAIL;})->();
 };
 use Carp @carp;
 use Nobody::PP @pp;
@@ -18,7 +19,7 @@ use Scalar::Util;
 BEGIN {
   push(@EXPORT_OK,@FindBin::EXPORT_OK);
   push(@EXPORT_OK,@Nobody::PP::EXPORT_OK);
-  push(@EXPORT_OK,
+  push(@EXPORT_OK, @carp, @pp,
     qw( sum avg max min mkdir_p basename suckdir suck spit )
   );
   push(@EXPORT_OK,
@@ -40,6 +41,7 @@ BEGIN {
   @ISA=qw(Exporter);
   require Exporter;
   sub import {
+    #warn(pp([caller]));
     goto &Exporter::import;
   };
 }

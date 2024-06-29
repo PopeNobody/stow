@@ -1,4 +1,5 @@
 #!/bin/bash
+
 rsync_sync () 
 {
   if (($#==0)); then

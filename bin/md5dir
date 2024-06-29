@@ -5,9 +5,23 @@ $|++;
 use strict;
 use warnings;
 use Digest::MD5;
+use Getopt::WonderBra;
+
 my %missing;
 my %skip = map { $_, 1 } qw( . .. CVS .git .md5 );
 sub md5dir($);
+sub main() {
+  (*_)=*ARGV;
+  print STDERR "start: @_";
+  $,="  ";
+  $\="\n";
+  if(@_ == 1 && grep { $_ eq "-c" } @_ ) {
+    $check=1;
+  } elsif (@_) {
+    die "usage: $0 [-c]";
+  };
+  print md5dir("");
+};
 sub md5file($){
 	my ($fn,$fh) =shift;
 	die "got a dir" if -d $fn;
@@ -38,6 +52,7 @@ sub fixdir($) {
 }
 sub md5dir($) {
 	my $dir = fixdir(shift);
+  say STDERR "dir: $dir";
 	my @dents = dents($dir);
 	my %res;
 	local $_;
@@ -76,11 +91,3 @@ sub md5dir($) {
 		close($fh);
 	}
 }
-$,="  ";
-$\="\n";
-if(@ARGV == 1 && grep { $_ eq "-c" } @ARGV ) {
-	$check=1;
-} elsif (@ARGV) {
-	die "usage: $0 [-c]";
-};
-print md5dir("");

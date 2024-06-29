@@ -53,9 +53,7 @@ sub cat(@){
 sub loop() {
   my $qr=$data{qr};
   die "no pattern" unless defined $qr;
-  #ddx($qr);
   $qr = qr{$qr} if defined $qr;
-  #ddx($qr);
   die "no qr in:\n", pp(\%data) unless defined $qr;
   my $pre = get_pre($data{type});
   open(STDIN,"<$data{fn}");
@@ -108,7 +106,6 @@ BEGIN {
   $opt{-l}=opt( 'line', 0 );
   $opt{-p}=opt( 'pack', 0 );
   $opt{-u}='update';
-  ddx(\%opt);
 }
 sub debug {
 };

@@ -3,8 +3,7 @@
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
-use strict;
-use warnings;
+use common::sense;
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
@@ -25,8 +24,8 @@ sub help {
   print "  dir.tgz.  if dir starts with a period, the period will be";
   print "  removed from the name of the tar file";
   print;
-  print "   -r - remove files. [default]";
-  print "   -R - don't remove files.";
+  print "   -r - remove dir.";
+  print "   -R - don't remove dir.";
   print "   -c - encrypt the tar result.";
 }
 our(@VERSION) = qw( 1 0 0 );
@@ -36,16 +35,18 @@ sub version {
 }
 my (%pid,$pid,@pid);
 sub tarup($) {
-  my ($dir,$tgz) = map { s{/+$}{}; ( $_, "$_.tgz" ) } $_;
-  local $_=$dir;
-  unless($dir =~ m{[^.]}){
-    warn "nothing but dots!";
-    return;
+  die "no args" unless @_;
+  local($_)=shift;
+  s{/+}{/};
+  s{/$}{};
+  die "cannot find directory '$_'" unless -d;
+  die "nothing but dots" unless m{[^.]};
+  chdir("/") if s{^/}{};
+  if(@_=m{(.*)/(.*)}) {
+    chdir(shift);
+    $_=shift;
   };
-  unless(-d $dir) {
-    warn "cannot find directory '$dir'";
-    return;
-  }
+  my ($tgz)="$_.tgz";
   if($tgz =~ s{^[.]}{} && !$opt{quiet}) {
     warn "removed leading dot from archive name"
   };
@@ -53,13 +54,14 @@ sub tarup($) {
     die "not clobbering existing '$tgz'";
   };
   open(STDOUT,">&STDERR");
-  my @cmd=qw(tar -c );
+  my @cmd=qw(tar -zc );
   if($opt{remove}) {
     warn "removing files" unless $opt{quiet};
     push(@cmd,"--remove-files");
   }
-  push(@cmd,"-f", $tgz,$dir);
-  exec("echo", "echo", @cmd);
+  push(@cmd,"-f$tgz",$_);
+  print "running (@cmd) in dir (", readlink("/proc/self/cwd"), ")";
+  exec(@cmd);
   die "exec: $!";
 }
 sub main() {
@@ -83,28 +85,22 @@ sub main() {
   use vars qw($obj %pid $pid $res);
   help unless(@_);
   die "help failed to exit" unless @_;
-  if(@_==1) {
-    tarup($_=shift);
-  } else {
-    for(@_) {
-      print STDERR "gonna fork for $_";
-      if($pid=fork) {
-        $pid{$pid}=$_;
-      } else {
-        print STDERR "$$:$pid: tar $_";
-        tarup($_);
-        exit(0);
-      };
-    };
-  }
-  while(keys %pid) {
-    print STDERR "pids: @pid";
+  die "no dirs" unless @_;
+  tarup(shift) if(@_==1);
+  my %pid;
+  for(@_) {
+    tarup($_) unless $pid{$_}=fork;
+  };
+  my $res=0;
+  while(%pid) {
+    $?=0;
     $pid=wait;
-    $res=$?;
-    $obj=delete $pid{$pid};
-    next unless defined $obj;
-    print "tarup for ",pp($obj)," exited", ($res ? " with $res" : "");    
-    print STDERR;
+    die "wait returned -1.", pp(\%pid) if $pid==-1;
+    for(keys %pid) {
+      next unless $pid{$_} == $pid;
+      say STDERR "process for $_ returned $?" if $?;
+      delete $pid{$_}; 
+    };
   };
 };
 main();

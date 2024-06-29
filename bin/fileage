@@ -14,17 +14,25 @@ $\="\n";
 
 
 my $t=time;
-for(@ARGV)
-{
-  my $st=stat($_);
-  if(!defined($st)){
-    warn("stat:$_:$!");
-    $_=undef;
-    next;
-  } else {
-    $_=[ $st->mtime, $_ ];
+if(@ARGV) {
+  for(@ARGV)
+  {
+    my $st=stat($_);
+    if(!defined($st)){
+      warn("stat:$_:$!");
+      $_=undef;
+      next;
+    } else {
+      $_=[ $st->mtime, $_ ];
+    };
   };
-};
+} else {
+  while(<STDIN>){
+    chomp;
+    my $st=stat($_);
+    push(@ARGV,[ $st->mtime, $_ ]);
+  };
+}
 sub dcmp {
   our(@a,@b);
   *a=$a;
@@ -34,6 +42,7 @@ sub dcmp {
 for( sort { dcmp } grep {defined } @ARGV ) {
   my $secs=int($t-$_->[0]);
   my $days=int($secs/86400);
+  my $years=int($days/365);
   my $file=$_->[1];
-  printf "%10d secs %4d days: %s\n", $secs,$days,$file;
+  printf "%10d secs %4d days: %2d years: %s\n", $secs,$days,$years,$file;
 };

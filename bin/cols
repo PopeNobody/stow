@@ -45,7 +45,7 @@ sub main(@) {
     my @r=split;
     @r=grep { defined } @r[@sel] if @sel;
     if(@r) {
-      ddx(\@r);
+      #ddx(\@r);
       while(@r > @c) {
         my @t = map { "" } 0 .. $r;
         push(@c,\@t);

@@ -53,19 +53,10 @@ sub reap {
   $cmd{$pid}{res}=$res;
   delete $pid{$pid};
 };  
-sub show_proc($) {
-#  my $pid=shift;
-#  warn("$$:$pid\n");
-#  for(0 .. 2) {
-#    my $name="/proc/$pid/fd/$_";
-#    warn("$name => ", readlink($name),"\n");
-#  };
-};
 sub run_pipe(@){
   open(STDIN,"</dev/null");
   our (@cmd)= @_;
   my $pid=0;
-  show_proc($$);
   for my $cmd(@cmd) {
     $pid=open(STDIN,'-|');
     if(!$pid) {
@@ -73,7 +64,6 @@ sub run_pipe(@){
       exec(@$cmd);
       die "exec @cmd";
     };
-    show_proc($pid);
     $cmd{$pid}{pid}=$pid;
     $cmd{$pid}{cmd}="@$cmd";
     $pid{$pid}=$pid;
@@ -91,9 +81,15 @@ sub run_pipe(@){
 }
 sub main(@){
   my (@args) = splice(@_);
-  @args=qw( . ) unless @args;
-  push(@cmd,["pkg-name", @args]);
-  push(@cmd,[ qw( xargs apt-cache show ) ]);
+  if($use_pkg_name) {
+    @args=qw( . ) unless @args;
+    push(@cmd,["pkg-name", @args]);
+    push(@cmd,[ qw( xargs apt-cache show ) ]);
+  } elsif(@args) {
+    push(@cmd,[ qw( apt-cache show ), @args ]);
+  } else {
+    die "-n not specified, and no pkg names given";
+  };
   push(@cmd,[ qw( egrep ^(Package:|Desc) ) ] );
   push(@cmd,[ qw( egrep -v md5: ) ] );
   run_pipe(@cmd);

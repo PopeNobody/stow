@@ -11,12 +11,11 @@ if($< or $>) {
 
 use strict;
 use warnings;
-use autodie qw(:all);
+use autodie;
 our ($VERSION) = join("-",qw ( 1 0 0 ));
 BEGIN {
   $|++; $\="\n";
 };
-use autodie qw(:all);
 use POSIX qw(strftime);
 use subs;
 sub test_klog();
@@ -31,9 +30,14 @@ die "no args used" if @ARGV;
 exit(main());
 die "survived exit!";
 
+sub xsystem {
+	system @_;
+	die "system failed" if $?;
+	return 1;
+};
 sub goto_dir() {
   for("/var/log/dmesg.d"){
-    system("install -oroot -gadm -d $_");
+    xsystem("install -oroot -gadm -d $_");
     chdir($_);
   }
 }
@@ -72,7 +76,7 @@ sub main(){
   @ARGV="dmesg -c|";
   @_=<ARGV>;
   splice(@_,0,$lines);
-  system("echo dmesg-save ran at @{[serdate]} > /dev/kmsg");
+  xsystem("echo dmesg-save ran at @{[serdate]} > /dev/kmsg");
   return 0 unless @_;
   unshift(@_,"more lines appeared");
   print STDERR "more lines appeared";
