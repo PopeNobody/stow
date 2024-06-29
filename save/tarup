@@ -1,0 +1,112 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+BEGIN {
+  use FindBin qw($Bin);
+  use lib "$Bin/../lib/perl";
+  $|++; $\="\n"; $,=" "; $"=" "; $/="n";
+};
+my %opt = (
+  'remove' => 1,
+  'crypt' => 0,
+  'quiet' => 0,
+);
+use autodie qw(:all);
+use Nobody::Util qw(ddx);
+use Getopt::WonderBra;
+sub help {
+  print "usage: $0 [ -r ] <dir...>\n";
+  print "  tars up the given directory, using the --remove-files option";
+  print "  pretty much rm -fr with a backup.  The backup will go into";
+  print "  dir.tgz.  if dir starts with a period, the period will be";
+  print "  removed from the name of the tar file";
+  print;
+  print "   -r - remove files. [default]";
+  print "   -R - don't remove files.";
+  print "   -c - encrypt the tar result.";
+}
+our(@VERSION) = qw( 1 0 0 );
+sub version {
+  $"=".";
+  print "version( @VERSION )";
+}
+my (%pid,$pid,@pid);
+sub tarup($) {
+  my ($dir,$tgz) = map { s{/+$}{}; ( $_, "$_.tgz" ) } $_;
+  local $_=$dir;
+  unless($dir =~ m{[^.]}){
+    warn "nothing but dots!";
+    return;
+  };
+  unless(-d $dir) {
+    warn "cannot find directory '$dir'";
+    return;
+  }
+  if($tgz =~ s{^[.]}{} && !$opt{quiet}) {
+    warn "removed leading dot from archive name"
+  };
+  if( -e $tgz ) {
+    die "not clobbering existing '$tgz'";
+  };
+  open(STDOUT,">&STDERR");
+  my @cmd=qw(tar -cvz );
+  push(@cmd,"-f", $tgz,$dir);
+  if($opt{remove}) {
+    warn "removing files" unless $opt{quiet};
+    push(@cmd,"--remove-files");
+  }
+  #unshift(@cmd,"echo");
+  ddx( \@cmd );
+  exec(@cmd);
+  die "exec: $!";
+}
+sub main() {
+  local (@_,$_)=getopt("qQrRcC", @ARGV);
+  $_="*";
+  my (%hand) = ( 
+    '-r' => sub { $opt{remove}=1; return @_; },
+    '-R' => sub { $opt{remove}=0; return @_; },
+    '-q' => sub { $opt{quiet}=1; return @_; },
+    '-Q' => sub { $opt{quiet}=0; return @_; },
+    '-c' => sub { $opt{crypt}=1; return @_; },
+    '-C' => sub { $opt{crypt}=0; return @_; },
+  );
+  while(($_=shift(@_))ne '--')
+  {
+    my $hand = $hand{$_};
+    die "unknown option: ($_)" unless defined $hand;
+    @_ = $hand->(@_);    
+  };
+  die "crypt not implmented" if $opt{crypt};
+  use vars qw($obj %pid $pid $res);
+  help unless(@_);
+  die "help failed to exit" unless @_;
+  if(@_==1) {
+    tarup($_=shift);
+  } else {
+    for(@_) {
+      print STDERR "gonna fork for $_";
+      if($pid=fork) {
+        $pid{$pid}=$_;
+      } else {
+        print STDERR "$$:$pid: tar $_";
+        tarup($_);
+        exit(0);
+      };
+    };
+  }
+  while(keys %pid) {
+    print STDERR "pids: @pid";
+    $pid=wait;
+    $res=$?;
+    $obj=delete $pid{$pid};
+    next unless defined $obj;
+    print "tarup for ",pp($obj)," exited", ($res ? " with $res" : "");    
+    print STDERR;
+  };
+};
+main();

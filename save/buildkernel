@@ -1,0 +1,165 @@
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+
+use strict;
+use warnings;
+use common::sense;
+use autodie;
+use Archive::Tar;
+use Nobody::Util;
+use POSIX ":sys_wait_h";
+if($< or $>){
+  say STDERR "press enter to run with sudo, q to quit";
+  $_=scalar(<STDIN>);
+  die "quit" if /q/;
+  exec "sudo", "perl", $0, @ARGV
+} else {
+  say STDERR "We are already root";
+};
+die "stil not root" if $< or $>;
+if(@ARGV) {
+  chdir shift;
+};
+die "usage: buildkernel <optional dir>" if @ARGV;
+{ 
+  my $fail=0;
+  -f "./.config"  || $fail++;
+  -d "Documentation" || $fail++;
+  -f "init/main.c" || $fail++;
+  die "fails: $fail" if $fail;
+};
+
+$,=" ";
+sub vsystem(@);
+use FindBin qw($Bin);
+use lib "$Bin/../lib/perl";
+my $term = -t STDIN ? 1 : 0;
+say "term: $term";
+use POSIX qw(strftime);
+use Nobody::PP;
+use Getopt::WonderBra;
+sub kernel_tree($);
+my ($src_dir,$src_ver) = kernel_tree(readlink("/proc/self/cwd"));
+die "no src dir" unless length($src_ver);
+sub check_lib_modules();
+check_lib_modules();
+
+my ($dst_dir) = "/boot/$src_ver/";
+system("rm -fr $dst_dir");
+system("mkdir -p $dst_dir");
+open(my $LOG,">","$dst_dir/buildkernel.log");
+my ($serdate)=strftime("%Y%m%d-%H%M%S", gmtime );
+print("dst_dir=$dst_dir\n");
+my ($boot);
+my (@proc)=map { split } qx(nproc);
+unshift(@proc,"-j") if @proc;
+
+sub help {
+  say "usage: $0 [-j #]";
+  say "   -j: number of jobs";
+  say "";
+};
+our($VERSION)=join("-",qw(1 0 0));
+sub version {
+  say "$0: version $VERSION;";
+};
+@ARGV = getopt("nbj:", @ARGV);
+while(($_=shift)ne'--'){
+  if(/^-j$/){
+    my $procs=shift;
+    die "missing required int arg for -j" unless defined($procs);
+    @proc=("-j",$procs);
+  } elsif (/^-n$/) {
+    warn "will not boot or ask to boot when done";
+    $boot=0;
+  } elsif (/^-b$/) {
+    warn "will boot without asking when done";
+    $boot=1;
+  } else {
+    die "unexpected: $_";
+  };
+};
+chdir($src_dir);
+vsystem(qw(make oldconfig));
+system(qw(git commit -a -m), sprintf("buildkernel %s", $serdate));
+vsystem(qw(make bzImage modules), @proc);
+vsystem(qw(cp /opt/sbin/bk-buildtar scripts/packages/buildtar));
+vsystem(qw(make tar-pkg),@proc);
+{
+  my @cmd;
+  push(@cmd,"make", "MODLIB=/boot/$src_ver","INSTALL_MOD_PATH=/", "modules_install",@proc);
+  system @cmd;
+  die "@cmd failed $?" if $?;
+};
+
+close($LOG);
+exit 0;
+sub vsystem(@)
+{
+  STDERR->say(@_);
+  my $pid;
+  if($pid=fork) {
+    
+    my $kid;
+    while(1) {
+      $?=0;
+      $kid = waitpid($pid, 0);
+      my $err=0+$?;
+      if(defined($kid)) {
+        return if($kid==$pid && !$err);
+        die "cmd (@_) pid ($pid) err ($?)\n";
+      } else {
+        warn "waitpid($pid)=>", pp($kid), "\n";
+      };
+    };
+  } else {
+    open(STDERR,">&".fileno($LOG));
+    open(STDOUT,">&STDERR");
+    open(STDIN,"</dev/null");
+    close($LOG);
+    exec(@_);
+    die "exec:@_:$!";
+  }
+
+}
+sub kernel_tree($) {
+  my ($txt,$src_ver_str);
+  $src_dir=shift;
+  $src_ver=qx{head $src_dir/Makefile -n 5};
+  $src_ver=[  grep { s{#.*}{}; length; } split("\n", $src_ver)   ];
+  $src_ver={ grep { s{\s*}{}g } map { m{(.*)=(.*)} } @{$src_ver} };
+  $src_ver_str=join(".", grep { length } map { $src_ver->{$_} } qw( VERSION PATCHLEVEL SUBLEVEL ) );
+  ($txt) = grep  { length } map { $src_ver->{$_} } qw( EXTRAVERSION );
+  $txt="-$txt" if defined($txt) && length($txt);
+  $txt =~ s{^--}{-};
+  $src_ver=$src_ver_str.$txt;
+  ddx( [ $src_ver, $src_ver_str, $txt ] );
+  $src_ver=[ $src_dir, $src_ver ];
+  return wantarray ? @{$src_ver} : $src_ver;
+};
+our(@kdfiles,@kddirs);
+BEGIN {
+  push(@kdfiles,    "$_/vmlinuz" , "$_/System.map", "$_/config");
+  push(@kddirs, "modules");
+};
+sub check_lib_modules() {
+  if(! -l "/lib/modules" ) {
+    die "/lib/modules should be a symlink.  (ln -sf /boot/lib/modules /lib)\n";
+  };
+  if(! -d "/boot/lib/modules") {
+    die "/boot/lib/modules should be a dir";
+  };
+  chdir("/boot/");
+  for my $a(glob("[0-9]*[0-9+]")) {
+    for my $b(@kdfiles) {
+      say "   $a$b" if -e join("",$a,$b);
+    }
+    for my $b(@kddirs) {
+      say "   $a/$b/" if -d join("/",$a,$b,"");
+    };
+  };
+    
+  exit(0);
+};
