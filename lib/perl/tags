@@ -1,0 +1,220 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+ASSUME_TAINTED	IPC/System/Simple.pm	/^use constant ASSUME_TAINTED => ($] < 5.008);$/;"	c
+AUTOLOAD	CPAN.pm	/^    sub AUTOLOAD { ## no critic$/;"	s
+AUTOLOAD	ReportHash.pm	/^  sub AUTOLOAD {$/;"	s
+AutoLess	AutoLess.pm	/^package AutoLess;$/;"	p
+CLEAR	Env.pm	/^sub CLEAR {$/;"	s
+CLEAR	ReportHash.pm	/^  sub CLEAR {$/;"	s
+CPAN	CPAN.pm	/^  CPAN: Module::Signature security checks disabled because Module::Signature$/;"	l
+CPAN	CPAN.pm	/^  CPAN: checksum security checks disabled because Digest::SHA not installed.$/;"	l
+CPAN	CPAN.pm	/^package CPAN;$/;"	p
+CPAN::Eval	CPAN.pm	/^                CPAN::Eval; # hide from the indexer$/;"	p
+DELETE	Env.pm	/^sub DELETE { }$/;"	s
+DELETE	Env.pm	/^sub DELETE {$/;"	s
+DELETE	ReportHash.pm	/^  sub DELETE {$/;"	s
+DESTROY	CPAN.pm	/^sub DESTROY {$/;"	s
+DESTROY	ReportHash.pm	/^  sub DESTROY {$/;"	s
+EXISTS	Env.pm	/^sub EXISTS {$/;"	s
+EXISTS	ReportHash.pm	/^  sub EXISTS {$/;"	s
+EXIT_ANY	IPC/System/Simple.pm	/^use constant EXIT_ANY       => [ EXIT_ANY_CONST ];	# Exported$/;"	c
+EXIT_ANY_CONST	IPC/System/Simple.pm	/^use constant EXIT_ANY_CONST => -1;			# Used internally$/;"	c
+Env	Env.pm	/^package Env;$/;"	p
+Env::Array	Env.pm	/^package Env::Array;$/;"	p
+Env::Array::VMS	Env.pm	/^package Env::Array::VMS;$/;"	p
+FAIL_BADEXIT	IPC/System/Simple.pm	/^use constant FAIL_BADEXIT   => q{"%s" unexpectedly returned exit value %d};$/;"	c
+FAIL_CMD_BLANK	IPC/System/Simple.pm	/^use constant FAIL_CMD_BLANK => q{Entirely blank command passed: "%s"};$/;"	c
+FAIL_INTERNAL	IPC/System/Simple.pm	/^use constant FAIL_INTERNAL  => q{Internal error in IPC::System::Simple: "%s"};$/;"	c
+FAIL_PLUMBING	IPC/System/Simple.pm	/^use constant FAIL_PLUMBING  => q{Error in IPC::System::Simple plumbing: "%s" - "%s"};$/;"	c
+FAIL_POSIX	IPC/System/Simple.pm	/^use constant FAIL_POSIX     => q{IPC::System::Simple does not understand the POSIX error '%s'.  Please check https:\/\/metacpan.org\/pod\/IPC::System::Simple to see if there is an updated version.  If not please report this as a bug to https:\/\/github.com\/pjf\/ipc-system-simple\/issues};$/;"	c
+FAIL_SIGNAL	IPC/System/Simple.pm	/^use constant FAIL_SIGNAL    => q{"%s" died to signal "%s" (%d)%s};$/;"	c
+FAIL_START	IPC/System/Simple.pm	/^use constant FAIL_START     => q{"%s" failed to start: "%s"};$/;"	c
+FAIL_TAINT	IPC/System/Simple.pm	/^use constant FAIL_TAINT     => q{%s called with tainted argument "%s"};$/;"	c
+FAIL_TAINT_ENV	IPC/System/Simple.pm	/^use constant FAIL_TAINT_ENV => q{%s called with tainted environment $ENV{%s}};$/;"	c
+FAIL_UNDEF	IPC/System/Simple.pm	/^use constant FAIL_UNDEF     => q{%s called with undefined command};$/;"	c
+FETCH	Env.pm	/^sub FETCH {$/;"	s
+FETCH	ReportHash.pm	/^  sub FETCH {$/;"	s
+FETCHSIZE	Env.pm	/^sub FETCHSIZE {$/;"	s
+FIRSTKEY	ReportHash.pm	/^  sub FIRSTKEY {$/;"	s
+FindBin	FindBin.pm	/^package FindBin;$/;"	p
+Getopt::WonderBra	Getopt/WonderBra.pm	/^package Getopt::WonderBra;$/;"	p
+IPC::System::Simple	IPC/System/Simple.pm	/^package IPC::System::Simple;$/;"	p
+NEXTKEY	ReportHash.pm	/^  sub NEXTKEY {$/;"	s
+NODE	Stow.pm	/^  NODE:$/;"	l
+NO_SHELL	IPC/System/Simple.pm	/^    use constant NO_SHELL  => 0;$/;"	c
+Nobody::PP	Nobody/PP.pm	/^package Nobody::PP;$/;"	p
+PART	Stow/Util.pm	/^    PART:$/;"	l
+POP	Env.pm	/^sub POP {$/;"	s
+PUSH	Env.pm	/^sub PUSH {$/;"	s
+ReportHash	ReportHash.pm	/^  package ReportHash;$/;"	p
+ReportHash::Real	ReportHash.pm	/^  package ReportHash::Real;$/;"	p
+SCALAR	ReportHash.pm	/^  sub SCALAR {$/;"	s
+SEARCH	CPAN.pm	/^        SEARCH: for my $d (sort { $a->id cmp $b->id } $CPAN::META->all_objects("CPAN::Distribution")) {$/;"	l
+SHELLCOMMAND	CPAN.pm	/^  SHELLCOMMAND: while () {$/;"	l
+SHIFT	Env.pm	/^sub SHIFT {$/;"	s
+SPLICE	Env.pm	/^sub SPLICE {$/;"	s
+STORE	Env.pm	/^sub STORE {$/;"	s
+STORE	ReportHash.pm	/^  sub STORE {$/;"	s
+STORESIZE	Env.pm	/^sub STORESIZE {$/;"	s
+SUGGEST_MYCONFIG	CPAN.pm	/^  SUGGEST_MYCONFIG: if(!$INC{'CPAN\/MyConfig.pm'}) {$/;"	l
+Stow	Stow.pm	/^package Stow;$/;"	p
+Stow::Util	Stow/Util.pm	/^package Stow::Util;$/;"	p
+TIEARRAY	Env.pm	/^sub TIEARRAY {$/;"	s
+TIEHASH	ReportHash.pm	/^  sub TIEHASH  {$/;"	s
+TIESCALAR	Env.pm	/^sub TIESCALAR {$/;"	s
+UNDEFINED_POSIX_RE	IPC/System/Simple.pm	/^use constant UNDEFINED_POSIX_RE => qr{not (?:defined|a valid) POSIX macro|not implemented on this architecture};$/;"	c
+UNSHIFT	Env.pm	/^sub UNSHIFT {$/;"	s
+UNTIE	ReportHash.pm	/^  sub UNTIE {$/;"	s
+USE_SHELL	IPC/System/Simple.pm	/^    use constant USE_SHELL => 1;$/;"	c
+Util	Util.pm	/^package Util;$/;"	p
+VMS	IPC/System/Simple.pm	/^use constant VMS     => ($^O eq 'VMS');$/;"	c
+WINDOWS	IPC/System/Simple.pm	/^use constant WINDOWS => ($^O eq 'MSWin32');$/;"	c
+WINDOWS_SHELL	IPC/System/Simple.pm	/^    use constant WINDOWS_SHELL => eval { Win32::IsWinNT() }$/;"	c
+_check_exit	IPC/System/Simple.pm	/^sub _check_exit {$/;"	s
+_check_taint	IPC/System/Simple.pm	/^sub _check_taint {$/;"	s
+_exit_messages	CPAN.pm	/^sub _exit_messages {$/;"	s
+_flock	CPAN.pm	/^sub _flock {$/;"	s
+_init_sqlite	CPAN.pm	/^sub _init_sqlite () {$/;"	s
+_list_sorted_descending_is_tested	CPAN.pm	/^sub _list_sorted_descending_is_tested {$/;"	s
+_native_wcoredump	IPC/System/Simple.pm	/^sub _native_wcoredump {$/;"	s
+_perl_fingerprint	CPAN.pm	/^sub _perl_fingerprint {$/;"	s
+_perl_is_same	CPAN.pm	/^sub _perl_is_same {$/;"	s
+_pp	Nobody/PP.pm	/^sub _pp$/;"	s
+_process_args	IPC/System/Simple.pm	/^sub _process_args {$/;"	s
+_process_child_error	IPC/System/Simple.pm	/^sub _process_child_error {$/;"	s
+_redirect	CPAN.pm	/^    sub _redirect(@) {$/;"	s
+_spawn_or_die	IPC/System/Simple.pm	/^sub _spawn_or_die {$/;"	s
+_sqlite_running	CPAN.pm	/^    sub _sqlite_running {$/;"	s
+_uniq	CPAN.pm	/^sub _uniq {$/;"	s
+_unredirect	CPAN.pm	/^    sub _unredirect {$/;"	s
+_win32_capture	IPC/System/Simple.pm	/^sub _win32_capture {$/;"	s
+_yaml_dumpfile	CPAN.pm	/^sub _yaml_dumpfile {$/;"	s
+_yaml_loadfile	CPAN.pm	/^sub _yaml_loadfile {$/;"	s
+_yaml_module	CPAN.pm	/^sub _yaml_module () {$/;"	s
+adjust_dotfile	Stow/Util.pm	/^sub adjust_dotfile {$/;"	s
+all_objects	CPAN.pm	/^sub all_objects {$/;"	s
+anycwd	CPAN.pm	/^sub anycwd () {$/;"	s
+avg	Util.pm	/^sub avg(@){$/;"	s
+backtickcwd	CPAN.pm	/^sub backtickcwd {my $cwd = `cwd`; chomp $cwd; $cwd}$/;"	s
+basename	Util.pm	/^sub basename {$/;"	s
+canon_path	Stow/Util.pm	/^sub canon_path {$/;"	s
+capture	IPC/System/Simple.pm	/^sub capture {$/;"	s
+capturex	IPC/System/Simple.pm	/^sub capturex {$/;"	s
+checklock	CPAN.pm	/^sub checklock {$/;"	s
+cleanup	CPAN.pm	/^sub cleanup {$/;"	s
+cleanup_invalid_links	Stow.pm	/^sub cleanup_invalid_links {$/;"	s
+compile_ignore_regexps	Stow.pm	/^sub compile_ignore_regexps {$/;"	s
+compile_regexp	Stow.pm	/^sub compile_regexp {$/;"	s
+conflict	Stow.pm	/^sub conflict {$/;"	s
+cwd	CPAN.pm	/^sub cwd {Cwd::cwd();}$/;"	s
+cwd2	FindBin.pm	/^sub cwd2 {$/;"	s
+dd	Nobody/PP.pm	/^sub dd {$/;"	s
+ddx	Nobody/PP.pm	/^sub ddx {$/;"	s
+debug	Stow/Util.pm	/^sub debug {$/;"	s
+defer	Stow.pm	/^sub defer {$/;"	s
+delete	CPAN.pm	/^sub delete {$/;"	s
+dir_task_action	Stow.pm	/^sub dir_task_action {$/;"	s
+do_link	Stow.pm	/^sub do_link {$/;"	s
+do_mkdir	Stow.pm	/^sub do_mkdir {$/;"	s
+do_mv	Stow.pm	/^sub do_mv {$/;"	s
+do_rmdir	Stow.pm	/^sub do_rmdir {$/;"	s
+do_unlink	Stow.pm	/^sub do_unlink {$/;"	s
+doubleopt	Getopt/WonderBra.pm	/^sub doubleopt($\\@){$/;"	s
+error	Stow/Util.pm	/^sub error {$/;"	s
+exists	CPAN.pm	/^sub exists {$/;"	s
+fastcwd	CPAN.pm	/^sub fastcwd {Cwd::fastcwd();}$/;"	s
+find_perl	CPAN.pm	/^sub find_perl () {$/;"	s
+find_stowed_path	Stow.pm	/^sub find_stowed_path {$/;"	s
+fold_tree	Stow.pm	/^sub fold_tree {$/;"	s
+foldable	Stow.pm	/^sub foldable {$/;"	s
+format_list	Nobody/PP.pm	/^sub format_list$/;"	s
+frontend	CPAN.pm	/^sub frontend {$/;"	s
+fullname	Nobody/PP.pm	/^sub fullname$/;"	s
+get_action_count	Stow.pm	/^sub get_action_count {$/;"	s
+get_conflict_count	Stow.pm	/^sub get_conflict_count {$/;"	s
+get_conflicts	Stow.pm	/^sub get_conflicts {$/;"	s
+get_default_global_ignore_regexps	Stow.pm	/^sub get_default_global_ignore_regexps {$/;"	s
+get_ignore_regexps	Stow.pm	/^sub get_ignore_regexps {$/;"	s
+get_ignore_regexps_from_fh	Stow.pm	/^sub get_ignore_regexps_from_fh {$/;"	s
+get_ignore_regexps_from_file	Stow.pm	/^sub get_ignore_regexps_from_file {$/;"	s
+get_tasks	Stow.pm	/^sub get_tasks {$/;"	s
+get_verbosity	Stow.pm	/^sub get_verbosity {$/;"	s
+getcwd	CPAN.pm	/^sub getcwd {Cwd::getcwd();}$/;"	s
+getdcwd	CPAN.pm	/^sub getdcwd {Cwd::getdcwd();}$/;"	s
+getopt	Getopt/WonderBra.pm	/^sub getopt($\\@) {$/;"	s
+has_inst	CPAN.pm	/^sub has_inst {$/;"	s
+has_usable	CPAN.pm	/^sub has_usable {$/;"	s
+help	Getopt/WonderBra.pm	/^sub help { $/;"	s
+ignore	Stow.pm	/^sub ignore {$/;"	s
+import	Env.pm	/^sub import {$/;"	s
+import	Getopt/WonderBra.pm	/^sub import {$/;"	s
+import	Util.pm	/^  sub import {$/;"	s
+init	FindBin.pm	/^sub init$/;"	s
+init_state	Stow.pm	/^sub init_state {$/;"	s
+instance	CPAN.pm	/^sub instance {$/;"	s
+internal_error	Stow.pm	/^sub internal_error {$/;"	s
+invalidate_memoized_regexp	Stow.pm	/^sub invalidate_memoized_regexp {$/;"	s
+is_a_dir	Stow.pm	/^sub is_a_dir {$/;"	s
+is_a_link	Stow.pm	/^sub is_a_link {$/;"	s
+is_a_node	Stow.pm	/^sub is_a_node {$/;"	s
+is_installed	CPAN.pm	/^sub is_installed {$/;"	s
+is_tested	CPAN.pm	/^sub is_tested {$/;"	s
+join_paths	Stow/Util.pm	/^sub join_paths {$/;"	s
+link_task_action	Stow.pm	/^sub link_task_action {$/;"	s
+marked_stow_dir	Stow.pm	/^sub marked_stow_dir {$/;"	s
+max	Util.pm	/^sub max(@){$/;"	s
+maybeRef	Util.pm	/^sub maybeRef($) {$/;"	s
+min	Util.pm	/^sub min(@){$/;"	s
+new	CPAN.pm	/^sub new {$/;"	s
+new	Stow.pm	/^sub new {$/;"	s
+override	Stow.pm	/^sub override {$/;"	s
+parent	Stow/Util.pm	/^sub parent {$/;"	s
+parent_link_scheduled_for_removal	Stow.pm	/^sub parent_link_scheduled_for_removal {$/;"	s
+parsefmt	Getopt/WonderBra.pm	/^sub parsefmt($){$/;"	s
+pasteLines	Util.pm	/^sub pasteLines(@) {$/;"	s
+path_owned_by_package	Stow.pm	/^sub path_owned_by_package {$/;"	s
+plan_stow	Stow.pm	/^sub plan_stow {$/;"	s
+plan_unstow	Stow.pm	/^sub plan_unstow {$/;"	s
+pp	Nobody/PP.pm	/^sub pp$/;"	s
+ppx	Nobody/PP.pm	/^sub ppx {$/;"	s
+process_task	Stow.pm	/^sub process_task {$/;"	s
+process_tasks	Stow.pm	/^sub process_tasks {$/;"	s
+quote	Nobody/PP.pm	/^sub quote {$/;"	s
+read_a_link	Stow.pm	/^sub read_a_link {$/;"	s
+readhist	CPAN.pm	/^sub readhist {$/;"	s
+rep_funcs	Getopt/WonderBra.pm	/^sub rep_funcs {$/;"	s
+reset_tested	CPAN.pm	/^sub reset_tested {$/;"	s
+restore_cwd	Stow/Util.pm	/^sub restore_cwd {$/;"	s
+reverse_dotfile	Stow/Util.pm	/^sub reverse_dotfile {$/;"	s
+run	IPC/System/Simple.pm	/^sub run {$/;"	s
+runx	IPC/System/Simple.pm	/^sub runx {$/;"	s
+savehist	CPAN.pm	/^sub savehist {$/;"	s
+set_debug_level	Stow/Util.pm	/^sub set_debug_level {$/;"	s
+set_perl5lib	CPAN.pm	/^sub set_perl5lib {$/;"	s
+set_stow_dir	Stow.pm	/^sub set_stow_dir {$/;"	s
+set_test_mode	Stow/Util.pm	/^sub set_test_mode {$/;"	s
+shell	CPAN.pm	/^sub shell {$/;"	s
+should_skip_target_which_is_stow_dir	Stow.pm	/^sub should_skip_target_which_is_stow_dir {$/;"	s
+singleopt	Getopt/WonderBra.pm	/^sub singleopt($\\@){$/;"	s
+skipnode	Stow.pm	/^sub skipnode {$/;"	s
+soft_chdir_with_alternatives	CPAN.pm	/^sub soft_chdir_with_alternatives ($) {$/;"	s
+spit	Util.pm	/^sub spit($@){$/;"	s
+stow_contents	Stow.pm	/^sub stow_contents {$/;"	s
+stow_node	Stow.pm	/^sub stow_node {$/;"	s
+str	Nobody/PP.pm	/^sub str {$/;"	s
+suck	Util.pm	/^sub suck(@){$/;"	s
+suckdir	Util.pm	/^sub suckdir(@){$/;"	s
+suggest_myconfig	CPAN.pm	/^sub suggest_myconfig () {$/;"	s
+sum	Util.pm	/^sub sum(@){$/;"	s
+tied_str	Nobody/PP.pm	/^sub tied_str {$/;"	s
+unstow_contents	Stow.pm	/^sub unstow_contents {$/;"	s
+unstow_contents_orig	Stow.pm	/^sub unstow_contents_orig {$/;"	s
+unstow_node	Stow.pm	/^sub unstow_node {$/;"	s
+unstow_node_orig	Stow.pm	/^sub unstow_node_orig {$/;"	s
+use_inst	CPAN.pm	/^sub use_inst {$/;"	s
+version	Getopt/WonderBra.pm	/^sub version {$/;"	s
+within_target_do	Stow.pm	/^sub within_target_do {$/;"	s

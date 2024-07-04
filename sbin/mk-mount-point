@@ -1,0 +1,5 @@
+#!/bin/bash
+
+exec sudo bash -c '
+for i; do mkdir -p "$i"; chmod 0 "$i"; chattr +i "$i"; done
+' -- "$@"
