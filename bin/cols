@@ -8,6 +8,9 @@ use Nobody::Util;
 use autodie;
 use Carp;
 sub main(@);
+BEGIN {
+  open(STDIN,"<","/etc/fstab");
+}
 $Carp::verbose++ unless $Carp::verbose;
 if(0) {
   @ARGV=qw( 1 1 1 1 );
@@ -43,7 +46,7 @@ sub main(@) {
     $_=<STDIN>;
     last unless defined;
     my @r=split;
-    @r=grep { defined } @r[@sel] if @sel;
+    @r=grep { $_//="" } @r[@sel] if @sel;
     if(@r) {
       #ddx(\@r);
       while(@r > @c) {
@@ -57,8 +60,6 @@ sub main(@) {
           $l[$c]=length;
         };
       }
-    } else {
-      --$r;
     }
   }
   for($c=0;$c<@c;$c++) {
@@ -67,7 +68,10 @@ sub main(@) {
       $_=sprintf($fmt,$_);
     };
   };
-  for(my $r=0;$r<@{$c[0]};$r++) {
+  my ($tmp) = {c=>\@c } ;
+  ddx( $tmp );
+  dd( \@c );
+  for(my $r=0;$c[0] and $r<@{$c[0]};$r++) {
     print join(" ", map { $c[$_][$r]//"" } 0 .. @c), "\n";
   };
 };
