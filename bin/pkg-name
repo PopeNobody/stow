@@ -51,7 +51,7 @@ sub main()
     $seen{line($_)}++;
   };
   close(STDIN);
-  print join("\n",sort keys %seen);
+  say for sort keys %seen;
 };
 @ARGV=handle_args(@ARGV);
 main();

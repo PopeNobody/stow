@@ -4,23 +4,39 @@ my $check=0;
 $|++;
 use strict;
 use warnings;
+use Nobody::Util;
 use Digest::MD5;
 use Getopt::WonderBra;
-
+my ($prog);
+BEGIN {
+  $prog=$0;
+};
+BEGIN {
+  warn "prog=$prog";
+};
 my %missing;
 my %skip = map { $_, 1 } qw( . .. CVS .git .md5 );
 sub md5dir($);
 sub main() {
   (*_)=*ARGV;
-  print STDERR "start: @_";
+  say STDERR "start: @_";
   $,="  ";
   $\="\n";
-  if(@_ == 1 && grep { $_ eq "-c" } @_ ) {
-    $check=1;
-  } elsif (@_) {
-    die "usage: $0 [-c]";
+  my @todo;
+  while(@_){
+    $_=shift;
+    if($_ eq "-c"){
+      $check=1;
+    } elsif ( -d ) {
+      push(@todo,$_);
+    } else {
+      die "no idea: $_";
+    };
   };
-  print md5dir("");
+  push(@todo,".") unless @todo;
+  for(@todo) {
+    print $_, "  ", md5dir($_);
+  };
 };
 sub md5file($){
 	my ($fn,$fh) =shift;
@@ -37,26 +53,23 @@ sub md5file($){
 sub dents($) {
 	my $dir=shift;
 	opendir(my $dh, $dir||".") or die "opendir:$dir:$!";
-	grep { !$skip{$_} } readdir($dh);
+	sort grep { !$skip{$_} } readdir($dh);
 }
 sub fixdir($) {
   for($_[0]) {
-    if(length) {
-      local $_="$_/";
-      s{//+}{/};
-      return $_;
-    } else {
-      return $_;
-    }
+    $_="" unless defined;
+    return $_ unless length;
+    $_="$_/";
+    s{//+}{/};
+    return $_;
   };
 }
 sub md5dir($) {
-	my $dir = fixdir(shift);
+  my $dir = fixdir(shift);
   say STDERR "dir: $dir";
-	my @dents = dents($dir);
 	my %res;
 	local $_;
-	for(@dents) {
+	for(dents($dir)) {
 		if( -d "$dir$_" ) {
 			md5dir "$dir$_";
 			$_=$_."/.md5";
@@ -84,10 +97,7 @@ sub md5dir($) {
 			};
 		}
 	} else {
-		open(my $fh,">$dir.md5") or die "open:>$dir.md5:$!";
-		for( sort keys %res ) {
-			$fh->print($res{$_}, $_);
-		}
-		close($fh);
+    spit("$dir.md5", map { "$res{$_}  $_" } keys %res );
 	}
 }
+main();

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+exec >> ${TMPDIR}/xnohup.log 2>&1
+exec < /dev/null
+echo setsid nohup "$@" | bash &

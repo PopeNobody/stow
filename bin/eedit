@@ -16,7 +16,7 @@ my $env;
 for($env) {
   $_=$ENV{VISUAL} unless defined;
   $_=$ENV{EDITOR} unless defined;
-  $_="nvim" unless defined;
+  $_="/usr/bin/editor";
 }
 
 exec($env, @ARGV);
