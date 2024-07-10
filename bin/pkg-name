@@ -54,6 +54,7 @@ sub main()
   say for sort keys %seen;
 };
 @ARGV=handle_args(@ARGV);
+
 main();
 sub handle_args(\@)
 {

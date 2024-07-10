@@ -3,13 +3,16 @@
 use strict;
 BEGIN {
   unless($<) {
-    for( sort grep{!/CANARY/} grep {/PERL/} keys %ENV ) {
-      warn("$_\n");
-      delete $ENV{$_};
+    if($ENV{DONE}){
+      warn "not cleaning env";
+    } else {
+      for( sort grep{!/CANARY/} grep {/PERL/} keys %ENV ) {
+        warn("$_\n");
+        delete $ENV{$_};
+      }
     }
+    $ENV{DONE}=1;
     warn "pristine now\n";
-  } else {
-    warn "not cleaning env";
   };
   $ENV{PERL_CANARY_STABILITY_NOPROMPT}=1;
   for(@INC) {
