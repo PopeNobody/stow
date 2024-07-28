@@ -20,11 +20,11 @@ BEGIN {
   push(@EXPORT_OK,@FindBin::EXPORT_OK);
   push(@EXPORT_OK,@Nobody::PP::EXPORT_OK);
   push(@EXPORT_OK, @carp, @pp,
-    qw( sum avg max min mkdir_p basename suckdir suck spit )
+    qw( sum avg max min mkdir_p basename suckdir suck spit getcwd )
   );
   push(@EXPORT_OK,
-    qw( pasteLines serdate class mkref show_fds deparse maybeRef ),
-    qw( file_id WNOHANG )
+    qw( pasteLines serdate class mkref open_fds deparse maybeRef ),
+    qw( file_id WNOHANG uniq )
   );
 }
 use strict;
@@ -40,22 +40,12 @@ BEGIN {
   @EXPORT=@EXPORT_OK;
   @ISA=qw(Exporter);
   require Exporter;
-  sub import {
-    #warn(pp([caller]));
-    goto &Exporter::import;
-  };
+  sub import;
+  *import=\&Exporter::import;
 }
-
-sub show_fds() {
-  my %links=map { $_, undef } glob("/proc/self/fd/*");
-  for(keys %links) {
-    if(-l) {
-      $links{$_}=eval { readlink("$_") };
-    } else {
-      delete $links{$_}
-    };
-  };
-  ddx(\%links);
+sub uniq {
+  my %seen;
+  grep { !$seen{$_}++ } @_;
 };
 sub mkdir_p($;$);
 sub mkdir_p($;$) {
@@ -70,15 +60,17 @@ sub mkdir_p($;$) {
   mkdir_p(join("/",@dir),$mode);
   mkdir($dir,$mode); 
 };
-sub getfds();
+sub open_fds(;$);
 BEGIN {
-  sub getfds() {
-    opendir(my $dir,"/proc/self/fd");
-    my $no = fileno($dir);
-    while(readdir($dir)){
-      print;
-    };
-    closedir($dir);
+  sub open_fds(;$) {
+    my ($dn) = "/proc/self/fd/";
+    if(@_ && $_[0]) {
+      map { $_, readlink "$dn$_" } open_fds();
+    } else {
+      opendir(my $dir,$dn);
+      my $no = fileno($dir);
+      grep { $_ ne '.' && $_ ne '..' && ($no-$_) } readdir($dir);
+    }
   };
   sub getcwd() {
     return readlink("/proc/self/cwd");
@@ -108,7 +100,7 @@ sub min(@){
   return $min;
 }
 sub basename {
-  return unless @_;
+  local(@_) = @_ || $_;
   return map { $_, basename($_) } @_ unless @_ == 1;
   local $_=shift;
   s{//+}{/}g;
@@ -131,6 +123,7 @@ sub suckdir(@){
     return grep { s{^\./}{} } suckdir(".");
   };
 }
+our($root,@dirs);
 use File::stat qw(:FIELDS);
 
 sub file_id {
@@ -169,7 +162,7 @@ sub spit($@){
   local($\,$/);
   my ($fn,$fh)=shift;
   use autodie qw(open close);
-  $fn =~ s{^}{> } unless substr($fn,0,1) eq '|';
+  $fn =~ s{^}{>} unless substr($fn,0,1) eq '|';
   open($fh,$fn);
   $fh->print($_) for join("",@_);
   close($fh);
