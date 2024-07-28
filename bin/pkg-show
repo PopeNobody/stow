@@ -77,21 +77,29 @@ sub run_pipe(@){
       print "$pkg:$_\n";
     };
   };
-  close(STDIN);
+  no autodie 'close';
+  if(!close(STDIN)) {
+    my ($err) = $?;
+    if($err/256) {
+      warn "$$:pipe returned ", ($err/256);
+    } else {
+      warn "$$: pipe died of signal: ", $err%256;
+    };
+    warn "$$:pipe returned $?";
+  };
 }
 sub main(@){
   my (@args) = splice(@_);
   if($use_pkg_name) {
     @args=qw( . ) unless @args;
     push(@cmd,["pkg-name", @args]);
+    push(@cmd,[ qw( sort -u ) ]);
     push(@cmd,[ qw( xargs apt-cache show ) ]);
   } elsif(@args) {
     push(@cmd,[ qw( apt-cache show ), @args ]);
   } else {
     die "-n not specified, and no pkg names given";
   };
-  push(@cmd,[ qw( egrep ^(Package:|Desc) ) ] );
-  push(@cmd,[ qw( egrep -v md5: ) ] );
   run_pipe(@cmd);
   return 0;
 };

@@ -31,7 +31,7 @@ getppid ()
       set -- $$
     fi
   fi
-  (($# > 1)) && echo "usage: getppid [-r] [-p] <-[0-9]> <pid>" >&2 && return 1
+  #(($# > 1)) && echo "usage: getppid [-r] [-p] <-[0-9]> <pid>" >&2 && return 1
 
   if (( $count )); then
     for((i=1;i<$count && $1>1;i++)); do

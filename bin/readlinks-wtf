@@ -9,9 +9,9 @@ use Nobody::Util;
 use autodie;
 no autodie qw(readlink);
 
-for(@ARGV) {
-  print;
-  while( -l ) {
-    print "  $!" unless defined;
-  };
-}
+my (@res) = map { [ $_, readlink($_) ] } @ARGV;
+for(@res) {
+  print $_->[0];
+  print " ", $_->[1] if defined $_->[1];
+  print "\n";
+};

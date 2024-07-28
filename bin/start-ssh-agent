@@ -22,7 +22,6 @@ unset SSH_AUTH_SOCK SSH_AGENT_PID
 mkdir -p $HOME/.ssh
 echo "$(ssh-agent -s -a $socket)" > $script.new
 mv $script.new $script
-ln -sf "$script" "${script%.bash}.sh"
 source "$HOME/.ssh/agent.bash"
 echo "$SSH_AUTH_SOCK"
 echo "$SSH_AGENT_PID"

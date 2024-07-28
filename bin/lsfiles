@@ -1,13 +1,12 @@
 #!/usr/bin/perl
 # vim: sw=2 ts=2
-use strict;
-use warnings;
+use common::sense;
 BEGIN {
   use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
 };
-use autodie qw(:all);
-use Nobody::PP;
+use autodie;
+use Nobody::Util;
 use Getopt::WonderBra;
 use File::Basename;
 use File::stat qw(:FIELDS);
@@ -25,6 +24,7 @@ my $type=undef;
 my $neg=0;
 my $glob;
 my $words=1;
+my $links;
 
 debug("script: $Script\n");
 sub is_mount() {
@@ -47,9 +47,19 @@ my (%opts) = (
   g => sub { $glob=!$glob; },
   n => sub { $neg=!$neg; },
   w => sub { $words=!$words; },
+  h => sub { $links=1; },
+  H => sub { $links=0; }
 );
 my $opts = join("",sort keys %opts);
 @ARGV = getopt( $opts, @ARGV );
+for(keys %opts) {
+  my $opt=$opts{$_};
+  next unless ref($opt) eq 'HASH';
+  if($opt->{name} eq $Script) {
+    $type=$opt;
+    last;
+  }
+};
 while ( ( $_ = shift ) ne '--' )
 {
   die "expected leading dash" unless s{^-}{};
@@ -57,27 +67,35 @@ while ( ( $_ = shift ) ne '--' )
   if(!defined($opt)) {
     die "I do not grok flag '$_'";
   } elsif ( ref($opt) eq 'HASH' ) {
-    die "repeated type" if (defined $type) && ($type ne $opt);
+    die "repeated type" if (defined $type);
     $type=$opt;
   } else {
     $opt->();
   }
 };
-unless(defined($type)){
-  for(keys %opts) {
-    my $opt=$opts{$_};
-    next unless ref($opt) eq 'HASH';
-    if($opt->{name} eq $Script) {
-      $type=$opt;
-      last;
-    }
-  };
-}
 die "no type found" unless defined($type) && defined($type->{test});
+our(@list);
 my $test=$type->{test};
-debug("test: $test\n");
+push(@list,$test);
 $test="!($test)" if( $neg );
-if(!@ARGV) {
+if(defined($links)) {
+  if($type->{type} eq 'link') {
+    die "-h and -H make no sense for lslinks or lsany -l";
+  };
+  $test="($test) and ";
+  if(!$links){
+    $test=$test." not ";
+  };
+  $test=$test."-l";
+};
+if(@ARGV) {
+  if($glob){
+    @ARGV = map { glob($_) } @ARGV;
+  };
+  for(@ARGV) {
+    print "$_\n" if eval $test;
+  };
+} else {
   if ( -t STDIN ) {
     print STDERR "enter items" if -t STDERR;
   } else {
@@ -88,10 +106,4 @@ if(!@ARGV) {
     @ARGV = map { split } @ARGV;
   };
   STDERR->printf("%d items:\n", scalar(@ARGV)) if -t STDERR;
-};
-if($glob){
-  @ARGV = map { glob($_) } @ARGV;
-};
-for(@ARGV) {
-  print "$_\n" if eval $test;
 };

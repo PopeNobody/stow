@@ -3,8 +3,8 @@
 inout=
 for i; do
   case "$i" in
-    (-in) inout="$i";;
-    (-out) inout="$i";;
+    (--in|-in) inout="$i";;
+    (--out|-out) inout="$i";;
     (*) : ;;
   esac
 done
