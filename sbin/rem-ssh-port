@@ -1,0 +1,21 @@
+#!/bin/bash
+
+
+if (($#!=1)); then
+  (($#)) || set $(hostname | sed 's,[.].*,,')
+  for h; do
+    rem-ssh-port $h;
+  done;
+else
+  case "$1" in
+    (skipper) remssh=5101;;
+    (walrus) remssh=5102;;
+    (penguin) remssh=5103;;
+    (*) 
+      echo >&2 "no host $(hostname)"
+      exit 1;
+      ;;
+  esac
+  echo "$1 $remssh"
+fi
+
