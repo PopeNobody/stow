@@ -8,6 +8,8 @@ use autodie ;
 use Nobody::Util;
 open(STDIN,"</dev/null");
 package Pkg::debian;
+use Getopt::WonderBra;
+
 sub debian_source() {
   open(STDIN,"-|", qw(apt-cache pkgnames));
 };

@@ -7,9 +7,11 @@ BEGIN {
   $DB::single=1;
 }
 use common::sense;
-use Nobody::Util qw( $Bin $Script );
+use feature qw(current_sub);
+use Nobody::Util;
 use Env qw($HOME @PATH);
 $ENV{LANG}="C";
+no strict 'subs';
 
 die "no filenames given" unless @ARGV;
 sub read_src($){

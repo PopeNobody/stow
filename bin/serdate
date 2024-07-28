@@ -4,7 +4,7 @@ serdate() {
   if (($#)); then
     printf "$(serdate)-%s\n" "$*"
   else
-    export TZ=GMT
+    export TZ=gmt
     date +%Y%m%d-%H%M%S-%Z
   fi
 }
