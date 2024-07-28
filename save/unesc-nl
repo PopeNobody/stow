@@ -1,0 +1,8 @@
+#!/usr/bin/perl
+
+
+$_=join("",<>);
+s{[ \t]*\\[ \t]*\n}{ }g;
+for(split /\n/) {
+  print "$_\n";
+}
