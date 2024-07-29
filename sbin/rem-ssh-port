@@ -1,5 +1,6 @@
 #!/bin/bash
 
+PATH=$(dirname "${BASH_SOURCE}"):$PATH
 
 if (($#!=1)); then
   (($#)) || set $(hostname | sed 's,[.].*,,')
