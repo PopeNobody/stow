@@ -33,6 +33,7 @@ lspath() {
   local -n var="$1"
   shift
   eval "set -- ${var//:/ }"
+  for i; do set -- "$@" "${i//\/\//\/}"; shift; done
   if $uniq; then
     #printf 'debug1: %s\n' "$@" >&2
     local -a "seen=()" "res=()"
