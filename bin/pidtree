@@ -1,0 +1,22 @@
+#!/bin/bash
+
+pidtree () 
+{ 
+    for i in "$@";
+    do
+        [[ $i =~ ^[0-9]+$ ]] && continue;
+        echo "bad pid: $i" >&2
+        return 1;
+    done;
+     
+    while (($#)); do
+      echo "$1"
+      for i in $(pgrep --parent $1); do
+        echo "" $i
+        set -- "$@" "$i"
+      done
+      shift;
+    done
+}
+pidtree "$@"
+echo
