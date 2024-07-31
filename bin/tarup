@@ -14,8 +14,8 @@ my %opt = (
   'crypt' => 0,
   'quiet' => 0,
 );
-use autodie qw;
-use Nobody::Util qw(ddx);
+use autodie;
+use Nobody::Util;
 use Getopt::WonderBra;
 sub help {
   print "usage: $0 [ -r ] <dir...>\n";
