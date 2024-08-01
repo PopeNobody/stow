@@ -14,7 +14,7 @@ my %opt = (
   'crypt' => 0,
   'quiet' => 0,
 );
-use autodie qw;
+use autodie;
 use Nobody::Util qw(ddx);
 use Getopt::WonderBra;
 sub help {
