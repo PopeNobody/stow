@@ -1,5 +1,7 @@
 #!/bin/bash
 
-exec sudo bash -c '
-for i; do mkdir -p "$i"; chmod 0 "$i"; chattr +i "$i"; done
-' -- "$@"
+if (($UID)) ; then
+  sudo bash "${BASH_SOURCE}" "$@";
+else 
+  for i; do mkdir -p "$i"; chmod 0 "$i"; chattr +i "$i"; done
+fi
