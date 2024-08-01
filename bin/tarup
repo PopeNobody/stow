@@ -3,18 +3,17 @@
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
-use common::sense;
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
-  $|++; $\="\n"; $,=" "; $"=" "; $/="n";
 };
+use common::sense;
 my %opt = (
   'remove' => 1,
   'crypt' => 0,
   'quiet' => 0,
 );
-use autodie qw;
+use autodie;
 use Nobody::Util qw(ddx);
 use Getopt::WonderBra;
 sub help {
