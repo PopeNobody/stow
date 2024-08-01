@@ -1,27 +1,64 @@
 #!/bin/bash
 # vim: sw=2 ts=2 et
 
-agent-exists() {
-  ssh-add -l > /dev/null
+script="$HOME/.ssh/agent.bash";
+defsocket="$HOME/.ssh/agent.sock";
+rm -f "${script%.bash}".sh
+check-envvar() {
+  test -z "$SSH_AUTH_SOCK" && return 2
+  test -e "$SSH_AUTH_SOCK" || return 2
+  if test ! -S "$SSH_AUTH_SOCK"; then
+    exec >&2
+    echo "warning:  something not a socket"
+    echo "at $SSH_AUTH_SOCK"
+  fi
+  ssh-add -l >&2 && exit 0
+  if (($?==2)); then
+    return 1
+  else 
+    return 0
+  fi
 };
-for script in $HOME/.ssh/agent.bash; do
-  test -e "$script" || break;
-  source $script
-  agent-exists && exit 0
-  rm -f "$script" "$SSH_AUTH_SOCK"
-  unset SSH_AUTH_SOCK SSH_AGENT_PID
-done
-socket="$HOME/.ssh/agent.sock"
-script="$HOME/.ssh/agent.bash"
-
-SSH_AUTH_SOCK=$socket agent-exists && exit 0
-rm -f "$socket"
-
-pkill -eu $UID ^ssh-agent$
-unset SSH_AUTH_SOCK SSH_AGENT_PID
+unset SSH_AGENT_PID
+if check-envvar; then
+  echo ssh-agent on $SSH_AUTH_SOCK >&2
+  set -- "$SSH_AUTH_SOCK"
+  unset SSH_AUTH_SOCK
+fi
+if test -e "$script"; then
+  source $script >&2
+  if [ "$1" != "$SSH_AUTH_SOCK" ]; then
+    if check-envvar; then
+      echo >&2 "ssh-agent on $SSH_AUTH_SOCK"
+      set -- "$@" $SSH_AUTH_SOCK
+    else
+      echo >&2 "removing stale script"
+      rm -f "$script"
+    fi
+  fi
+  unset SSH_AUTH_SOCK
+fi
+if [ -n "$1" -a -n "$2" ]; then
+  if [ $1 == $2 ]; then
+    echo "sockets same" >&2
+  else
+    echo "killing one copy" >&2
+    shift
+  fi
+fi
 mkdir -p $HOME/.ssh
-echo "$(ssh-agent -s -a $socket)" > $script.new
-mv $script.new $script
-source "$HOME/.ssh/agent.bash"
-echo "$SSH_AUTH_SOCK"
-echo "$SSH_AGENT_PID"
+export SSH_AUTH_SOCK="$1"
+if test -z "$SSH_AUTH_SOCK"; then
+  test -S $defsocket && rm -f $defsocket
+  pgrep -u $UID ^ssh-agent | xargs -r kill
+  if report ssh-agent -s -a $defsocket > $script.new; then
+    source $script.new >&2
+    mv $script.new $script
+    echo export "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" | tee $script
+    exit 0
+  else
+    echo >&2 failed
+  fi
+else
+  echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK" | tee $script
+fi  
