@@ -3,30 +3,29 @@
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
-use common::sense;
 BEGIN {
   use FindBin qw($Bin);
   use lib "$Bin/../lib/perl";
-  $|++; $\="\n"; $,=" "; $"=" "; $/="n";
 };
+use common::sense;
 my %opt = (
   'remove' => 1,
   'crypt' => 0,
   'quiet' => 0,
 );
 use autodie;
-use Nobody::Util qw(ddx);
+use Nobody::Util;
 use Getopt::WonderBra;
 sub help {
-  print "usage: $0 [ -r ] <dir...>\n";
-  print "  tars up the given directory, using the --remove-files option";
-  print "  pretty much rm -fr with a backup.  The backup will go into";
-  print "  dir.tgz.  if dir starts with a period, the period will be";
-  print "  removed from the name of the tar file";
-  print;
-  print "   -r - remove dir.";
-  print "   -R - don't remove dir.";
-  print "   -c - encrypt the tar result.";
+  say "usage: $0 [ -r ] <dir...>\n";
+  say "  tars up the given directory, using the --remove-files option";
+  say "  pretty much rm -fr with a backup.  The backup will go into";
+  say "  dir.tgz.  if dir starts with a period, the period will be";
+  say "  removed from the name of the tar file";
+  say;
+  say "   -r - remove dir.";
+  say "   -R - don't remove dir.";
+  say "   -c - encrypt the tar result.";
 }
 our(@VERSION) = qw( 1 0 0 );
 sub version {

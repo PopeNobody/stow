@@ -7,7 +7,7 @@ use Nobody::Util;
 use lib "$Bin/../lib/perl";
 $|++;
 $\="\n"; $,=" "; $"=" ";
-use autodie qw(:all);
+use autodie;
 use Getopt::WonderBra;
 use File::Basename;
 use File::Copy;

@@ -3,14 +3,12 @@
 eval 'exec perl -x -wS $0 ${1+"$@"}'
   if 0;
 
-use strict;
-use warnings;
+use common::sense;
 BEGIN {
   use FindBin qw($Bin $Script);
   use autodie;
   use lib "$Bin/../lib/perl";
   use Getopt::WonderBra;
-  $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
 };
 sub opts(@);
 sub help {
@@ -18,14 +16,16 @@ sub help {
   print "usage: $0 --help\n";
   print "       $0 <files>";
   print "       lists all installed packages\n";
-  print "       $0 -u <files>";
+  print "       $0 -u <files>\n";
   print "       lists all uninstalled (but not purged) packages\n";
 }
 sub version {
-  print "version: pkg-inst 0.1";
+  print "version: pkg-inst 0.1\n";
 }
 $ENV{LANG}="C";
 my $del=0;
+my $rev=0;
+my %seen;
 opts(@ARGV);
 
 open(STDIN,"</dev/null");
@@ -39,6 +39,7 @@ sub xwarn(@){
 };
 while(<STDIN>){
   next unless s{^([a-z][a-z])\s*}{};
+  chomp;
   my $stat=$1;
   if($stat eq "ii") {
     next if $del;
@@ -47,25 +48,44 @@ while(<STDIN>){
   };
   s{\s.*}{};
   ($_,my $arch)=split /:/;
-  next unless filter;
-  chomp;
-  print;
+  if(filter()) {
+   $seen{$_}++;
+ };
+};
+if($rev) {
+  open(STDIN,"pkg-names|");
+  while(<STDIN>){
+    chomp;
+    print "$_\n" unless $seen{$_}++;
+  };
+} else {
+  print "$_\n" for sort keys %seen;
 };
 sub opts(@) {
-  @_=getopt("u",@_);
+  @_=getopt("ur",@_);
   while(($_=shift)ne'--'){
     if($_ eq '-u') {
       $del=1;
+    } elsif ($_ eq '-r') {
+      $rev=1;
     } else {
       die "did not expect '$_'";
     };
   };
-  *filter=mkFilter(@_);
+  my $filter=mkFilter(@_);
+  *filter=$filter;
 }
 sub mkFilter(@) {
   @_ = grep { length } @_;
-  return eval "sub { return 1; }" unless @_;
+  return sub { return 1; } unless @_;
   for(join("|",@_)){
-    return eval "sub { m{$_}; }";
+    my $sub=eval qq{sub { 
+      if(m{$_}) {
+        return 1;
+      } else {
+        return 0;
+      };
+    }};
+    return $sub;
   };
 };

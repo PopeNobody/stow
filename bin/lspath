@@ -3,6 +3,7 @@
 lspath() {
   local inodes=false source=false uniq=false dirs=false exist=false
   local IFS="$IFS"
+  local SIFS="$IFS"
   local -a argv
   if argv=( $(getopt edisu "$@" ) ); then
     : # Kludge for vim formatting
@@ -32,7 +33,9 @@ lspath() {
   (($#!=1)) && echo "expected one name" && return 1
   local -n var="$1"
   shift
-  eval "set -- ${var//:/ }"
+  IFS=":"
+  set -- $var 
+  IFS="$SIFS"
   if $uniq; then
     #printf 'debug1: %s\n' "$@" >&2
     local -a "seen=()" "res=()"
