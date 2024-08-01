@@ -33,7 +33,6 @@ lspath() {
   (($#!=1)) && echo "expected one name" && return 1
   local -n var="$1"
   shift
-
   IFS=":"
   set -- $var 
   IFS="$SIFS"

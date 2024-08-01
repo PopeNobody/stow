@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -- $(pidof runsvdir) $(pidof runsvdir-bin)
+if (($#)); then
+  while (($#)); do
+    pstree -ap $1
+    shift
+  done
+else
+  echo >&2 runsvdir not running
+fi
+
+

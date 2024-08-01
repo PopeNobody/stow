@@ -1,10 +1,9 @@
 #!/bin/bash
 
-
 if (($#!=1)); then
   (($#)) || set $(hostname | sed 's,[.].*,,')
   for h; do
-    rem-ssh-port $h;
+    ${BASH_SOURCE} $h;
   done;
 else
   case "$1" in
