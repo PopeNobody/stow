@@ -14,11 +14,9 @@ BEGIN {
 use autodie qw(:all);
 use Nobody::PP;
 
-open(STDIN,"</dev/null");
-open(STDIN,"ifconfig -a|");
+open(STDIN,"</proc/net/dev");
 while(<STDIN>){
-  next if /^\s/;
+  next if $.<=2;
   s/:\s.*//;
-  chomp;
-  print;
+  print split;
 }

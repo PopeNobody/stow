@@ -7,5 +7,7 @@ case "$ID" in
   (void) set void $ID;;
   (linuxmint|ubuntu|devuan|debian) set debian $ID;;
   (alpine) set alpine $ID;;
+  (gentoo) set gentoo $ID;;
+  (*) echo >&2 "unknown system: $ID"; exit 1;;
 esac
 echo "$@"

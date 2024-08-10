@@ -7,11 +7,19 @@ use lib "$Bin/../lib/perl";
 use autodie ;
 use Nobody::Util;
 open(STDIN,"</dev/null");
-package Pkg::debian;
 sub debian_source() {
   open(STDIN,"-|", qw(apt-cache pkgnames));
 };
-sub alpine_source() {
+sub gentoo_source() {
+  open(STDIN,"-|", qw(
+    find /var/db/repos/gentoo
+    -mindepth 2
+    -maxdepth 2
+    -type d
+    -printf %P\n
+    ));
+};
+sub gentoo_line($) {
   chomp;
   $_;
 };
@@ -22,6 +30,7 @@ sub debian_line($) {
 sub get_os_type() {
   local (@_);
   @_ = map { split } qx(os);
+  die "os failed (said @_)" if $?;
   return shift;
 };
 sub match($);
@@ -38,8 +47,11 @@ if ( $os_type eq "debian" ) {
 } elsif ( $os_type eq "ubuntu" ) {
   *line=\&debian_line;
   debian_source();
+} elsif ( $os_type eq "gentoo" ) {
+  *line=\&gentoo_line;
+  gentoo_source();
 } else {
-    die "os_type neither debian nor void\n";
+    die "no code for $os_type\n";
 };
 sub main()
 {
@@ -64,9 +76,9 @@ sub handle_args(\@)
     *match=sub ($){
       my $a=$_;
       for(@re) {
-        return 1 if $a=~$_;
+        return 0 unless $a=~$_;
       }
-      return 0;
+      return 1;
     };
   } else {
     *match=sub ($){
