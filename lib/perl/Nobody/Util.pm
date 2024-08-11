@@ -158,12 +158,21 @@ sub pasteLines(@) {
   return join("\n",@_) unless wantarray;
   return @_;
 }
-sub spit($@){
+sub spit($$@){
   local($\,$/);
-  my ($fn,$fh)=shift;
+  my ($fn,$dir,$fh)=shift;
   use autodie qw(open close);
-  $fn =~ s{^}{>} unless substr($fn,0,1) eq '|';
-  open($fh,$fn);
+  if($dir eq '|' or $dir eq '-|') {
+    die "pipe as second arg without cmd" unless @_;
+    open($fh,'-|',@_);
+  } elsif ( $dir eq '>' ) {
+    die "> as second arg without name" unless @_;
+    die "> as second arg with >1 name" unless @_ == 1;
+    open($fh,'>', $_[1]);
+  } else {
+    $fn =~ s{^}{>} unless substr($fn,0,1) eq '|';
+    open($fh,$fn);
+  };
   $fh->print($_) for join("",@_);
   close($fh);
 };
