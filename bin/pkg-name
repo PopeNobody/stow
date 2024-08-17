@@ -63,7 +63,7 @@ sub main()
     $seen{line($_)}++;
   };
   close(STDIN);
-  say for sort keys %seen;
+  say ("$_") for sort keys %seen;
 };
 @ARGV=handle_args(@ARGV);
 
