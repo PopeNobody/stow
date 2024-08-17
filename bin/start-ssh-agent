@@ -49,7 +49,8 @@ fi
 mkdir -p $HOME/.ssh
 export SSH_AUTH_SOCK="$1"
 if test -z "$SSH_AUTH_SOCK"; then
-  test -S $defsocket && rm -f $defsocket
+  set -x
+  rm -f $defsocket
   pgrep -u $UID ^ssh-agent | xargs -r kill
   if report ssh-agent -s -a $defsocket > $script.new; then
     source $script.new >&2
