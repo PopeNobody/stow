@@ -1,65 +1,69 @@
-#!/bin/bash
-# vim: sw=2 ts=2 et
+#!/usr/bin/perl
+# vim: ts=2 sw=2 ft=perl
+eval 'exec perl -x -wS $0 ${1+"$@"}'
+  if 0;
+$|++;
+use common::sense;
+use autodie;
+use Nobody::Util;
+our(@VERSION) = qw( 0 1 0 );
 
-script="$HOME/.ssh/agent.bash";
-defsocket="$HOME/.ssh/agent.sock";
-rm -f "${script%.bash}".sh
-check-envvar() {
-  test -z "$SSH_AUTH_SOCK" && return 2
-  test -e "$SSH_AUTH_SOCK" || return 2
-  if test ! -S "$SSH_AUTH_SOCK"; then
-    exec >&2
-    echo "warning:  something not a socket"
-    echo "at $SSH_AUTH_SOCK"
-  fi
-  ssh-add -l >&2 && exit 0
-  if (($?==2)); then
-    return 1
-  else 
-    return 0
-  fi
+open(COMMAND,">&1");
+open(STDOUT,">&2");
+sub test_sock();
+sub from_script();
+
+our($var);
+my $res;
+my ($base) = "$ENV{HOME}/.ssh/agent";
+*var=\$ENV{SSH_AUTH_SOCK};
+ddx( { var=>$var, res=>$res } );
+$res=test_sock;
+ddx( { var=>$var, res=>$res } );
+exit($res) if $res<2;
+if(-e "$base.bash") {
+  $res=from_script();
+  uc "$base.bash" if $res==2;
+}
+
+$res=test_sock;
+exit($res);
+sub test_sock() {
+  local(*_)=\$var;
+  print STDERR "checking if defined\n";
+  unless(defined) {
+    print STDERR "nope\n";
+    return 2;
+  };
+  print STDERR ppx( $var );
+  print STDERR "checking if socket\n";
+  unless(-S) {
+    print STDERR "nope\n";
+    return 2;
+  };
+  print STDERR "checking if working\n";
+  system("ssh-add -l");
+  ($res)=int($?/256);
+  if($res==0) {
+    print STDERR "working\n";
+  } elsif ( $res==1 ) {
+    print STDERR "no keys\n";
+  } else {
+    rename $var, "$var.old" if -e $res;
+    print STDERR "no agent\n";
+  };
+  return $res;
 };
-unset SSH_AGENT_PID
-if check-envvar; then
-  echo ssh-agent on $SSH_AUTH_SOCK >&2
-  set -- "$SSH_AUTH_SOCK"
-  unset SSH_AUTH_SOCK
-fi
-if test -e "$script"; then
-  source $script >&2
-  if [ "$1" != "$SSH_AUTH_SOCK" ]; then
-    if check-envvar; then
-      echo >&2 "ssh-agent on $SSH_AUTH_SOCK"
-      set -- "$@" $SSH_AUTH_SOCK
-    else
-      echo >&2 "removing stale script"
-      rm -f "$script"
-    fi
-  fi
-  unset SSH_AUTH_SOCK
-fi
-if [ -n "$1" -a -n "$2" ]; then
-  if [ $1 == $2 ]; then
-    echo "sockets same" >&2
-  else
-    echo "killing one copy" >&2
-    shift
-  fi
-fi
-mkdir -p $HOME/.ssh
-export SSH_AUTH_SOCK="$1"
-if test -z "$SSH_AUTH_SOCK"; then
-  set -x
-  rm -f $defsocket
-  pgrep -u $UID ^ssh-agent | xargs -r kill
-  if report ssh-agent -s -a $defsocket > $script.new; then
-    source $script.new >&2
-    mv $script.new $script
-    echo export "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" | tee $script
-    exit 0
-  else
-    echo >&2 failed
-  fi
-else
-  echo "export SSH_AUTH_SOCK=$SSH_AUTH_SOCK" | tee $script
-fi  
+  sub from_script() {
+    if( -e "$base.bash") {
+      print "from_script: $var, $res";
+      open(STDIN,"echo 'source $base.bash; echo \$SSH_AUTH_SOCK'|");
+      open(STDIN,"bash|");
+      ddx( [ ($var) = map { split } <STDIN> ] );
+      close(STDIN);
+      open(STDIN,"</dev/null");
+      ddx( { var=>$var, res=>$res } );
+      $res=test_sock();
+      unlink("$base.bash") if $res==2;
+    }
+  };
