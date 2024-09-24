@@ -1,69 +1,34 @@
-#!/usr/bin/perl
-# vim: ts=2 sw=2 ft=perl
-eval 'exec perl -x -wS $0 ${1+"$@"}'
-  if 0;
-$|++;
-use common::sense;
-use autodie;
-use Nobody::Util;
-our(@VERSION) = qw( 0 1 0 );
+#!/bin/bash
+# vim: sw=2 ts=2 et
+#set -- $(pagent-exists-exitgrep ssh-agent -u $UID)
+#ps "$@"
+set -x
 
-open(COMMAND,">&1");
-open(STDOUT,">&2");
-sub test_sock();
-sub from_script();
-
-our($var);
-my $res;
-my ($base) = "$ENV{HOME}/.ssh/agent";
-*var=\$ENV{SSH_AUTH_SOCK};
-ddx( { var=>$var, res=>$res } );
-$res=test_sock;
-ddx( { var=>$var, res=>$res } );
-exit($res) if $res<2;
-if(-e "$base.bash") {
-  $res=from_script();
-  uc "$base.bash" if $res==2;
+agent-exists() {
+  ssh-add -l >/dev/null 2>&1
+  (($?!=2))
 }
 
-$res=test_sock;
-exit($res);
-sub test_sock() {
-  local(*_)=\$var;
-  print STDERR "checking if defined\n";
-  unless(defined) {
-    print STDERR "nope\n";
-    return 2;
-  };
-  print STDERR ppx( $var );
-  print STDERR "checking if socket\n";
-  unless(-S) {
-    print STDERR "nope\n";
-    return 2;
-  };
-  print STDERR "checking if working\n";
-  system("ssh-add -l");
-  ($res)=int($?/256);
-  if($res==0) {
-    print STDERR "working\n";
-  } elsif ( $res==1 ) {
-    print STDERR "no keys\n";
-  } else {
-    rename $var, "$var.old" if -e $res;
-    print STDERR "no agent\n";
-  };
-  return $res;
-};
-  sub from_script() {
-    if( -e "$base.bash") {
-      print "from_script: $var, $res";
-      open(STDIN,"echo 'source $base.bash; echo \$SSH_AUTH_SOCK'|");
-      open(STDIN,"bash|");
-      ddx( [ ($var) = map { split } <STDIN> ] );
-      close(STDIN);
-      open(STDIN,"</dev/null");
-      ddx( { var=>$var, res=>$res } );
-      $res=test_sock();
-      unlink("$base.bash") if $res==2;
-    }
-  };
+agent-exists && exit 0
+for script in $HOME/.ssh/agent.bash; do
+  test -e "$script" || break;
+  source $script
+  agent-exists && exit 0
+  rm -f "$script" "$SSH_AUTH_SOCK"
+  unset SSH_AUTH_SOCK SSH_AGENT_PID
+done
+socket="$HOME/.ssh/agent.sock"
+script="$HOME/.ssh/agent.bash"
+
+SSH_AUTH_SOCK=$socket agent-exists && exit 0
+rm -f "$socket"
+
+pkill -eu $UID ^ssh-agent$
+unset SSH_AUTH_SOCK SSH_AGENT_PID
+mkdir -p $HOME/.ssh
+echo "$(ssh-agent -s -a $socket)" > $script.new
+mv $script.new $script
+ln -sf "$script" "${script%.bash}.sh"
+source "$HOME/.ssh/agent.bash"
+echo "$SSH_AUTH_SOCK"
+echo "$SSH_AGENT_PID"
