@@ -24,7 +24,7 @@ BEGIN {
   );
   push(@EXPORT_OK,
     qw( pasteLines serdate class mkref open_fds deparse maybeRef ),
-    qw( file_id WNOHANG uniq )
+    qw( file_id WNOHANG uniq matrix )
   );
 }
 use strict;
@@ -59,6 +59,17 @@ sub mkdir_p($;$) {
   pop(@dir);
   mkdir_p(join("/",@dir),$mode);
   mkdir($dir,$mode); 
+};
+sub matrix(){
+  my $l;
+  while(<>){
+    my (@r) = split;
+    for(scalar(@r)){
+      $l=$_ if $l<$_;
+    };
+    push(@_,\@r);
+  };
+  @_;
 };
 sub open_fds(;$);
 BEGIN {
