@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use autodie qw(:all);
+use autodie;
 select(STDERR);
 $\="\n";
 select(STDOUT);

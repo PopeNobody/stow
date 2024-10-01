@@ -10,7 +10,7 @@ BEGIN {
   use lib "$Bin/../lib/perl";
   $|++; $\="\n"; $,=" "; $"=" "; $/="\n";
 };
-use autodie qw(:all);
+use autodie;
 
 our(@cmd,@arg,$arg);
 push(@ARGV,'--');

@@ -6,20 +6,12 @@ eval 'exec perl -x -wS $0 ${1+"$@"}'
 use strict;
 use warnings;
 use Nobody::Util;
-use POSIX qw(getcwd);
 use Env qw($HOME @PATH $PWD);
 use vars qw(%opt);
 use Getopt::WonderBra;
 $ENV{LANG}="C";
 sub resolve($);
 sub opts(@);
-sub verbose(@){};
-sub verbose_1(@){ warn("@_\n"); };
-sub verbose_n(@){ warn("@_"); };
-if($opt{verbose}){
-  no warnings 'redefine';
-  *verbose=($opt{verbose}>1 ? \&verbose_1 : \&verbose_n );
-};
 die "$@" if "$@";
 resolve($_) for @ARGV;
 sub dir($) {
@@ -33,11 +25,11 @@ sub resolve($) {
   s{//+}{/}g for ($t,$d);
   {
     local $_="$t";
-    say STDERR "R: $_";
+    #    say STDERR "R: $_";
     if($opt{cmd}) {
       ($_,@_) = map { split } qx(which $_);
       if($t ne $_) {
-        say STDERR "C: $_";
+        #        say STDERR "C: $_";
         $t=$_;
       };
     }
@@ -49,14 +41,14 @@ sub resolve($) {
   while(1) {
     if($t !~ m{^/}){
       $_=join('/',$d,$t);
-      say STDERR "D: $d $t => $_";
+    #  say STDERR "D: $d $t => $_";
       $t=$_;
     };
     undef($d);
     last unless -l $t;
     $d=dir($t);
     $_=readlink($t);
-    say STDERR "L: $t => $_";
+    #    say STDERR "L: $t => $_";
     $t=$_;
   };
   if(m{/}){
@@ -73,7 +65,6 @@ BEGIN {
   sub help {
     print "usage: $0 <-c> <-v>";
     print "       -c: search on path";
-    print "       -v: verbose";
   }
   our(@VERSION) = qw( 0 1 0 );
   sub version {
@@ -83,7 +74,6 @@ BEGIN {
   use Getopt::WonderBra;
   my %arg = (
     'c' => \$opt{cmd},
-    'v' => \$opt{verbose}
   );
   sub argstr() {
     my %abbr;

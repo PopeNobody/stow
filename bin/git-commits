@@ -10,7 +10,7 @@ BEGIN {
   use lib "$Bin/../lib/perl";
   $|++; $\="\n"; $,=" "; $"=" "; $\="\n";
 };
-use autodie qw(:all);
+use autodie;
 use Nobody::PP;
 my ($date)="";
 sub read_log() {

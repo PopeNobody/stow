@@ -5,7 +5,7 @@ BEGIN {
   use FindBin qw($Bin $Script);
   use lib "$Bin/../lib/perl";
 };
-use autodie qw(:all);
+use autodie;
 use File::Spec;
 print STDERR "Script: $Script\n";
 my (%cmd,$cmd);

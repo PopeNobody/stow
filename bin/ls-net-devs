@@ -11,7 +11,7 @@ BEGIN {
   $|++;
   $\="\n"; $,=" "; $"=" ";
 };
-use autodie qw(:all);
+use autodie;
 use Nobody::PP;
 
 open(STDIN,"</proc/net/dev");

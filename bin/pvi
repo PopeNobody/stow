@@ -7,7 +7,7 @@ BEGIN {
   use FindBin qw($Bin);
   use lib ($Lib="$Bin/../lib/perl");
 };
-use autodie qw(:all);
+use autodie;
 use Getopt::WonderBra;
 use File::Basename;
 use File::Copy;

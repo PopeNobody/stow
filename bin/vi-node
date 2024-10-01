@@ -2,7 +2,7 @@
 
 use strict;
 use warnings;
-use autodie qw(:all);
+use autodie;
 use autodie qw(fork);
 use File::stat;
 use Nobody::PP;
