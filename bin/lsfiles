@@ -88,14 +88,7 @@ if(defined($links)) {
   };
   $test=$test."-l";
 };
-if(@ARGV) {
-  if($glob){
-    @ARGV = map { glob($_) } @ARGV;
-  };
-  for(@ARGV) {
-    print "$_\n" if eval $test;
-  };
-} else {
+if(!@ARGV) {
   if ( -t STDIN ) {
     print STDERR "enter items" if -t STDERR;
   } else {
@@ -106,4 +99,10 @@ if(@ARGV) {
     @ARGV = map { split } @ARGV;
   };
   STDERR->printf("%d items:\n", scalar(@ARGV)) if -t STDERR;
+};
+if($glob){
+  @ARGV = map { glob($_) } @ARGV;
+};
+for(@ARGV) {
+  print "$_\n" if eval $test;
 };
